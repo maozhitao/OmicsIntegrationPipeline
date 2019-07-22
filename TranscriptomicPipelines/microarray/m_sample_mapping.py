@@ -1,4 +1,4 @@
-class SampleMappingModule:
+class MicroarraySampleMapping:
     def __init__(self):
         self.data = None #Fake
         

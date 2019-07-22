@@ -1,4 +1,4 @@
-class ValueExtractionModule:
+class MicroarrayExtraction:
     def __init__(self):
         self.data = None
         

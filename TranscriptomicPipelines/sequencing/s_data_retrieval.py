@@ -1,15 +1,15 @@
-class ValueExtractionModule:
+class SequencingRetrieval:
     def __init__(self):
         self.data = None #Fake
         
-    def prepare_data(self):
+    def download_metadata(self):
         self.data = None #Fake
         
-    def align_data(self):
-        self.data = None #Fake
-    
-    def infer_stranded_information(self):
+    def complete_data_independent_metadata(self):
         self.data = None #Fake
         
-    def complete_data_dependent_metadata(self):
+    def filter_entry(self):
+        self.data = None #Fake
+        
+    def download_data(self):
         self.data = None #Fake
