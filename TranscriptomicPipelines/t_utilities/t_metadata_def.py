@@ -1,7 +1,7 @@
-import t_metadata_exceptions
+from . import t_metadata_exceptions
 #t_metadata_def.py
 #Define each field of metadata table
-from enum import Enum
+from enum import Enum, auto
 import datetime
 
 class Separator(Enum):
@@ -67,37 +67,36 @@ class ValueValidIndicator(Enum):
 class SampleID:
     #For SRA data, we have to take care of cases with multiple runs...
     def __init__(   self, 
-                    source_type = SourceType.GEO : SourceType,
-                    channel_num = ChannelNum.TWO : ChannelNum,
-                    channel = Channel.CY3: Channel,
-                    series_id = "" : str, #Only for arrayexpress data
-                    experiment_id = "" : str
+                    source_type : SourceType = SourceType.GEO,
+                    channel_num : ChannelNum = ChannelNum.TWO,
+                    channel : Channel = Channel.CY3,
+                    series_id : str = "", #Only for arrayexpress data
+                    experiment_id : str = ""
                     ):
         self.source_type = source_type
         self.channel_num = channel_num
         self.channel = channel
         self.series_id = series_id
         self.experiment_id = experiment_id
-        self.id = create_id()
+        self.id = ""
         
     def create_id(self):
-        result = ""
         if self.source_type == SourceType.GEO:
             if series_id:
                 raise t_metadata_exceptions.FailedToCreateID("No series id should be provided to create id for a GEO entry")
-            result = add_channel_surfix(self.experiment_id)
+            self.id = add_channel_surfix(self.experiment_id)
             
         elif self.source_type == SourceType.ARRAYEXPRESS:
             if not series_id:
                 raise t_metadata_exceptions.FailedToCreateID("Series id should be provided to create id for a ArrayExpress entry")
-            result = add_channel_surfix(self.series_id + Separator.SERIES + self.experiment_id)
+            self.id = add_channel_surfix(self.series_id + Separator.SERIES + self.experiment_id)
             
         elif self.source_type == SourceType.SRA:
             #SRA data:
             #NOTE: One experiment should be mapped into only ONE entry even there are more than one runs
             if series_id:
                 raise t_metadata_exceptions.FailedToCreateID("No series id should be provided to create id for a SRA entry")
-            result = self.experiment_id
+            self.id = self.experiment_id
             
         else:
             raise t_metadata_exceptions.FailedToCreateID("Invalid Source Type")
@@ -118,23 +117,23 @@ class MetadataEntry:
     #1. Initiate the new Sample ID after you got the necessary information
     #2. Fill the necessary elements
     def __init__(self,
-                sample_id = SampleID() : SampleID, #Should be prepared well before you call the constructor
-                channel_num = ChannelNum.TWO : ChannelNum,
-                first_channel = Channel.CY3 : Channel,
-                second_channel = Channel.CY5 : Channel,
-                source_type = SourceType.GEO : SourceType,
-                series_id = "" : str,
-                platform_id = "" : str,
-                removed = RemovedIndicator.FALSE : RemovedIndicator,
-                used_data = UsedDataType.GEOSOFT : UsedDataType,
-                paired = PairedType.NA : PairedType,
-                stranded = StrandedType.NA : StrandedType,
-                bg_available = BGAvailableIndicator.TRUE : BGAvailableIndicator,
-                used_value = UsedValueType.MEDIAN : UsedValueType,
-                value_valid = ValueValidIndicator.TRUE: ValueValidIndicator,
-                pmid = [] : list, #Should be prepared well before you call the constructor
-                author = [] : str, #Should be prepared well before you call the constructor
-                date = datetime.date(1,1,1) : datetime.date #Should be prepared well before you call the constructor
+                sample_id : SampleID = SampleID(), #Should be prepared well before you call the constructor
+                channel_num : ChannelNum = ChannelNum.TWO,
+                first_channel : Channel = Channel.CY3,
+                second_channel : Channel = Channel.CY5,
+                source_type : SourceType = SourceType.GEO,
+                series_id : str = "",
+                platform_id : str = "",
+                removed : RemovedIndicator = RemovedIndicator.FALSE,
+                used_data : UsedDataType = UsedDataType.GEOSOFT,
+                paired : PairedType = PairedType.NA,
+                stranded : StrandedType = StrandedType.NA,
+                bg_available : BGAvailableIndicator = BGAvailableIndicator.TRUE,
+                used_value : UsedValueType = UsedValueType.MEDIAN,
+                value_valid: ValueValidIndicator = ValueValidIndicator.TRUE,
+                pmid : list = [], #Should be prepared well before you call the constructor
+                author : str = [], #Should be prepared well before you call the constructor
+                date : datetime.date = datetime.date(1,1,1) #Should be prepared well before you call the constructor
                 ):
         
         self.sample_id = sample_id
