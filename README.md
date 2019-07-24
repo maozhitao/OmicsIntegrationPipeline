@@ -33,17 +33,22 @@
 <h4>07/24/2019 Update</h4>
 <ol>
 <li>Gene Annotation Data Definition</li>
-<li>SRA metadata download implementation<br>
+<li>Data Retrieval<br>
     <ol>
-    <li>Fetch SRA runinfo by SRA ids (DONE)</li>
-    <li>Fetch FASTA file(s) by gene annotation (GFF3) file(s) and merge them into one file (DONE)</li>
+    <li>SRA metadata download implementation<br>
+        <ol>
+        <li>Fetch SRA runinfo by SRA ids (DONE)</li>
+        <li>Fetch FASTA file(s) by gene annotation (GFF3) file(s) and merge them into one file (DONE)</li>
+        </ol>
+    </li>
+    <li>SRA data download implementation<br>
+        <ol>
+        <li>Download SRA data from NCBI (ONGOING) </li>
+        </ol>
+    </li>
     </ol>
 </li>
-<li>SRA data download implementation<br>
-    <ol>
-    <li>Download SRA data from NCBI (ONGOING) </li>
-    </ol>
-</li>
+
 <li>Value extraction implementation<br>    
     <ol>
     <li>Data Preparation<br>
