@@ -3,13 +3,7 @@ from enum import Enum
 
 import pandas as pd
 
-#Need to import module in parent folder
-import sys
-sys.path.append("..")
-import t_utilities.t_metadata as t_metadata
-import t_utilities.t_metadata_def as t_metadata_def
-import t_utilities.t_gff as t_gff
-
+from . import s_module_template
 
 class SequencingRetrievalConstant(Enum):
     SRADB           = "sra"
@@ -29,34 +23,43 @@ class SequencingRetrievalParameters:
                     fasta_path : str = 'merged.fasta'):
         self.entrez_mail = entrez_mail
         self.fasta_path = fasta_path
-
         
 
-class SequencingRetrieval:
-    def __init__(   self, 
-                    query_id : list,
-                    metadata : t_metadata.TranscriptomeMetadata,
-                    gene_annotation : t_gff.GeneAnnotation,
-                    parameters : SequencingRetrievalParameters = SequencingRetrievalParameters()
-                    ):
-        self.query_id = query_id
-        self.metadata = metadata
-        self.gene_annotation = gene_annotation
+class SequencingRetrievalResults:
+    def __init__(self):
+        self.fasta_path = None
+        self.mapping_experiment_runs = None
+        
+    def update_download_metadata(self, fasta_path):
+        self.fasta_path = fasta_path
+
+    def update_complete_data_independent_metadata(self, mapping_experiment_runs = None):
+        self.mapping_experiment_runs = mapping_experiment_runs
+
+class SequencingRetrieval(s_module_template.SequencingModule):
+    def __init__(self, owner, parameters : SequencingRetrievalParameters = SequencingRetrievalParameters()):
+        self.owner = owner
         self.parameters = parameters
+        self.results = SequencingRetrievalResults()
         
         self.sra_run_info = None
+        
+    def get_parameters(self):
+        return self.parameters
+        
+    def get_results(self):
+        return self.results
         
     def download_metadata(self):
         #1. Download run_info table from SRA
         #2. Download fasta files from NCBI genome and merge fasta files
-        #3. Creating Bowtie2 Index
         self.download_srainfo()
         self.download_fasta()
-
+        self.results.update_download_metadata(self.parameters.fasta_path)
         
     def download_srainfo(self):
         Entrez.mail = self.parameters.entrez_mail
-        for id in self.query_id:
+        for id in self.get_s_query_id():
             handle = Entrez.efetch( id = id, 
                                     db = SequencingRetrievalConstant.SRADB.value, 
                                     rettype = SequencingRetrievalConstant.RUNINFO.value, 
@@ -72,7 +75,7 @@ class SequencingRetrieval:
             
     def download_fasta(self):
         Entrez.mail = self.parameters.entrez_mail
-        genome_id = self.gene_annotation.get_genome_id()
+        genome_id = self.get_t_gene_annotation().get_genome_id()
         with open(self.parameters.fasta_path, SequencingRetrievalConstant.WRITEMODE.value) as outfile:
             for id in genome_id:
                 print(id)
@@ -86,7 +89,9 @@ class SequencingRetrieval:
         
     def complete_data_independent_metadata(self):
         #Note: You should manage the experiment - run mapping information
-        self.data = None #Fake
+        metadata = self.get_t_metadata()
+        self.set_t_metadata(metadata)
+        self.results.update_complete_data_independent_metadata()
         
     def filter_entry(self):
         self.data = None #Fake

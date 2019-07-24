@@ -6,11 +6,14 @@ import validation_pipeline
 import t_utilities.t_metadata as t_metadata
 import t_utilities.t_gff as t_gff
 
+import copy
+
 class TranscriptomicDataPreparationPipeline:
     def __init__(   self,
                     m_query_id : list,
                     s_query_id : list,
-                    gff_path : list #GFF3 Table Paths
+                    gff_path : list, #GFF3 Table Paths
+                    owner = None
                     ):
                     
         self.m_query_id = m_query_id
@@ -23,13 +26,26 @@ class TranscriptomicDataPreparationPipeline:
         self.t_gene_annotation.read_file()
         
         
-        self.microarray_pipeline = microarray_pipeline.MicroarrayPipeline()
-        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(s_query_id,self.t_metadata,self.t_gene_annotation)
-        self.postprocessing_pipeline = postprocessing_pipeline.PostprocessingPipeline()
-        self.validation_pipeline = validation_pipeline.ValidationPipeline()
+        self.microarray_pipeline = microarray_pipeline.MicroarrayPipeline(self)
+        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(self)
+        self.postprocessing_pipeline = postprocessing_pipeline.PostprocessingPipeline(self)
+        self.validation_pipeline = validation_pipeline.ValidationPipeline(self)
         
-
+    
+    def get_m_query_id(self):
+        return self.m_query_id
         
+    def get_s_query_id(self):
+        return self.s_query_id
+        
+    def get_t_metadata(self):
+        return self.t_metadata
+        
+    def set_t_metadata(self,metadata):
+        self.t_metadata = metadata
+        
+    def get_t_gene_annotation(self):
+        return self.t_gene_annotation
         
         
 if __name__ == "__main__":
@@ -41,5 +57,7 @@ if __name__ == "__main__":
     transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.complete_data_independent_metadata()
     transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.filter_entry()
     transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.download_data()
+    
+    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.prepare_data()
     
     

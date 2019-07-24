@@ -1,6 +1,8 @@
-class MicroarrayGeneMapping:
-    def __init__(self):
-        self.data = None #Fake
+from . import m_module_template
+
+class MicroarrayGeneMapping(m_module_template.MicroarrayModule):
+    def __init__(self, owner):
+        self.owner = owner
         
     def add_tag(self):
         self.data = None #Fake

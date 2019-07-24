@@ -1,6 +1,8 @@
-class MicroarrayExtraction:
-    def __init__(self):
-        self.data = None
+from . import m_module_template
+
+class MicroarrayExtraction(m_module_template.MicroarrayModule):
+    def __init__(self, owner):
+        self.owner = owner
         
     def extract_column(self):
         self.data = None
