@@ -37,9 +37,41 @@
     <ol>
     <li>Fetch SRA runinfo by SRA ids (DONE)</li>
     <li>Fetch FASTA file(s) by gene annotation (GFF3) file(s) and merge them into one file (DONE)</li>
-    <li>Build bowtie2index by merged fasta file (DONE)</li>
-    <li>Integration of toolkit (sratoolkit) (ONGOING) </li>
-    <li>Integration of packages (RSeQC and HTSeq) (ONGOING) </li>
-    <li></li>
     </ol>
+</li>
+<li>SRA data download implementation<br>
+    <ol>
+    <li>Download SRA data from NCBI (ONGOING) </li>
+    </ol>
+</li>
+<li>Value extraction implementation<br>    
+    <ol>
+    <li>Data Preparation<br>
+        <ol>
+        <li>Build bowtie2index by merged fasta file (DONE)</li>
+        <li>Convert SRA files to fastq files (ONGOING) </li>
+        <li>GFF3 file to GTF file (ONGOING) </li>
+        </ol>
+    </li>
+    <li>Alignment<br>
+        <ol>
+        <li>bowtie2-align testing (ONGOING)</li>
+        </ol>
+    </li>
+    <li>Strand Infer<br>
+        <ol>
+        <li>RSeQC integration testing (ONGOING)</li>
+        </ol>
+    </li>
+    <li>Read Count<br>
+        <ol>
+        <li>HTSeq-count testing (ONGOING)</li>
+        </ol>
+    </li>
+    <li>Metadata Completion<br>
+        <ol>
+        <li>HTSeq-count testing (ONGOING)</li>
+        </ol>
+    </li>
+</li>
 </ol>
