@@ -25,7 +25,7 @@
 <li>07/18/2019 21:20 Update: (TEST) Create the directories and files</li>
 <li>07/22/2019 01:43 Update: Metadata definitions</li>
 <li>07/23/2019 Gene Annotation Data Definition and SRA metadata download implementation</li>
-<li>07/24/2019 Use more set/get methods, wrapper of bowtie2-build, and compatability of the toolkit (sratoolkit) and packages (RSeQC and HTSeq)
+<li>07/24/2019 Use more set/get methods, wrapper of bowtie2-build, and compatability of the toolkit (sratoolkit) and packages (RSeQC and HTSeq) </li>
 </ul>
 
 
