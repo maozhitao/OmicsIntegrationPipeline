@@ -26,6 +26,7 @@
 <li>07/22/2019 01:43 Update: Metadata definitions</li>
 <li>07/23/2019 Gene Annotation Data Definition and SRA metadata download implementation</li>
 <li>07/24/2019 Use more set/get methods, wrapper of bowtie2-build, and compatability of the toolkit (sratoolkit) and packages (RSeQC and HTSeq) </li>
+<li>07/24/2019 implementation of fetching SRA data and convert SRA data to fastq file </li>
 </ul>
 
 
@@ -43,7 +44,7 @@
     </li>
     <li>SRA data download implementation<br>
         <ol>
-        <li>Download SRA data from NCBI (ONGOING) </li>
+        <li>Download SRA data from NCBI (DONE, 07/25) </li>
         </ol>
     </li>
     </ol>
@@ -54,7 +55,7 @@
     <li>Data Preparation<br>
         <ol>
         <li>Build bowtie2index by merged fasta file (DONE)</li>
-        <li>Convert SRA files to fastq files (ONGOING) </li>
+        <li>Convert SRA files to fastq files (DONE, 07/25) </li>
         <li>GFF3 file to GTF file (ONGOING) </li>
         </ol>
     </li>
@@ -74,9 +75,6 @@
         </ol>
     </li>
     <li>Metadata Completion<br>
-        <ol>
-        <li>HTSeq-count testing (ONGOING)</li>
-        </ol>
     </li>
 </li>
 </ol>

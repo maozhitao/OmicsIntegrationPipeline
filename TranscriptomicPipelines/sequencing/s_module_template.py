@@ -1,3 +1,4 @@
+
 class SequencingModule:
     def __init__(self, owner):
         self.owner = owner
@@ -13,3 +14,19 @@ class SequencingModule:
         
     def get_t_gene_annotation(self):
         return self.owner.get_t_gene_annotation()
+        
+    def get_general_parameters(self):
+        return self.owner.get_general_parameters()
+        
+    def get_general_constant(self):
+        return self.owner.get_general_constant()
+        
+class SequencingSubModule(SequencingModule):
+    def __init__(self, owner):
+        self.owner = owner
+        
+    def get_bowtie2_parameters(self):
+        return self.owner.get_bowtie2_parameters()
+    
+    def get_sratool_parameters(self):
+        return self.owner.get_sratool_parameters()
