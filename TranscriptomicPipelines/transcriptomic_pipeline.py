@@ -103,5 +103,11 @@ if __name__ == "__main__":
     transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.download_data()
     
     transcriptome_pipeline.sequencing_pipeline.s_value_extraction.prepare_data()
+    #transcriptome_pipeline.sequencing_pipeline.s_value_extraction.align_data()
+    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.infer_stranded_information()
+    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.count_reads()
+    
+    transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_different_run()
+    transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_sample()
     
     

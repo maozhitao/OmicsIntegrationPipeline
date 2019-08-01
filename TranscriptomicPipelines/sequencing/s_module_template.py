@@ -30,3 +30,9 @@ class SequencingSubModule(SequencingModule):
     
     def get_sratool_parameters(self):
         return self.owner.get_sratool_parameters()
+        
+    def get_rseqc_parameters(self):
+        return self.owner.get_rseqc_parameters()
+        
+    def get_htseq_parameters(self):
+        return self.owner.get_htseq_parameters()
