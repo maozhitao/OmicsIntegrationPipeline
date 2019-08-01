@@ -1,8 +1,57 @@
 from . import s_module_template
 
-class SequencingGeneMapping(s_module_template.SequencingModule):
+class SequencingGeneMappingParameters:
+    def __init__(self, owner, 
+                    drop_unnamed_genes = False,
+                    data_matrix_table_path : str = 'SequencingDataMatrix.csv',
+                    gene_mapping_table_path : str = 'SequencingGeneMappingTable.csv'
+                ):
+        self.owner = owner
+        self.drop_unnamed_genes = drop_unnamed_genes
+        self.data_matrix_table_path = data_matrix_table_path
+        self.gene_mapping_table_path = gene_mapping_table_path
+        
+class SequencingGeneMappingResults:
+    def __init__(self):
+        self.original_data_matrix = None
+        
+    def update_original_data_matrix(self, original_data_matrix):
+        self.original_data_matrix = original_data_matrix
+        print(self.original_data_matrix)
+
+class SequencingGeneMapping(s_module_template.SequencingSubModule):
     def __init__(self, owner):
         self.owner = owner
+        self.s_sample_mapping_results = owner.get_s_sample_mapping_results()
+        self.parameters = SequencingGeneMappingParameters(self)
+        self.results = SequencingGeneMappingResults()
         
     def map_gene(self):
-        self.data = None
+        gene_mapping_table = self.owner.get_t_gene_annotation().get_gene_mapping_table()
+        colname_id = self.owner.get_t_gene_annotation().get_gene_mapping_table_colname_id()
+        colname_gene_name = self.owner.get_t_gene_annotation().get_gene_mapping_table_colname_gene_name()
+        
+        gene_mapping_table_selected = gene_mapping_table[[colname_id,colname_gene_name]]
+        gene_mapping_table_selected.to_csv(self.parameters.gene_mapping_table_path)
+        
+        gene_mapping_table_selected_dict = {}
+        for index, row in gene_mapping_table_selected.iterrows():
+            gene_mapping_table_selected_dict[row[colname_id]] = row[colname_gene_name]
+        
+        count_reads_matrix = self.s_sample_mapping_results.count_reads_matrix
+        indices = count_reads_matrix.index.tolist()
+        for i in range(len(indices)):
+            indices[i] = self.find_gene_name(indices[i], gene_mapping_table_selected_dict)
+            
+        count_reads_matrix.index = indices
+        self.results.update_original_data_matrix(count_reads_matrix)
+        
+        count_reads_matrix.to_csv(self.parameters.data_matrix_table_path)
+            
+    def find_gene_name(self, index, gene_mapping_table_dict):
+        if gene_mapping_table_dict[index] != "":
+            return gene_mapping_table_dict[index]
+        else:
+            return index
+        
+        

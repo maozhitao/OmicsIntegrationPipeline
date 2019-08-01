@@ -169,6 +169,7 @@ class SequencingExtractionResults:
         self.alignment_rate = {}
         self.infer_experiment_result = {}
         self.count_reads_result = {}
+        self.count_reads_result_exceptions = {}
         
     def update_alignment_rate(self, run, alignment_rate_run):
         self.alignment_rate[run] = alignment_rate
@@ -176,8 +177,9 @@ class SequencingExtractionResults:
     def update_infer_experiment_result(self, run, infer_experiment_result_run):
         self.infer_experiment_result[run] = infer_experiment_result_run
         
-    def update_count_reads_result(self, run, count_reads_result_run):
+    def update_count_reads_result(self, run, count_reads_result_run, count_reads_result_exceptions_run):
         self.count_reads_result[run] = count_reads_result_run
+        self.count_reads_result_exceptions[run] = count_reads_result_exceptions_run
         
 class InferExperimentResults:
     def __init__(self, paired_type, ratio_failed, ratio_direction1, ratio_direction2, stranded_info):
@@ -334,6 +336,11 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                 self.count_reads_run(run)
         
     def count_reads_run(self, run):
+        #FOR HTSEQ COUNT RESULTS ONLY
+        if self.check_existed_results(run) == True:
+            return
+        
+        
         stranded = self.check_stranded_info(run)
         command = self.parameters.get_htseq_count_command(self.s_retrieval_results.sra_file_dir + run, stranded)
         print(command)
@@ -348,34 +355,8 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             count_reads_result_run = pd.DataFrame([x.split(SequencingExtractionConstant.TABSEP.value) for x in output.split(SequencingExtractionConstant.NEWLINE.value)])
             count_reads_result_run = count_reads_result_run.set_index(0)
             count_reads_result_run.rename(columns={1:run})
+            self.check_htseq_count_results(output)
             
-            output = output.split(SequencingExtractionConstant.NEWLINE.value)
-            print(output)
-            
-            no_feature_line = output[-6]
-            print(no_feature_line)
-            if not no_feature_line.startswith(SequencingExtractionConstant.COUNT_NO_FEATURE.value):
-                raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
-            
-            ambiguous_line = output[-5]
-            print(ambiguous_line)
-            if not ambiguous_line.startswith(SequencingExtractionConstant.COUNT_AMBIGUOUS.value):
-                raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
-            
-            too_low_aQual_line = output[-4]
-            print(too_low_aQual_line)
-            if not too_low_aQual_line.startswith(SequencingExtractionConstant.COUNT_TOO_LOW_AQUAL.value):
-                raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
-                
-            not_aligned_line = output[-3]
-            print(not_aligned_line)
-            if not not_aligned_line.startswith(SequencingExtractionConstant.COUNT_NOT_ALIGNED.value):
-                raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
-                
-            alignment_not_unique_line = output[-2]
-            print(alignment_not_unique_line)
-            if not alignment_not_unique_line.startswith(SequencingExtractionConstant.COUNT_ALIGNMENT_NOT_UNIQUE.value):
-                raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
                 
         except Exception as e:
             raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
@@ -383,7 +364,53 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         with open(self.s_retrieval_results.sra_file_dir + run + self.parameters.count_reads_file_ext, SequencingExtractionConstant.WRITEMODE.value) as outfile:
             outfile.write(binary_output)
             
-        self.results.update_count_reads_result(run,count_reads_result_run)
+            
+        count_reads_result_exceptions_run = count_reads_result_run.iloc[-5:]
+        count_reads_result_run = count_reads_result_run.iloc[:-5]
+        self.results.update_count_reads_result(run,count_reads_result_run, count_reads_result_exceptions_run)
+        
+    def check_htseq_count_results(self, htseq_count_results):
+        output = htseq_count_results.split(SequencingExtractionConstant.NEWLINE.value)
+        
+        no_feature_line = output[-6]
+        if not no_feature_line.startswith(SequencingExtractionConstant.COUNT_NO_FEATURE.value):
+            raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
+        
+        ambiguous_line = output[-5]
+        if not ambiguous_line.startswith(SequencingExtractionConstant.COUNT_AMBIGUOUS.value):
+            raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
+        
+        too_low_aQual_line = output[-4]
+        if not too_low_aQual_line.startswith(SequencingExtractionConstant.COUNT_TOO_LOW_AQUAL.value):
+            raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
+            
+        not_aligned_line = output[-3]
+        if not not_aligned_line.startswith(SequencingExtractionConstant.COUNT_NOT_ALIGNED.value):
+            raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
+            
+        alignment_not_unique_line = output[-2]
+        if not alignment_not_unique_line.startswith(SequencingExtractionConstant.COUNT_ALIGNMENT_NOT_UNIQUE.value):
+            raise s_value_extraction_exceptions.HTSeqCountFailedException('Invalid htseq-count results')
+        
+    def check_existed_results(self, run):
+        try:
+            filename = self.s_retrieval_results.sra_file_dir + run + self.parameters.count_reads_file_ext
+            with open(filename) as h:
+                output = h.read()
+                self.check_htseq_count_results(output)
+            
+            
+            count_reads_result_run = pd.read_table(filename, index_col = 0, names = [run])
+            count_reads_result_exceptions_run = count_reads_result_run.iloc[-5:]
+            count_reads_result_run = count_reads_result_run.iloc[:-5]
+            self.results.update_count_reads_result(run,count_reads_result_run, count_reads_result_exceptions_run)
+            print('BYPASSED!')
+            return True
+            
+        except Exception as e:
+            raise Exception('!!!')
+            
+                
             
     def complete_data_dependent_metadata(self):
         self.data = None #Fake

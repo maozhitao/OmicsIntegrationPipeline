@@ -6,3 +6,6 @@ class FailedToOutputBEDFile(Exception):
 
 class FailedToOutputGFFFile(Exception):
     pass
+    
+class InvalidIDSelectionInGFFFile(Exception):
+    pass

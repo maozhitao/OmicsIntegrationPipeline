@@ -137,6 +137,9 @@ class SequencingPipeline(s_module_template.SequencingModule):
     def get_s_value_extraction_results(self):
         return self.s_value_extraction.get_results()
         
+    def get_s_sample_mapping_results(self):
+        return self.s_sample_mapping.get_results()
+        
     def get_bowtie2_parameters(self):
         return self.bowtie2_parameters
     

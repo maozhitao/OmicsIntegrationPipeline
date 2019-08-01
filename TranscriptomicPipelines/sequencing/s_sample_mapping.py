@@ -34,7 +34,6 @@ class SequencingSampleMappingResults:
         
     def update_count_reads_matrix(self, count_reads_matrix):
         self.count_reads_matrix = count_reads_matrix
-        print(self.count_reads_matrix)
         
         
 class SequencingSampleMapping(s_module_template.SequencingSubModule):
@@ -122,4 +121,10 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         count_reads_matrix.columns = exps
         
         self.results.update_count_reads_matrix(count_reads_matrix)
+        
+    def get_results(self):
+        return self.results
+        
+    def get_parameters(self):
+        return self.parameters
         

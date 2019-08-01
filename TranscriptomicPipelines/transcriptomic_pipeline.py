@@ -110,4 +110,5 @@ if __name__ == "__main__":
     transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_different_run()
     transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_sample()
     
+    transcriptome_pipeline.sequencing_pipeline.s_gene_mapping.map_gene()
     

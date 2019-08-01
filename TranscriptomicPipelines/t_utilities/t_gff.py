@@ -48,7 +48,7 @@ class BEDHeader(Enum):
     
     
 class GFF3AttributesHeader(Enum):
-    NAME = "Name"
+    NAME = "gene"
     GENESYNONYM = "gene_synonym"
     LOCUSTAG = "locus_tag"
 
@@ -58,12 +58,14 @@ class GeneAnnotation:
                     output_bed : str = 'gene_annotation.bed',
                     output_gff : str = 'gene_annotation.gff',
                     target_type = GFF3Type.CDS.value,
-                    used_id = GFF3AttributesHeader.LOCUSTAG.value):
+                    used_id = GFF3AttributesHeader.LOCUSTAG.value,
+                    gene_name_id = GFF3AttributesHeader.NAME.value):
         self.file_paths = list(set(file_paths)) #Take the unique file list
         self.gff3_data = None
         self.gff3_data_target_type = None
         self.target_type = target_type
         self.used_id = used_id
+        self.gene_name_id = gene_name_id
         
         self.gene_annotation_bed_file = output_bed
         self.gene_annotation_gff_file = output_gff
@@ -80,22 +82,22 @@ class GeneAnnotation:
                 self.gff3_data = pd.read_table(file_path, comment = GFF3Symbol.COMMENT.value, names = [e.name for e in GFF3Header])
             else:
                 cur_data = pd.read_table(file_path, comment = GFF3Symbol.COMMENT.value, names = [e.name for e in GFF3Header])
-                self.gff3_data = pd.concat([self.gff3_data,cur_data])
-        
+                self.gff3_data = pd.concat([self.gff3_data,cur_data],ignore_index = True)
+
     def parse_attributes(self):
-        try:
-            attributes = pd.DataFrame("", index = self.gff3_data.index, columns = [e.name for e in GFF3AttributesHeader])
-            for index, row in self.gff3_data.iterrows():
-                extracted_fields = self.parse_fields(row[GFF3Header.ATTRIBUTES.name],[e.value for e in GFF3AttributesHeader])
-                for e in GFF3AttributesHeader:
-                    attributes[e.name][index] = extracted_fields[e.value]
-                    
-                    
-            self.gff3_data = pd.concat([self.gff3_data,attributes],axis=1)
+        #try:
+        attributes = pd.DataFrame("", index = self.gff3_data.index, columns = [e.name for e in GFF3AttributesHeader])
+        for index, row in self.gff3_data.iterrows():
+            extracted_fields = self.parse_fields(row[GFF3Header.ATTRIBUTES.name],[e.value for e in GFF3AttributesHeader])
+            for e in GFF3AttributesHeader:
+                attributes[e.name][index] = extracted_fields[e.value]
+                
+                
+        self.gff3_data = pd.concat([self.gff3_data,attributes],axis=1)
             
-        except Exception as e:
-            raise t_gff_exceptions.FailedToExtractGFF3Attributes('Failed to extract GFF3 attributes.\n \
-                Make sure this is the GFF3 file from NCBI genome database and the the genome is from RefSeq database.')
+        #except Exception as e:
+        #    raise t_gff_exceptions.FailedToExtractGFF3Attributes('Failed to extract GFF3 attributes.\n \
+        #        Make sure this is the GFF3 file from NCBI genome database and the the genome is from RefSeq database.')
                 
     def parse_fields(self, input:str, patterns:list) -> dict:
         result = {}
@@ -109,12 +111,23 @@ class GeneAnnotation:
                     #A = B: if A is the field we want, return B
                     #No Blank should be left
                     result[pattern] = s2[1].replace(GFF3Symbol.BLANK.value,"")
-                
+            
         return result
         
     def extract_target_type_entries(self):
         idx = self.gff3_data[GFF3Header.TYPE.name] == self.target_type
         self.gff3_data_target_type = self.gff3_data.loc[idx]
+        
+        #Check:
+        possible_id_values = [e.value for e in GFF3AttributesHeader]
+        possible_id_names = [e.name for e in GFF3AttributesHeader]
+        if self.used_id not in possible_id_values:
+            raise t_gff_exceptions.InvalidIDSelectionInGFFFile('You selected a field as an ID, but this field is not annotated in GFF3 attributes')
+            
+        idx = possible_id_values.index(self.used_id)
+        for index, row in self.gff3_data_target_type.iterrows(): 
+            if self.gff3_data_target_type[possible_id_names[idx]][index] == "":
+                raise t_gff_exceptions.InvalidIDSelectionInGFFFile('You selected a field as an ID, but this field have some empty values for some entries')
         
     def output_bed_file(self):
         bed_format_data = pd.DataFrame("", index = self.gff3_data_target_type.index, columns = [e.name for e in BEDHeader])
@@ -175,6 +188,21 @@ class GeneAnnotation:
         
     def get_used_id(self) -> str:
         return self.used_id
+        
+    def get_gene_mapping_table_colname_id(self):
+        possible_id_values = [e.value for e in GFF3AttributesHeader]
+        possible_id_names = [e.name for e in GFF3AttributesHeader]
+        idx = possible_id_values.index(self.used_id)
+        return possible_id_names[idx]
+        
+    def get_gene_mapping_table_colname_gene_name(self):
+        possible_id_values = [e.value for e in GFF3AttributesHeader]
+        possible_id_names = [e.name for e in GFF3AttributesHeader]
+        idx = possible_id_values.index(self.gene_name_id)
+        return possible_id_names[idx]
+        
+    def get_gene_mapping_table(self):
+        return self.gff3_data_target_type[[e.name for e in GFF3AttributesHeader]]
         
         
     
