@@ -139,8 +139,9 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
             idx = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_EXP.value] == exp
             self.mapping_experiment_runs[exp] = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_RUN.value][idx].tolist()
         
-        metadata = self.get_t_metadata()
-        self.set_t_metadata(metadata)
+        metadata = self.get_s_metadata()
+        #Update metadata here :)
+        
         self.results.update_complete_data_independent_metadata(self.mapping_experiment_runs)
         
     def filter_entry(self):

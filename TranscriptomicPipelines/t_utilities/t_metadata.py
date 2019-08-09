@@ -1,6 +1,7 @@
 from . import t_metadata_def
 
 import datetime
+import pandas as pd
 
 class TranscriptomeMetadata:
     def __init__(   self, 
@@ -13,5 +14,6 @@ class TranscriptomeMetadata:
         self.query_date = query_date #A datetime object
         self.query_string = query_string
         self.entries = entries #(A List with entries)
+        self.metadata_table = pd.DataFrame() #Should add the column name
         
     

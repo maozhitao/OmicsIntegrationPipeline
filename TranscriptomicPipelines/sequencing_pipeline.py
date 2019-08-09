@@ -114,8 +114,11 @@ class HTSeqParameters:
             self.dir = self.dir + general_parameters.dir_sep
         
 class SequencingPipeline(s_module_template.SequencingModule):
-    def __init__(self, owner):
+    def __init__(self, owner, s_query_id, s_compendium):
         self.owner = owner
+        
+        self.s_query_id = s_query_id
+        self.s_compendium = s_compendium
         
         self.bowtie2_parameters = Bowtie2Parameters(self)
         self.sratool_parameters = SRAToolkitParameters(self)
@@ -127,6 +130,14 @@ class SequencingPipeline(s_module_template.SequencingModule):
         self.s_sample_mapping = s_sample_mapping.SequencingSampleMapping(self)
         self.s_gene_mapping = s_gene_mapping.SequencingGeneMapping(self)
         
+    def get_s_query_id(self):
+        return self.s_query_id
+        
+    def get_s_metadata(self):
+        return self.s_compendium.get_metadata()
+        
+    def get_s_data(self):
+        return self.s_compendium.get_data()
         
     def get_s_data_retrieval_results(self):
         return self.s_data_retrieval.get_results()

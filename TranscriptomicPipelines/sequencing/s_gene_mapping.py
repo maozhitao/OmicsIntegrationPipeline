@@ -1,5 +1,7 @@
 from . import s_module_template
 
+from . import s_gene_mapping_exceptions
+
 class SequencingGeneMappingParameters:
     def __init__(self, owner, 
                     drop_unnamed_genes = False,
@@ -17,7 +19,6 @@ class SequencingGeneMappingResults:
         
     def update_original_data_matrix(self, original_data_matrix):
         self.original_data_matrix = original_data_matrix
-        print(self.original_data_matrix)
 
 class SequencingGeneMapping(s_module_template.SequencingSubModule):
     def __init__(self, owner):
@@ -32,7 +33,10 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         colname_gene_name = self.owner.get_t_gene_annotation().get_gene_mapping_table_colname_gene_name()
         
         gene_mapping_table_selected = gene_mapping_table[[colname_id,colname_gene_name]]
-        gene_mapping_table_selected.to_csv(self.parameters.gene_mapping_table_path)
+        try:
+            gene_mapping_table_selected.to_csv(self.parameters.gene_mapping_table_path)
+        except Exception as e:
+            raise s_gene_mapping_exceptions.FailedToWriteGeneMappingTable('Failed to write gene mapping table!')
         
         gene_mapping_table_selected_dict = {}
         for index, row in gene_mapping_table_selected.iterrows():
@@ -46,12 +50,19 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         count_reads_matrix.index = indices
         self.results.update_original_data_matrix(count_reads_matrix)
         
-        count_reads_matrix.to_csv(self.parameters.data_matrix_table_path)
+        
+        #Update the compendium part
+        s_data = self.get_s_data()
+        s_data.update_ori_data_matrix(count_reads_matrix, self.parameters.data_matrix_table_path)
+        s_data.output_ori_data_matrix()
+
             
     def find_gene_name(self, index, gene_mapping_table_dict):
         if gene_mapping_table_dict[index] != "":
             return gene_mapping_table_dict[index]
         else:
             return index
+            
+            
         
         

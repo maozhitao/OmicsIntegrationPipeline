@@ -3,7 +3,7 @@ import sequencing_pipeline
 import postprocessing_pipeline
 import validation_pipeline
 
-import t_utilities.t_metadata as t_metadata
+import t_utilities.t_compendium as t_compendium
 import t_utilities.t_gff as t_gff
 
 from enum import Enum 
@@ -54,33 +54,26 @@ class TranscriptomicDataPreparationPipeline:
         self.general_parameters = GeneralParameters() #Temp arrangement, it should be moved to upper layer (OmicsDataPreparationPipeline)
         self.general_parameters.check_os()
                     
-        self.m_query_id = m_query_id
-        self.s_query_id = s_query_id
         #Initialize the metadata table:
         #metadata will be initialized here and it will shared by ALL COMPONENT in this pipeline
-        self.t_metadata = t_metadata.TranscriptomeMetadata()
         #Initialize the gene annotation table:
         self.t_gene_annotation = t_gff.GeneAnnotation(gff_path)
         self.t_gene_annotation.read_file()
+        self.t_compendium_collections = t_compendium.TranscriptomeCompendiumCollections()
         
-        
-        self.microarray_pipeline = microarray_pipeline.MicroarrayPipeline(self)
-        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(self)
+        self.microarray_pipeline = microarray_pipeline.MicroarrayPipeline(self, m_query_id, t_compendium.TranscriptomeCompendium())
+        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(self, s_query_id, t_compendium.TranscriptomeCompendium())
         self.postprocessing_pipeline = postprocessing_pipeline.PostprocessingPipeline(self)
         self.validation_pipeline = validation_pipeline.ValidationPipeline(self)
         
-    
-    def get_m_query_id(self):
-        return self.m_query_id
+    def get_t_compendium_collections(self):
+        return self.t_compendium_collections
         
-    def get_s_query_id(self):
-        return self.s_query_id
+    def get_m_compendium(self):
+        return self.microarray_pipeline.m_compendium
         
-    def get_t_metadata(self):
-        return self.t_metadata
-        
-    def set_t_metadata(self,metadata):
-        self.t_metadata = metadata
+    def get_s_compendium(self):
+        return self.sequencing_pipeline.s_compendium
         
     def get_t_gene_annotation(self):
         return self.t_gene_annotation
@@ -109,6 +102,7 @@ if __name__ == "__main__":
     
     transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_different_run()
     transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_sample()
-    
     transcriptome_pipeline.sequencing_pipeline.s_gene_mapping.map_gene()
+
+    transcriptome_pipeline.postprocessing_pipeline.data_concatenation.concat_compendium()
     
