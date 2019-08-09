@@ -135,12 +135,28 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
         #Note: You should manage the experiment - run mapping information
         self.mapping_experiment_runs = {}
         experiments = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_EXP.value].tolist()
+        
+        metadata = self.get_s_metadata()
         for exp in experiments:
             idx = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_EXP.value] == exp
             self.mapping_experiment_runs[exp] = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_RUN.value][idx].tolist()
         
-        metadata = self.get_s_metadata()
-        #Update metadata here :)
+        
+        
+        
+        for ... self.sra_run_info:
+        
+            #Update metadata here :)
+            new_entry = metadata.new_entry()
+            
+            if ... 
+            new_entry.get_sample_id().set_SRA_source_type
+            ...
+            
+            
+            
+            metadata.add_entry(new_entry)
+            
         
         self.results.update_complete_data_independent_metadata(self.mapping_experiment_runs)
         
