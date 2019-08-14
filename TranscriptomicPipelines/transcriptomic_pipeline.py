@@ -90,19 +90,8 @@ if __name__ == "__main__":
     transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],['SRX5961261','SRX3266939'],['../TestFiles/LT2_pSLT.gff3','../TestFiles/LT2.gff3'])
     
     #Start Working
-    transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.download_metadata()
-    transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.complete_data_independent_metadata()
-    transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.filter_entry()
-    transcriptome_pipeline.sequencing_pipeline.s_data_retrieval.download_data()
+    transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline()
     
-    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.prepare_data()
-    #transcriptome_pipeline.sequencing_pipeline.s_value_extraction.align_data()
-    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.infer_stranded_information()
-    transcriptome_pipeline.sequencing_pipeline.s_value_extraction.count_reads()
-    
-    transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_different_run()
-    transcriptome_pipeline.sequencing_pipeline.s_sample_mapping.merge_sample()
-    transcriptome_pipeline.sequencing_pipeline.s_gene_mapping.map_gene()
 
     transcriptome_pipeline.postprocessing_pipeline.data_concatenation.concat_compendium()
     

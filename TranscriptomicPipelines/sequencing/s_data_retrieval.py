@@ -88,6 +88,9 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
         self.sra_run_info = None
         self.mapping_experiment_runs = None
         
+        self.workers = {}
+        
+        
     def get_parameters(self):
         return self.parameters
         
@@ -142,34 +145,62 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
             self.mapping_experiment_runs[exp] = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_RUN.value][idx].tolist()
         
         self.results.update_complete_data_independent_metadata(self.mapping_experiment_runs)
+        self.results.update_download_data(self.parameters.sra_file_dir)
         
     def filter_entry(self):
         self.data = None #Fake
+        
+    def prepare_workers(self):
+        for exp in self.mapping_experiment_runs:
+            for run in self.mapping_experiment_runs[exp]:
+                self.workers[run] = prepare_worker(run)
+        
+    def prepare_worker(self, run):
+        download_data_command = self.parameters.get_sratool_prefetch_command(run)
+        check_data_command = self.parameters.get_sratool_vdb_validate_command(run)
+        general_parameters = self.get_general_parameters()
+        general_constant = self.get_general_constant()
+        worker = SequencingRetrievalWorker(run, download_data_command, check_data_command, general_parameters, general_constant)
+        return worker
         
     def download_data(self):
         #For each entry in metadata table, download each run
         for exp in self.mapping_experiment_runs:
             for run in self.mapping_experiment_runs[exp]:
-                if self.check_data(run) == False:
-                    command = self.parameters.get_sratool_prefetch_command(run)
-                    subprocess.run(command, stdout=subprocess.PIPE, shell = self.get_general_parameters().use_shell)
-                    
-                    if self.check_data(run) == False:
-                        raise s_data_retrieval_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + run)
-                        
-        self.results.update_download_data(self.parameters.sra_file_dir)
+                self.workers[run].download_data_run_independent()
                 
-    def check_data(self, sra_run_id):
-        command = self.parameters.get_sratool_vdb_validate_command(sra_run_id)
+                        
+        #self.results.update_download_data(self.parameters.sra_file_dir)
+        
+    
+        
+
+class SequencingRetrievalWorker:
+    def __init__(self, run, download_data_command, check_data_command, general_parameters, general_constant):
+        self.run = run
+        self.download_data_command = download_data_command
+        self.check_data_command = check_data_command
+        self.general_parameters = general_parameters
+        self.general_constant = general_constant
+        
+    def run(self):
+        self.download_data_run_independent()
+        
+    def download_data_run_independent(self):
+        if self.check_data_independent() == False:
+            subprocess.run(self.download_data_command, stdout=subprocess.PIPE, shell = self.general_parameters.use_shell)
+            if self.check_data_independent() == False:
+                raise s_data_retrieval_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + run)
+                
+    def check_data_independent(self):
         try:
-            binary_result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell = self.get_general_parameters().use_shell)
+            binary_result = subprocess.check_output(self.check_data_command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
         except subprocess.CalledProcessError as e:
             return False
-        result = binary_result.decode(self.get_general_constant().CODEC.value)
+        result = binary_result.decode(general_constant.CODEC.value)
         result = result.split(SequencingRetrievalConstant.SPACE.value)
         result = result[-1].replace(SequencingRetrievalConstant.NEWLINE.value,"")
         if result == SequencingRetrievalConstant.SRA_RESULT_OK.value:
             return True
         else:
             return False
-        
