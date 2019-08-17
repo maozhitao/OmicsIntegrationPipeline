@@ -3,8 +3,14 @@ import sequencing_pipeline
 import postprocessing_pipeline
 import validation_pipeline
 
-import t_utilities.t_compendium as t_compendium
-import t_utilities.t_gff as t_gff
+import sys
+if (sys.version_info < (3, 0)):
+    sys.path.insert(0, "t_utilities")
+    import t_compendium
+    import t_gff
+else:
+    import t_utilities.t_compendium as t_compendium
+    import t_utilities.t_gff as t_gff
 
 from enum import Enum 
 import sys
@@ -43,9 +49,9 @@ class GeneralParameters:
 
 class TranscriptomicDataPreparationPipeline:
     def __init__(   self,
-                    m_query_id : list,
-                    s_query_id : list,
-                    gff_path : list, #GFF3 Table Paths
+                    m_query_id,
+                    s_query_id,
+                    gff_path, #GFF3 Table Paths
                     owner = None
                     ):
                     
@@ -91,7 +97,6 @@ if __name__ == "__main__":
     
     #Start Working
     transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline()
-    
 
     transcriptome_pipeline.postprocessing_pipeline.data_concatenation.concat_compendium()
     

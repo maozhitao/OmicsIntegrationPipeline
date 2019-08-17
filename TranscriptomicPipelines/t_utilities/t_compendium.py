@@ -1,6 +1,12 @@
-from . import t_metadata
-from . import t_data
-from . import t_compendium_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import t_metadata
+    import t_data
+    import t_compendium_exceptions
+else:
+    from . import t_metadata
+    from . import t_data
+    from . import t_compendium_exceptions
 
 class TranscriptomeCompendium:
     def __init__(self):

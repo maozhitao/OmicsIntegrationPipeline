@@ -1,4 +1,8 @@
-from . import t_data_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import t_data_exceptions
+else:
+    from . import t_data_exceptions
 
 class TranscriptomeData:
     def __init__(self,test = ""):

@@ -4,8 +4,13 @@ from enum import Enum
 import pandas as pd
 import subprocess
 
-from . import s_module_template
-from . import s_data_retrieval_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import s_module_template
+    import s_data_retrieval_exceptions
+else:
+    from . import s_module_template
+    from . import s_data_retrieval_exceptions
 
 class SequencingRetrievalConstant(Enum):
     SRADB           = "sra"
@@ -27,9 +32,9 @@ class SequencingRetrievalConstant(Enum):
 
 class SequencingRetrievalParameters:
     def __init__(   self, owner,
-                    entrez_mail : str = 'cetan@ucdavis.edu',
-                    fasta_path : str = 'merged.fasta',
-                    sra_file_dir : str = '.'):
+                    entrez_mail = 'cetan@ucdavis.edu',
+                    fasta_path = 'merged.fasta',
+                    sra_file_dir = '.'):
         self.owner = owner
         self.entrez_mail = entrez_mail
         self.fasta_path = fasta_path
@@ -42,7 +47,7 @@ class SequencingRetrievalParameters:
         if not self.sra_file_dir.endswith(general_parameters.dir_sep):
             self.sra_file_dir = self.sra_file_dir + general_parameters.dir_sep
     
-    def get_sratool_prefetch_command(self, sra_run_id : str = ''):
+    def get_sratool_prefetch_command(self, sra_run_id = ''):
         sratool_parameters = self.owner.get_sratool_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -53,7 +58,7 @@ class SequencingRetrievalParameters:
         command = [executive_path, sra_run_id, output_par, output_file_name]
         return(command)
         
-    def get_sratool_vdb_validate_command(self, sra_run_id: str = ''):
+    def get_sratool_vdb_validate_command(self, sra_run_id = ''):
         sratool_parameters = self.owner.get_sratool_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -118,8 +123,6 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
                 self.sra_run_info = pd.concat([self.sra_run_info, df])
             handle.close()
             
-        print(self.sra_run_info)
-            
     def download_fasta(self):
         Entrez.mail = self.parameters.entrez_mail
         genome_id = self.get_t_gene_annotation().get_genome_id()
@@ -153,7 +156,7 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
     def prepare_workers(self):
         for exp in self.mapping_experiment_runs:
             for run in self.mapping_experiment_runs[exp]:
-                self.workers[run] = prepare_worker(run)
+                self.workers[run] = self.prepare_worker(run)
         
     def prepare_worker(self, run):
         download_data_command = self.parameters.get_sratool_prefetch_command(run)
@@ -183,21 +186,22 @@ class SequencingRetrievalWorker:
         self.general_parameters = general_parameters
         self.general_constant = general_constant
         
-    def run(self):
+    def do_run(self):
         self.download_data_run_independent()
         
     def download_data_run_independent(self):
         if self.check_data_independent() == False:
-            subprocess.run(self.download_data_command, stdout=subprocess.PIPE, shell = self.general_parameters.use_shell)
+            print(self.download_data_command)
+            subprocess.call(self.download_data_command, stdout=subprocess.PIPE, shell = self.general_parameters.use_shell)
             if self.check_data_independent() == False:
-                raise s_data_retrieval_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + run)
+                raise s_data_retrieval_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + self.run)
                 
     def check_data_independent(self):
         try:
             binary_result = subprocess.check_output(self.check_data_command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
         except subprocess.CalledProcessError as e:
             return False
-        result = binary_result.decode(general_constant.CODEC.value)
+        result = binary_result.decode(self.general_constant.CODEC.value)
         result = result.split(SequencingRetrievalConstant.SPACE.value)
         result = result[-1].replace(SequencingRetrievalConstant.NEWLINE.value,"")
         if result == SequencingRetrievalConstant.SRA_RESULT_OK.value:

@@ -1,15 +1,22 @@
-from . import s_module_template
-from enum import Enum, auto
+import sys
+if (sys.version_info < (3, 0)):
+    import s_module_template
+    import s_sample_mapping_exceptions
+else:
+    from . import s_module_template
+    from . import s_sample_mapping_exceptions
 
-from . import s_sample_mapping_exceptions
+from enum import Enum
+
+
 import random
 import pandas as pd
 
 class DifferentRunMergeMode(Enum):
-    DROP_EXPERIMENT = auto()
-    RANDOM_RUN      = auto()
-    SPECIFIED_RUN   = auto()
-    AVERAGE         = auto()
+    DROP_EXPERIMENT = "drop"
+    RANDOM_RUN      = "random"
+    SPECIFIED_RUN   = "specified"
+    AVERAGE         = "average"
 
 
 class SequencingSampleMappingParameters:
@@ -25,6 +32,8 @@ class SequencingSampleMappingResults:
         self.merged_count_reads_result = {}
         self.mapping_experiment_runs_after_merge = {}
         self.count_reads_matrix = None
+        self.done = False
+        self.exception = None
         
     def update_mapping_experiment_runs_after_merge(self, exp, runs):
         self.mapping_experiment_runs_after_merge[exp] = runs
@@ -49,9 +58,9 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
     def prepare_workers(self, count_reads_result_2D = None):
         for exp in self.s_retrieval_results.mapping_experiment_runs:
             if count_reads_result_2D == None:
-                worker[exp] = prepare_worker(exp)
+                self.workers[exp] = self.prepare_worker(exp)
             else:
-                worker[exp] = prepare_worker(exp, count_reads_result_2D[exp])
+                self.workers[exp] = self.prepare_worker(exp, count_reads_result_2D[exp])
             
     def prepare_worker(self, exp, count_reads_result = None):
         different_run_merge_mode = self.parameters.different_run_merge_mode
@@ -96,26 +105,26 @@ class SequencingSampleMappingWorker:
         self.count_reads_result = count_reads_result
         self.specified_mapping_experiment_runs = specified_mapping_experiment_runs
         
-        self.result = SequencingSampleMappingResults()
+        self.results = SequencingSampleMappingResults()
         
-    def run(self):
+    def do_run(self):
         self.merge_different_run_exp()
         
     def merge_different_run_exp(self):
         if self.different_run_merge_mode == DifferentRunMergeMode.DROP_EXPERIMENT.value:
-            self.merge_different_run_drop_experiment_exp(self.exp)
+            self.merge_different_run_drop_experiment_exp()
         elif self.different_run_merge_mode == DifferentRunMergeMode.RANDOM_RUN.value:
-            self.merge_different_run_random_run_exp(self.exp)
+            self.merge_different_run_random_run_exp()
         elif self.different_run_merge_mode == DifferentRunMergeMode.SPECIFIED_RUN.value:
-            self.merge_different_run_specified_run_exp(self.exp)
+            self.merge_different_run_specified_run_exp()
         elif self.different_run_merge_mode == DifferentRunMergeMode.AVERAGE.value:
-            self.merge_different_run_average_exp(self.exp)
+            self.merge_different_run_average_exp()
         else:
             raise s_sample_mapping_exceptions.InvalidDifferentRunMergeMode('Invalid different run merge mode!')
             
     def merge_different_run_drop_experiment_exp(self):
         if len(self.mapping_experiment_runs[self.exp]) > 1:
-            continue
+            return
         else:
             run = self.mapping_experiment_runs[self.exp][0]
             merged_count_reads_result = self.count_reads_result[run]

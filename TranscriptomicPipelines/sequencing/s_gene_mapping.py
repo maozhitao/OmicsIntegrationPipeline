@@ -1,12 +1,16 @@
-from . import s_module_template
-
-from . import s_gene_mapping_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import s_module_template
+    import s_gene_mapping_exceptions
+else:
+    from . import s_module_template
+    from . import s_gene_mapping_exceptions
 
 class SequencingGeneMappingParameters:
     def __init__(self, owner, 
                     drop_unnamed_genes = False,
-                    data_matrix_table_path : str = 'SequencingDataMatrix.csv',
-                    gene_mapping_table_path : str = 'SequencingGeneMappingTable.csv'
+                    data_matrix_table_path = 'SequencingDataMatrix.csv',
+                    gene_mapping_table_path = 'SequencingGeneMappingTable.csv'
                 ):
         self.owner = owner
         self.drop_unnamed_genes = drop_unnamed_genes

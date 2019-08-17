@@ -1,11 +1,24 @@
-import sequencing.s_data_retrieval as s_data_retrieval
-import sequencing.s_value_extraction as s_value_extraction
-import sequencing.s_sample_mapping as s_sample_mapping
-import sequencing.s_gene_mapping as s_gene_mapping
-import sequencing.s_module_template as s_module_template
+import sys
+if (sys.version_info < (3, 0)):
+    # Python 2 code in this block
+    sys.path.insert(0, "sequencing")
+    import s_data_retrieval
+    import s_value_extraction
+    import s_sample_mapping
+    import s_gene_mapping
+    import s_module_template
+else:
+    # Python 3
+    import sequencing.s_data_retrieval as s_data_retrieval
+    import sequencing.s_value_extraction as s_value_extraction
+    import sequencing.s_sample_mapping as s_sample_mapping
+    import sequencing.s_gene_mapping as s_gene_mapping
+    import sequencing.s_module_template as s_module_template
 
 import pickle
 import subprocess
+
+import time
 
 from enum import Enum
 class ParallelOptions(Enum):
@@ -127,9 +140,9 @@ class SequencingPipelineParallelParameters:
         self.owner = owner
         self.parallel_mode = ParallelOptions.LOCAL.value
         self.n_processes_local = 2
-        self.pyscripts_get_read_counts = 'scripts_get_read_counts_run.py'
-        self.pyscripts_merge_runs = 'scripts_merge_runs.py'
-        self.parameters_SLURM = SequencingPipelineParallelParameters_SLURM()
+        self.pyscripts_get_read_counts = 'script_get_read_counts_run.py'
+        self.pyscripts_merge_runs = 'script_merge_runs.py'
+        self.parameters_SLURM = SequencingPipelineParallelParameters_SLURM(self)
         
     def prepare_worker_file_s_data_retrieval(self, run, worker):
         pickle.dump(worker, open(self.get_worker_file_s_data_retrieval(run), 'wb'))
@@ -138,7 +151,7 @@ class SequencingPipelineParallelParameters:
     def get_worker_file_s_data_retrieval(self, run):
         return 'worker_s_data_retrieval_' + str(run) + '.dat'
     def get_worker_file_s_value_extraction(self, run):
-        return 'worker_s_value_extraction_' + str(run) + 'dat'
+        return 'worker_s_value_extraction_' + str(run) + '.dat'
     def get_results_file_get_read_counts(self, run):
         return 'results_get_read_counts_' + str(run) + '.dat'
     def get_results_get_read_counts(self, run):
@@ -147,7 +160,7 @@ class SequencingPipelineParallelParameters:
     def prepare_worker_file_s_sample_mapping(self, exp, worker):
         pickle.dump(worker, open(self.get_worker_file_s_sample_mapping(exp), 'wb'))
     def get_worker_file_s_sample_mapping(self, exp):
-        return 'worker_s_sample_mapping_' + str(exp) + 'dat'
+        return 'worker_s_sample_mapping_' + str(exp) + '.dat'
     def get_results_file_merge_runs(self, exp):
         return 'results_merge_runs_' + str(exp) + '.dat'
     def get_results_merge_runs(self, exp):
@@ -176,7 +189,7 @@ class SequencingPipelineParallelParameters:
         
     def get_merge_runs_command(self, exp):
         python_path = 'python'
-        script_path = self.get_pyscripts_get_read_counts()
+        script_path = self.get_pyscripts_merge_runs()
         sample_mapping_worker_path = self.get_worker_file_s_sample_mapping(exp)
         result_path = self.get_results_file_merge_runs(exp)
         
@@ -268,7 +281,7 @@ class SequencingPipelineParallelParameters_SLURM:
         par_time_limit = self.par_time_limit
         time_limit = str(self.time_limit_hr) + ":" + (format(self.time_limit_min,'02')) + ":00"
         par_job_name = self.par_job_name
-        job_name = 'merge_runs' + '_' + str(run)
+        job_name = 'merge_runs' + '_' + str(exp)
         par_output = self.par_output
         output_file = job_name + self.output_ext
         par_error = self.par_error
@@ -308,39 +321,16 @@ class SequencingPipeline(s_module_template.SequencingModule):
         self.s_data_retrieval.prepare_workers()
         self.s_value_extraction.prepare_workers()
         
-        #Runs
-        self.s_data_retrieval.download_data()
-        self.s_value_extraction.prepare_fastq_file()
-        self.s_value_extraction.align_data()
-        self.s_value_extraction.infer_stranded_information()
-        self.s_value_extraction.count_reads()
-        
-        #Exps
-        self.s_sample_mapping.merge_different_run()
-        
-        #Entire Matrix
-        self.s_sample_mapping.merge_sample()
-        self.s_gene_mapping.map_gene()
-        
-    def run_sequencing_pipeline_parallel(self):
-        self.s_data_retrieval.download_metadata()
-        self.s_data_retrieval.complete_data_independent_metadata()
-        self.s_data_retrieval.filter_entry()
-        
-        self.s_value_extraction.prepare_gene_annotation()
-        
-        self.s_data_retrieval.prepare_workers()
-        self.s_value_extraction.prepare_workers()
-        
         mapping_experiment_runs = self.s_data_retrieval.results.mapping_experiment_runs
         if self.parallel_parameters.parallel_mode == ParallelOptions.NONE.value:
             for exp in mapping_experiment_runs:
                 for run in mapping_experiment_runs[exp]:
-                    self.s_data_retrieval.workers[run].run()
-                    self.s_value_extraction.workers[run].run()
+                    self.s_data_retrieval.workers[run].do_run()
+                    self.s_value_extraction.workers[run].do_run()
             #JOIN
             count_reads_result_2D = {}
             for exp in mapping_experiment_runs:
+                count_reads_result_2D[exp] = {}
                 for run in mapping_experiment_runs[exp]:
                     cur_run_results = self.s_value_extraction.workers[run].results
                     count_reads_result_2D[exp][run] = cur_run_results.count_reads_result[run]
@@ -348,7 +338,7 @@ class SequencingPipeline(s_module_template.SequencingModule):
                     #Update the current results
                     self.s_value_extraction.results.update_alignment_rate(run, cur_run_results.alignment_rate[run])
                     self.s_value_extraction.results.update_infer_experiment_result(run, cur_run_results.infer_experiment_result[run])
-                    self.s_value_extraction.results.update_count_reads_result(run, cur_run_results.count_reads_result[run], cur_run_results_exceptions[run])
+                    self.s_value_extraction.results.update_count_reads_result(run, cur_run_results.count_reads_result[run], cur_run_results.count_reads_result_exceptions[run])
                     
         elif self.parallel_parameters.parallel_mode == ParallelOptions.LOCAL.value:
             runs = []
@@ -356,22 +346,27 @@ class SequencingPipeline(s_module_template.SequencingModule):
                 for run in mapping_experiment_runs[exp]:
                     runs.append(run)
             
-            obj_Popen = [None]*self.parameters.n_processes_local
+            obj_Popen = [None]*self.parallel_parameters.n_processes_local
             next_run_idx = 0
-            while next_run_idx < len(runs):
+            while True:
                 finish = True
-                for i in range(self.parameters.n_processes_local):
+                for i in range(self.parallel_parameters.n_processes_local):
                     if obj_Popen[i] is not None:
                         if obj_Popen[i].poll() is None:
                             #Working
                             finish = False
                             continue
+                        else:
+                            #Join the zombie process
+                            obj_Popen[i].wait()
+                            obj_Popen[i] = None
                             
                     if next_run_idx < len(runs):
+                        #New job has to be assigned
                         run = runs[next_run_idx]
-                        self.parameters.prepare_worker_file_s_data_retrieval(run, self.s_data_retrieval.workers[run])
-                        self.parameters.prepare_worker_file_s_value_extraction(run, self.s_value_extraction.workers[run])
-                        command = self.parameters.get_read_counts_command(run)
+                        self.parallel_parameters.prepare_worker_file_s_data_retrieval(run, self.s_data_retrieval.workers[run])
+                        self.parallel_parameters.prepare_worker_file_s_value_extraction(run, self.s_value_extraction.workers[run])
+                        command = self.parallel_parameters.get_read_counts_command(run)
                         obj_Popen[i] = subprocess.Popen(command)
                         next_run_idx = next_run_idx + 1
                         finish = False
@@ -387,13 +382,62 @@ class SequencingPipeline(s_module_template.SequencingModule):
                     count_reads_result_2D[exp][run] = cur_run_results.count_reads_result[run]
                     
                     #Update the current results
-                    self.s_value_extraction.results.update_alignment_rate(run, cur_run_results.alignment_rate[run])
+                    #self.s_value_extraction.results.update_alignment_rate(run, cur_run_results.alignment_rate[run])
                     self.s_value_extraction.results.update_infer_experiment_result(run, cur_run_results.infer_experiment_result[run])
-                    self.s_value_extraction.results.update_count_reads_result(run, cur_run_results.count_reads_result[run], cur_run_results_exceptions[run])
+                    self.s_value_extraction.results.update_count_reads_result(run, cur_run_results.count_reads_result[run], cur_run_results.count_reads_result_exceptions[run])
         
             #Now the s_value_extraction.results is the same as the outcome as in serial mode!
+            
+            
         elif self.parallel_parameters.parallel_mode == ParallelOptions.SLURM.value:
-            pass
+            runs = []
+            for exp in mapping_experiment_runs:
+                for run in mapping_experiment_runs[exp]:
+                    runs.append(run)
+            
+            #Submit the jobs
+            for run in runs:
+                #Worker
+                self.parallel_parameters.prepare_worker_file_s_data_retrieval(run, self.s_data_retrieval.workers[run])
+                self.parallel_parameters.prepare_worker_file_s_value_extraction(run, self.s_value_extraction.workers[run])
+                #Shell
+                self.parallel_parameters.parameters_SLURM.prepare_shell_file_read_counts_command(run)
+                #Sbatch command
+                command = self.parallel_parameters.parameters_SLURM.get_read_counts_command_sbatch(run)
+                #Submit
+                subprocess.call(command)
+                    
+            #Polling
+            finish = False
+            while finish == False:
+                time.sleep(1)
+                finish = True
+                for run in runs:
+                    try:
+                        cur_run_results = self.parallel_parameters.get_results_get_read_counts(run)
+                    except Exception as e:
+                        finish = False
+                        break
+                    
+                    if cur_run_results.done == False:
+                        finish = False
+                        break
+
+            #JOIN
+            count_reads_result_2D = {}
+            for exp in mapping_experiment_runs:
+                count_reads_result_2D[exp] = {}
+                for run in mapping_experiment_runs[exp]:
+                    cur_run_results = self.parallel_parameters.get_results_get_read_counts(run)
+                    count_reads_result_2D[exp][run] = cur_run_results.count_reads_result[run]
+                    
+                    #Update the current results
+                    #self.s_value_extraction.results.update_alignment_rate(run, cur_run_results.alignment_rate[run])
+                    self.s_value_extraction.results.update_infer_experiment_result(run, cur_run_results.infer_experiment_result[run])
+                    self.s_value_extraction.results.update_count_reads_result(run, cur_run_results.count_reads_result[run], cur_run_results.count_reads_result_exceptions[run])
+                
+                    
+            
                 
        
         self.s_sample_mapping.prepare_workers(count_reads_result_2D)
@@ -403,15 +447,15 @@ class SequencingPipeline(s_module_template.SequencingModule):
         #START PARALLEL
         if self.parallel_parameters.parallel_mode == ParallelOptions.NONE.value:
             for exp in mapping_experiment_runs:
-                self.s_sample_mapping.workers[exp].run()
+                self.s_sample_mapping.workers[exp].do_run()
             #JOIN
             for exp in mapping_experiment_runs:
-                cur_exp_results = self.s_sample_mapping.workers[run].results
+                cur_exp_results = self.s_sample_mapping.workers[exp].results
                 
                 #Update the current results
                 if cur_exp_results.mapping_experiment_runs_after_merge != {}:
                     self.s_sample_mapping.results.update_mapping_experiment_runs_after_merge(exp, cur_exp_results.mapping_experiment_runs_after_merge[exp])
-                if cur_exp_results.merged_count_reads_result != {}
+                if cur_exp_results.merged_count_reads_result != {}:
                     self.s_sample_mapping.results.update_merged_count_reads_result(exp, cur_exp_results.merged_count_reads_result[exp])
                     
         elif self.parallel_parameters.parallel_mode == ParallelOptions.LOCAL.value:
@@ -419,23 +463,28 @@ class SequencingPipeline(s_module_template.SequencingModule):
             for exp in mapping_experiment_runs:
                 exps.append(exp)
             
-            obj_Popen = [None]*self.parameters.n_processes_local
+            obj_Popen = [None]*self.parallel_parameters.n_processes_local
             next_exp_idx = 0
-            while next_exp_idx < len(exps):
+            while True:
                 finish = True
-                for i in range(self.parameters.n_processes_local):
+                for i in range(self.parallel_parameters.n_processes_local):
                     if obj_Popen[i] is not None:
                         if obj_Popen[i].poll() is None:
                             #Working
                             finish = False
                             continue
+                        else:
+                            #Join the zombie process
+                            obj_Popen[i].wait()
+                            obj_Popen[i] = None
                     
                     if next_exp_idx < len(exps):
+                        #New job has to be assigned
                         exp = exps[next_exp_idx]
-                        self.parameters.prepare_worker_file_s_sample_mapping(exp, self.s_sample_mapping.workers[exp])
-                        command = self.parameters.get_merge_runs_command(run)
+                        self.parallel_parameters.prepare_worker_file_s_sample_mapping(exp, self.s_sample_mapping.workers[exp])
+                        command = self.parallel_parameters.get_merge_runs_command(exp)
                         obj_Popen[i] = subprocess.Popen(command)
-                        next_run_idx = next_run_idx + 1
+                        next_exp_idx = next_exp_idx + 1
                         finish = False
                     
                 if finish == True:
@@ -447,14 +496,52 @@ class SequencingPipeline(s_module_template.SequencingModule):
                 #Update the current results
                 if cur_exp_results.mapping_experiment_runs_after_merge != {}:
                     self.s_sample_mapping.results.update_mapping_experiment_runs_after_merge(exp, cur_exp_results.mapping_experiment_runs_after_merge[exp])
-                if cur_exp_results.merged_count_reads_result != {}
+                if cur_exp_results.merged_count_reads_result != {}:
                     self.s_sample_mapping.results.update_merged_count_reads_result(exp, cur_exp_results.merged_count_reads_result[exp])
                     
         elif self.parallel_parameters.parallel_mode == ParallelOptions.SLURM.value:
-            pass
+            exps = []
+            for exp in mapping_experiment_runs:
+                exps.append(exp)
         
+            #Submit the jobs
+            for exp in exps:
+                #Worker
+                self.parallel_parameters.prepare_worker_file_s_sample_mapping(exp, self.s_sample_mapping.workers[exp])
+                #Shell
+                self.parallel_parameters.parameters_SLURM.prepare_shell_file_merge_runs_command(exp)
+                #Sbatch command
+                command = self.parallel_parameters.parameters_SLURM.get_merge_runs_command_sbatch(exp)
+                #Submit
+                subprocess.call(command)
+
+            #Polling
+            finish = False
+            while finish == False:
+                time.sleep(1)
+                finish = True
+                for exp in exps:
+                    try:
+                        cur_exp_results = self.parallel_parameters.get_results_merge_runs(exp)
+                    except Exception as e:
+                        finish = False
+                        break
+                    
+                    if cur_exp_results.done == False:
+                        finish = False
+                        break
+                        
+            #JOIN
+            for exp in mapping_experiment_runs:
+                
+                cur_exp_results = self.parallel_parameters.get_results_merge_runs(exp)
+                #Update the current results
+                if cur_exp_results.mapping_experiment_runs_after_merge != {}:
+                    self.s_sample_mapping.results.update_mapping_experiment_runs_after_merge(exp, cur_exp_results.mapping_experiment_runs_after_merge[exp])
+                if cur_exp_results.merged_count_reads_result != {}:
+                    self.s_sample_mapping.results.update_merged_count_reads_result(exp, cur_exp_results.merged_count_reads_result[exp])
         
-        
+            
         
         #Now the thing are the same as serial now :)
         self.s_sample_mapping.merge_sample()

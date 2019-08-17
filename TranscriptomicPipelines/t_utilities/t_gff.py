@@ -1,15 +1,17 @@
 #Parse GFF3 Files
 #Only for valid GFF3 files only (from RefSeq), rejected if the gff3 is invalid
 import pandas as pd
-from enum import Enum, auto
+from enum import Enum
 
-from . import t_gff_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import t_gff_exceptions
+else:
+    from . import t_gff_exceptions
 
 class GeneAnnotationConstants(Enum):
     SEP = '\t'
     
-
-
 class GFF3Symbol(Enum):
     COMMENT = "#"
     EQUAL = "="
@@ -17,15 +19,16 @@ class GFF3Symbol(Enum):
     BLANK = " "
 
 class GFF3Header(Enum):
-    SEQID = auto()
-    SOURCE = auto()
-    TYPE = auto()
-    START = auto()
-    END = auto()
-    SCORE = auto()
-    STRAND = auto()
-    PHASE = auto()
-    ATTRIBUTES = auto()
+    __order__ = 'SEQID SOURCE TYPE START END SCORE STRAND PHASE ATTRIBUTES'
+    SEQID = "SEQID"
+    SOURCE = "SOURCE"
+    TYPE = "TYPE"
+    START = "START"
+    END = "END"
+    SCORE = "SCORE"
+    STRAND = "STRAND"
+    PHASE = "PHASE"
+    ATTRIBUTES = "ATTRIBUTES"
     
 class GFF3Type(Enum):
     GENE = "gene"
@@ -33,18 +36,19 @@ class GFF3Type(Enum):
     SEQUENCE = "sequence"
     
 class BEDHeader(Enum):
+    __order__ = 'CHROMOSOME START STOP ID SCORE STRAND SOURCE TYPE PHASE ATTRIBUTES'
     #UCSC BED6 FORMAT
-    CHROMOSOME  = auto() #->SEQID in GFF3
-    START       = auto() #->START in GFF3
-    STOP        = auto() #->END in GFF3
-    ID          = auto() #->ATTRIBUTES.LOCUSTAG in GFF3
-    SCORE       = auto() #->SCORE in GFF3
-    STRAND      = auto() #->STRAND in GFF3
+    CHROMOSOME  = "CHROMOSOME" #->SEQID in GFF3
+    START       = "START" #->START in GFF3
+    STOP        = "STOP" #->END in GFF3
+    ID          = "ID" #->ATTRIBUTES.LOCUSTAG in GFF3
+    SCORE       = "SCORE" #->SCORE in GFF3
+    STRAND      = "STRAND" #->STRAND in GFF3
     #The remaining part is the same as GFF3
-    SOURCE      = auto()
-    TYPE        = auto()
-    PHASE       = auto()
-    ATTRIBUTES = auto()
+    SOURCE      = "SOURCE"
+    TYPE        = "TYPE"
+    PHASE       = "PHASE"
+    ATTRIBUTES = "ATTRIBUTES"
     
     
 class GFF3AttributesHeader(Enum):
@@ -54,9 +58,9 @@ class GFF3AttributesHeader(Enum):
 
 class GeneAnnotation:
     def __init__(   self, 
-                    file_paths : list = [],
-                    output_bed : str = 'gene_annotation.bed',
-                    output_gff : str = 'gene_annotation.gff',
+                    file_paths = [],
+                    output_bed = 'gene_annotation.bed',
+                    output_gff = 'gene_annotation.gff',
                     target_type = GFF3Type.CDS.value,
                     used_id = GFF3AttributesHeader.LOCUSTAG.value,
                     gene_name_id = GFF3AttributesHeader.NAME.value):
@@ -94,12 +98,12 @@ class GeneAnnotation:
                 
                 
         self.gff3_data = pd.concat([self.gff3_data,attributes],axis=1)
-            
+        
         #except Exception as e:
         #    raise t_gff_exceptions.FailedToExtractGFF3Attributes('Failed to extract GFF3 attributes.\n \
         #        Make sure this is the GFF3 file from NCBI genome database and the the genome is from RefSeq database.')
                 
-    def parse_fields(self, input:str, patterns:list) -> dict:
+    def parse_fields(self, input, patterns):
         result = {}
         for pattern in patterns:
             result[pattern] = ""
@@ -174,19 +178,19 @@ class GeneAnnotation:
             raise t_gff_exceptions.FailedToOutputGFFFile('Failed to generate gene annotation file in GFF format')
             
             
-    def get_genome_id(self) -> list:
+    def get_genome_id(self):
         return list(set(list(self.gff3_data[GFF3Header.SEQID.name])))
         
-    def get_bed_file_path(self) -> str:
+    def get_bed_file_path(self):
         return self.gene_annotation_bed_file
         
-    def get_gff_file_path(self) -> str:
+    def get_gff_file_path(self):
         return self.gene_annotation_gff_file
         
-    def get_target_type(self) -> str:
+    def get_target_type(self):
         return self.target_type
         
-    def get_used_id(self) -> str:
+    def get_used_id(self):
         return self.used_id
         
     def get_gene_mapping_table_colname_id(self):

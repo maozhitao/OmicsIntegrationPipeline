@@ -1,8 +1,13 @@
-from . import s_module_template
-from . import s_value_extraction_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import s_module_template
+    import s_value_extraction_exceptions
+else:
+    from . import s_module_template
+    from . import s_value_extraction_exceptions
 
 from enum import Enum
-import sys
+
 import subprocess
 import os
 import pandas as pd
@@ -33,11 +38,11 @@ class SequencingExtractionConstant(Enum):
     
     
 class SequencingExtractionParameters:
-    def __init__(self, owner, fastq_file_dir : str = ".", 
-                    alignment_record_file_ext : str = ".align_out",
-                    infer_experiment_record_file_ext : str = ".infer_experiment_out",
-                    infer_experiment_threshold : float = 0.9,
-                    count_reads_file_ext : str = '.count_reads'):
+    def __init__(self, owner, fastq_file_dir = ".", 
+                    alignment_record_file_ext = ".align_out",
+                    infer_experiment_record_file_ext = ".infer_experiment_out",
+                    infer_experiment_threshold = 0.9,
+                    count_reads_file_ext = '.count_reads'):
         self.owner = owner
         self.fastq_file_dir = fastq_file_dir
         self.alignment_record_file_ext = alignment_record_file_ext
@@ -51,7 +56,7 @@ class SequencingExtractionParameters:
         if not self.fastq_file_dir.endswith(general_parameters.dir_sep):
             self.fastq_file_dir = self.fastq_file_dir + general_parameters.dir_sep
             
-    def get_fastqdump_command(self, input_sra : str = ''):
+    def get_fastqdump_command(self, input_sra = ''):
         sratool_parameters = self.owner.get_sratool_parameters()
         
         general_parameters = self.owner.get_general_parameters()
@@ -66,7 +71,7 @@ class SequencingExtractionParameters:
         return(command)
         
         
-    def get_bowtie2_build_command(self, input_fasta : str = ''):
+    def get_bowtie2_build_command(self, input_fasta = ''):
         bowtie2_parameters = self.owner.get_bowtie2_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -78,7 +83,7 @@ class SequencingExtractionParameters:
         command = [executive_path, thread_par, nthread, fasta_path, bowtie2_index_name]
         return(command)
         
-    def get_bowtie2_align_command(self, input_sra : str = ''):
+    def get_bowtie2_align_command(self, input_sra, paired):
         bowtie2_parameters = self.owner.get_bowtie2_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -105,7 +110,7 @@ class SequencingExtractionParameters:
         file_paired_2 = input_sra + SequencingExtractionConstant.EXT_PAIR_2.value
         file_single = input_sra + SequencingExtractionConstant.EXT_SINGLE.value
         
-        if os.path.isfile(file_paired_1) and os.path.isfile(file_paired_2):
+        if paired == True:
             paired_1_par = bowtie2_parameters.align_par_paired_1
             paired_2_par = bowtie2_parameters.align_par_paired_2
             command = [executive_path, thread_par, nthread, reorder_par, mm_par, 
@@ -114,7 +119,7 @@ class SequencingExtractionParameters:
                         paired_1_par, file_paired_1, paired_2_par, file_paired_2,
                         sam_par, output_path]
             return(command)
-        elif os.path.isfile(file_single):
+        else:
             unpaired_par = bowtie2_parameters.align_par_unpaired
             command = [executive_path, thread_par, nthread, reorder_par, mm_par, 
                         align_mode_par, align_speed_par,
@@ -122,11 +127,9 @@ class SequencingExtractionParameters:
                         unpaired_par, file_single,
                         sam_par, output_path]
             return(command)
-        else:
-            raise s_value_extraction_exceptions.FastqFileNotFoundException('Fastq file not fouund!')
 
 
-    def get_rseqc_infer_experiment_command(self, input_sra : str = ''):
+    def get_rseqc_infer_experiment_command(self, input_sra = ''):
         rseqc_parameters = self.owner.get_rseqc_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -139,7 +142,7 @@ class SequencingExtractionParameters:
         command = [executive_path, bed_par, bed_path, input_par, input_path]
         return(command)
         
-    def get_htseq_count_command(self, input_sra : str = '', stranded = True):
+    def get_htseq_count_command(self, input_sra, stranded = True):
         htseq_parameters = self.owner.get_htseq_parameters()
         general_parameters = self.owner.get_general_parameters()
         
@@ -170,9 +173,11 @@ class SequencingExtractionResults:
         self.infer_experiment_result = {}
         self.count_reads_result = {}
         self.count_reads_result_exceptions = {}
+        self.done = False
+        self.exception = None
         
     def update_alignment_rate(self, run, alignment_rate_run):
-        self.alignment_rate[run] = alignment_rate
+        self.alignment_rate[run] = alignment_rate_run
 
     def update_infer_experiment_result(self, run, infer_experiment_result_run):
         self.infer_experiment_result[run] = infer_experiment_result_run
@@ -218,7 +223,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
     def prepare_workers(self):
         for exp in self.s_retrieval_results.mapping_experiment_runs:
             for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
-                self.workers[run] = prepare_worker(run)
+                self.workers[run] = self.prepare_worker(run)
             
     def prepare_worker(self, run):
         sra_file_dir = self.s_retrieval_results.sra_file_dir
@@ -228,22 +233,28 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         count_reads_file_ext = self.parameters.count_reads_file_ext
     
         fastqdump_command = self.parameters.get_fastqdump_command(self.s_retrieval_results.sra_file_dir + run)
-        align_data_command = self.parameters.get_bowtie2_align_command(self.s_retrieval_results.sra_file_dir + run)
+        
+        align_data_command_single = self.parameters.get_bowtie2_align_command(self.s_retrieval_results.sra_file_dir + run, False)
+        align_data_command_paired = self.parameters.get_bowtie2_align_command(self.s_retrieval_results.sra_file_dir + run, True)
+        
         infer_experiment_command = self.parameters.get_rseqc_infer_experiment_command(self.s_retrieval_results.sra_file_dir + run)
-        count_reads_command = self.parameters.get_htseq_count_command(self.s_retrieval_results.sra_file_dir + run, stranded)
+        count_reads_command_stranded = self.parameters.get_htseq_count_command(self.s_retrieval_results.sra_file_dir + run, True)
+        count_reads_command_unstranded = self.parameters.get_htseq_count_command(self.s_retrieval_results.sra_file_dir + run, True)
+        
         general_parameters = self.get_general_parameters()
         general_constant = self.get_general_constant()
             
         worker = SequencingExtractionWorker(run, sra_file_dir, alignment_record_file_ext,
                                             infer_experiment_threshold, infer_experiment_record_file_ext,
                                             count_reads_file_ext,
-                                            fastqdump_command, align_data_command, infer_experiment_command, count_reads_command,
+                                            fastqdump_command, align_data_command_single, align_data_command_paired, 
+                                            infer_experiment_command, count_reads_command_stranded, count_reads_command_unstranded,
                                             general_parameters, general_constant)
         return worker
 
     def create_bowtie2_index(self):
         command = self.parameters.get_bowtie2_build_command(self.s_retrieval_results.fasta_path)
-        subprocess.run(command, stdout=subprocess.PIPE, shell = self.get_general_parameters().use_shell)
+        subprocess.call(command, stdout=subprocess.PIPE, shell = self.get_general_parameters().use_shell)
         
     def prepare_fastq_file(self):
         for exp in self.s_retrieval_results.mapping_experiment_runs:
@@ -276,7 +287,8 @@ class SequencingExtractionWorker:
                 alignment_record_file_ext,
                 infer_experiment_threshold, infer_experiment_record_file_ext,
                 count_reads_file_ext,
-                fastqdump_command, align_data_command, infer_experiment_command, count_reads_command, 
+                fastqdump_command, align_data_command_single, align_data_command_paired, 
+                infer_experiment_command, count_reads_command_stranded, count_reads_command_unstranded,
                 general_parameters, general_constant):
                 
         self.run = run
@@ -291,20 +303,24 @@ class SequencingExtractionWorker:
         self.count_reads_file_ext = count_reads_file_ext
         
         self.fastqdump_command = fastqdump_command
-        self.align_data_command = align_data_command
+        
+        self.align_data_command_single = align_data_command_single
+        self.align_data_command_paired = align_data_command_paired
+        
         self.infer_experiment_command = infer_experiment_command
-        self.count_reads_command = count_reads_command
+        self.count_reads_command_stranded = count_reads_command_stranded
+        self.count_reads_command_unstranded = count_reads_command_unstranded
         self.general_parameters = general_parameters
         self.general_constant = general_constant
         
         self.results = SequencingExtractionResults()
         
-    def run(self):
+    def do_run(self):
         self.prepare_fastq_file_run_independent()
         self.align_data_run_independent()
         self.infer_stranded_information_run_independent()
         self.count_reads_run_independent()
-        pass
+        
         
     def prepare_fastq_file_run_independent(self):
         try:
@@ -329,8 +345,16 @@ class SequencingExtractionWorker:
             
             
     def align_data_run_independent(self):
+        print(self.check_paired())
+        
+
         try:
-            binary_output = subprocess.check_output(self.align_data_command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
+            if self.check_paired() == True:
+                print(self.align_data_command_paired)
+                binary_output = subprocess.check_output(self.align_data_command_paired, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
+            else:
+                print(self.align_data_command_single)
+                binary_output = subprocess.check_output(self.align_data_command_single, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
         except Exception as e:
             raise s_value_extraction_exceptions.Bowtie2AlignmentFailedException('Failed to run Bowtie2 alignment')
             
@@ -345,7 +369,7 @@ class SequencingExtractionWorker:
         except Exception as e:
             raise s_value_extraction_exceptions.Bowtie2AlignmentFailedException('Invalid Bowtie2 alignment results')
             
-        if not os.path.isfile(self.sra_file_dir + run + SequencingExtractionConstant.EXT_ALIGN_OUT.value):
+        if not os.path.isfile(self.sra_file_dir + self.run + SequencingExtractionConstant.EXT_ALIGN_OUT.value):
             raise s_value_extraction_exceptions.Bowtie2AlignmentFailedException('SAM output file not exist!')
             
         with open(self.sra_file_dir + self.run + self.alignment_record_file_ext, SequencingExtractionConstant.WRITEMODE.value) as outfile:
@@ -398,13 +422,17 @@ class SequencingExtractionWorker:
         
     def count_reads_run_independent(self):
         #FOR HTSEQ COUNT RESULTS ONLY
-        if self.check_existed_results(self.run) == True:
+        print('COUNT READS RUN')
+        if self.check_existed_results() == True:
             return
 
-        stranded = self.check_stranded_info(run)
+        stranded = self.check_stranded_info()
         
         try:
-            binary_output = subprocess.check_output(self.count_reads_command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
+            if stranded == True:
+                binary_output = subprocess.check_output(self.count_reads_command_stranded, shell = self.general_parameters.use_shell)
+            else:
+                binary_output = subprocess.check_output(self.count_reads_command_unstranded, shell = self.general_parameters.use_shell)
         except Exception as e:
             raise s_value_extraction_exceptions.HTSeqCountFailedException('Failed to run htseq-count')
             
@@ -412,7 +440,7 @@ class SequencingExtractionWorker:
             output = binary_output.decode(self.general_constant.CODEC.value)
             count_reads_result_run = pd.DataFrame([x.split(SequencingExtractionConstant.TABSEP.value) for x in output.split(SequencingExtractionConstant.NEWLINE.value)])
             count_reads_result_run = count_reads_result_run.set_index(0)
-            count_reads_result_run.rename(columns={1:run})
+            count_reads_result_run.rename(columns={1:self.run})
             self.check_htseq_count_results(output)
             
                 
@@ -423,9 +451,9 @@ class SequencingExtractionWorker:
             outfile.write(binary_output)
             
             
-        count_reads_result_exceptions_run = count_reads_result_run.iloc[-5:]
-        count_reads_result_run = count_reads_result_run.iloc[:-5]
-        self.results.update_count_reads_result(run,count_reads_result_run, count_reads_result_exceptions_run)
+        count_reads_result_exceptions_run = count_reads_result_run.iloc[-6:-1]
+        count_reads_result_run = count_reads_result_run.iloc[:-6]
+        self.results.update_count_reads_result(self.run,count_reads_result_run, count_reads_result_exceptions_run)
         
     def check_htseq_count_results(self, htseq_count_results):
         output = htseq_count_results.split(SequencingExtractionConstant.NEWLINE.value)
@@ -465,10 +493,22 @@ class SequencingExtractionWorker:
             return True
             
         except Exception as e:
-            raise Exception('!!!')
+            return False
             
-    def check_stranded_info(self, run):
+    def check_stranded_info(self):
         infer_experiment_result = self.results.infer_experiment_result
-        return infer_experiment_result[run].check_stranded_info()
+        return infer_experiment_result[self.run].check_stranded_info()
+        
+    def check_paired(self):
+        file_paired_1 = self.run + SequencingExtractionConstant.EXT_PAIR_1.value
+        file_paired_2 = self.run + SequencingExtractionConstant.EXT_PAIR_2.value
+        file_single = self.run + SequencingExtractionConstant.EXT_SINGLE.value
+    
+        if os.path.isfile(file_paired_1) and os.path.isfile(file_paired_2):
+            return True
+        elif os.path.isfile(file_single):
+            return False
+        else:
+            raise s_value_extraction_exceptions.FastqFileNotFoundException('Fastq file not fouund!')
         
     

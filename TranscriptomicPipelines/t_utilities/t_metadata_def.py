@@ -1,7 +1,11 @@
-from . import t_metadata_exceptions
+import sys
+if (sys.version_info < (3, 0)):
+    import t_metadata_exceptions
+else:
+    from . import t_metadata_exceptions
 #t_metadata_def.py
 #Define each field of metadata table
-from enum import Enum, auto
+from enum import Enum
 import datetime
 
 class Separator(Enum):
@@ -9,17 +13,17 @@ class Separator(Enum):
     SERIES          = "/"
 
 class SourceType(Enum):
-    GEO             = auto()
-    ARRAYEXPRESS    = auto()
-    SRA             = auto()
-    MICROARRAY      = auto()
-    SEQUENCING      = auto()
-    ALL             = auto()
+    GEO             = "GEO"
+    ARRAYEXPRESS    = "ARRAYEXPRESS"
+    SRA             = "SRA"
+    MICROARRAY      = "MICROARRAY"
+    SEQUENCING      = "SEQUENCING"
+    ALL             = "ALL"
     
 class ChannelNum(Enum):
-    ONE             = auto()
-    TWO             = auto()
-    NA              = auto()
+    ONE             = "ONE"
+    TWO             = "TWO"
+    NA              = "NA"
     
 class Channel(Enum):
     CY3             = "cy3"
@@ -29,49 +33,49 @@ class Channel(Enum):
     
 
 class RemovedIndicator(Enum):
-    TRUE            = auto()
-    FALSE           = auto()
+    TRUE            = "TRUE"
+    FALSE           = "FALSE"
     
 class UsedDataType(Enum):
-    GEOSOFT         = auto()
-    RAW             = auto()
-    SEQUENCING      = auto()
+    GEOSOFT         = "GEOSOFT"
+    RAW             = "RAW"
+    SEQUENCING      = "SEQUENCING"
     
 class PairedType(Enum):
-    PAIRED          = auto()
-    UNPAIRED        = auto()
-    NA              = auto()
+    PAIRED          = "PAIRED"
+    UNPAIRED        = "UNPAIRED"
+    NA              = "NA"
     
 class StrandedType(Enum):
-    STRANDED        = auto()
-    UNSTRANDED      = auto()
-    NA              = auto()
+    STRANDED        = "STRANDED"
+    UNSTRANDED      = "UNSTRANDED"
+    NA              = "NA"
     
 class BGAvailableIndicator(Enum):
-    TRUE            = auto()
-    FALSE           = auto()
-    NA              = auto()
+    TRUE            = "TRUE"
+    FALSE           = "FALSE"
+    NA              = "NA"
     
 class UsedValueType(Enum):
-    MEDIAN          = auto()
-    MEAN            = auto()
-    UNKNOWN         = auto()
-    NA              = auto()
+    MEDIAN          = "MEDIAN"
+    MEAN            = "MEAN"
+    UNKNOWN         = "UNKNOWN"
+    NA              = "NA"
     
 class ValueValidIndicator(Enum):
-    TRUE            = auto()
-    FALSE           = auto()
+    TRUE            = "TRUE"
+    FALSE           = "FALSE"
     
 
 
 class SampleID:
     #For SRA data, we have to take care of cases with multiple runs...
     def __init__(   self, 
-                    source_type : SourceType = SourceType.GEO,
-                    channel_num : ChannelNum = ChannelNum.TWO,
-                    channel : Channel = Channel.CY3,
-                    series_id : str = "", #Only for arrayexpress data
-                    experiment_id : str = ""
+                    source_type = SourceType.GEO,
+                    channel_num  = ChannelNum.TWO,
+                    channel = Channel.CY3,
+                    series_id = "", #Only for arrayexpress data
+                    experiment_id = ""
                     ):
         self.source_type = source_type
         self.channel_num = channel_num
@@ -117,23 +121,23 @@ class MetadataEntry:
     #1. Initiate the new Sample ID after you got the necessary information
     #2. Fill the necessary elements
     def __init__(self,
-                sample_id : SampleID = SampleID(), #Should be prepared well before you call the constructor
-                channel_num : ChannelNum = ChannelNum.TWO,
-                first_channel : Channel = Channel.CY3,
-                second_channel : Channel = Channel.CY5,
-                source_type : SourceType = SourceType.GEO,
-                series_id : str = "",
-                platform_id : str = "",
-                removed : RemovedIndicator = RemovedIndicator.FALSE,
-                used_data : UsedDataType = UsedDataType.GEOSOFT,
-                paired : PairedType = PairedType.NA,
-                stranded : StrandedType = StrandedType.NA,
-                bg_available : BGAvailableIndicator = BGAvailableIndicator.TRUE,
-                used_value : UsedValueType = UsedValueType.MEDIAN,
-                value_valid: ValueValidIndicator = ValueValidIndicator.TRUE,
-                pmid : list = [], #Should be prepared well before you call the constructor
-                author : str = [], #Should be prepared well before you call the constructor
-                date : datetime.date = datetime.date(1,1,1) #Should be prepared well before you call the constructor
+                sample_id = SampleID(), #Should be prepared well before you call the constructor
+                channel_num = ChannelNum.TWO,
+                first_channel = Channel.CY3,
+                second_channel = Channel.CY5,
+                source_type = SourceType.GEO,
+                series_id = "",
+                platform_id = "",
+                removed = RemovedIndicator.FALSE,
+                used_data = UsedDataType.GEOSOFT,
+                paired = PairedType.NA,
+                stranded = StrandedType.NA,
+                bg_available = BGAvailableIndicator.TRUE,
+                used_value = UsedValueType.MEDIAN,
+                value_valid = ValueValidIndicator.TRUE,
+                pmid = [], #Should be prepared well before you call the constructor
+                author = [], #Should be prepared well before you call the constructor
+                date = datetime.date(1,1,1) #Should be prepared well before you call the constructor
                 ):
         
         self.sample_id = sample_id
