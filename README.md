@@ -33,7 +33,7 @@
 
 
 
-<h4>07/24/2019 Update</h4>
+<h4>08/17/2019 Update</h4>
 <ol>
 <li>Sequencing Pipeline (Parallel Version) : (Finished functional part, need to implement API including parameters settings)</li>
 <li>Data Postprocessing<br>
