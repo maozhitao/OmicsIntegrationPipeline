@@ -9,11 +9,13 @@ else:
 class SequencingGeneMappingParameters:
     def __init__(self, owner, 
                     drop_unnamed_genes = False,
+                    use_gene_names = False,
                     data_matrix_table_path = 'SequencingDataMatrix.csv',
                     gene_mapping_table_path = 'SequencingGeneMappingTable.csv'
                 ):
         self.owner = owner
         self.drop_unnamed_genes = drop_unnamed_genes
+        self.use_gene_names = use_gene_names
         self.data_matrix_table_path = data_matrix_table_path
         self.gene_mapping_table_path = gene_mapping_table_path
         
@@ -48,8 +50,12 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         
         count_reads_matrix = self.s_sample_mapping_results.count_reads_matrix
         indices = count_reads_matrix.index.tolist()
-        for i in range(len(indices)):
-            indices[i] = self.find_gene_name(indices[i], gene_mapping_table_selected_dict)
+        
+        if self.parameters.use_gene_names == True:
+            #USE GENE NAMES ==> rpoS, spoT, ...
+            #NOT USE GENE NAMES ==> STMXXXX
+            for i in range(len(indices)):
+                indices[i] = self.find_gene_name(indices[i], gene_mapping_table_selected_dict)
             
         count_reads_matrix.index = indices
         self.results.update_original_data_matrix(count_reads_matrix)

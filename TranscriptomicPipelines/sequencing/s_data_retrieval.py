@@ -5,6 +5,9 @@ import pandas as pd
 import subprocess
 
 import sys
+import os
+
+import copy
 if (sys.version_info < (3, 0)):
     import s_module_template
     import s_data_retrieval_exceptions
@@ -24,62 +27,42 @@ class SequencingRetrievalConstant(Enum):
     SPACE           = ' '
     NEWLINE         = '\n'
     
-    SRAINFO_COL_RUN = 'Run'
-    SRAINFO_COL_EXP = 'Experiment'
+    SRAINFO_COL_RUN         = 'Run'
+    SRAINFO_COL_EXP         = 'Experiment'
+    SRAINFO_COL_PLATFORM    = "Model"
+    SRAINFO_COL_SERIES      = "SRAStudy"
     
-    SRA_RESULT_OK   = 'consistent'
+    
     
 
 class SequencingRetrievalParameters:
-    def __init__(   self, owner,
+    def __init__(   self,
                     entrez_mail = 'cetan@ucdavis.edu',
+                    sra_run_info_path = 'sra_run_info.csv',
                     fasta_path = 'merged.fasta',
-                    sra_file_dir = '.'):
-        self.owner = owner
+                    general_parameters = None):
         self.entrez_mail = entrez_mail
+        self.sra_run_info_path = sra_run_info_path
         self.fasta_path = fasta_path
-        self.sra_file_dir = sra_file_dir
         
-        general_parameters = self.owner.get_general_parameters()
-        
-        if self.sra_file_dir == "":
-            raise s_data_retrieval_exceptions.InvalidSRAFilePathException('You should provide the directory for saving downloaded sequencing data!')
-        if not self.sra_file_dir.endswith(general_parameters.dir_sep):
-            self.sra_file_dir = self.sra_file_dir + general_parameters.dir_sep
-    
-    def get_sratool_prefetch_command(self, sra_run_id = ''):
-        sratool_parameters = self.owner.get_sratool_parameters()
-        general_parameters = self.owner.get_general_parameters()
-        
-        executive_path = sratool_parameters.dir + general_parameters.executive_prefix + sratool_parameters.prefetch_exe_file + general_parameters.executive_surfix
-        sra_run_id = sra_run_id
-        output_par = sratool_parameters.prefetch_par_output_file
-        output_file_name = self.sra_file_dir + sra_run_id
-        command = [executive_path, sra_run_id, output_par, output_file_name]
-        return(command)
-        
-    def get_sratool_vdb_validate_command(self, sra_run_id = ''):
-        sratool_parameters = self.owner.get_sratool_parameters()
-        general_parameters = self.owner.get_general_parameters()
-        
-        executive_path = sratool_parameters.dir + general_parameters.executive_prefix + sratool_parameters.validate_exe_file + general_parameters.executive_surfix
-        sra_run_id = sra_run_id
-        check_file_name = self.sra_file_dir + sra_run_id
-        command = [executive_path, check_file_name]
-        return(command)
-        
+        self.skip_srainfo_download = False
+        self.skip_fasta_download = True
         
 class SequencingRetrievalResults:
     def __init__(self):
         self.fasta_path = None
         self.sra_file_dir = None
-        self.mapping_experiment_runs = None
+        self.mapping_experiment_runs = {}
+        self.mapping_experiment_runs_removed = {}
         
     def update_download_metadata(self, fasta_path):
         self.fasta_path = fasta_path
 
-    def update_complete_data_independent_metadata(self, mapping_experiment_runs = None):
+    def update_mapping_experiment_runs(self, mapping_experiment_runs = None):
         self.mapping_experiment_runs = mapping_experiment_runs
+        
+    def update_mapping_experiment_runs_removed(self, mapping_experiment_runs_removed = None):
+        self.mapping_experiment_runs_removed = mapping_experiment_runs_removed
         
     def update_download_data(self, sra_file_dir = ''):
         self.sra_file_dir = sra_file_dir
@@ -87,11 +70,13 @@ class SequencingRetrievalResults:
 class SequencingRetrieval(s_module_template.SequencingSubModule):
     def __init__(self, owner):
         self.owner = owner
-        self.parameters = SequencingRetrievalParameters(self)
+        self.parameters = SequencingRetrievalParameters(self, general_parameters = self.get_general_parameters())
         self.results = SequencingRetrievalResults()
         
         self.sra_run_info = None
-        self.mapping_experiment_runs = None
+        self.sra_run_info_removed = None
+        self.mapping_experiment_runs = {}
+        self.mapping_experiment_runs_removed = {}
         
         self.workers = {}
         
@@ -110,36 +95,55 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
         self.results.update_download_metadata(self.parameters.fasta_path)
         
     def download_srainfo(self):
-        Entrez.mail = self.parameters.entrez_mail
-        for id in self.get_s_query_id():
-            handle = Entrez.efetch( id = id, 
-                                    db = SequencingRetrievalConstant.SRADB.value, 
-                                    rettype = SequencingRetrievalConstant.RUNINFO.value, 
-                                    retmode = SequencingRetrievalConstant.TEXT.value)
-            df = pd.read_csv(handle)
-            if self.sra_run_info is None:
-                self.sra_run_info = df
-            else:
-                self.sra_run_info = pd.concat([self.sra_run_info, df])
-            handle.close()
+        if self.parameters.skip_srainfo_download == False or self.check_existed_srainfo() == False:
+            Entrez.mail = self.parameters.entrez_mail
+            df_list = []
+            for id in self.get_s_query_id():
+                print(id)
+                handle = Entrez.efetch( id = id, 
+                                        db = SequencingRetrievalConstant.SRADB.value, 
+                                        rettype = SequencingRetrievalConstant.RUNINFO.value, 
+                                        retmode = SequencingRetrievalConstant.TEXT.value)
+                df = pd.read_csv(handle)
+                df_list.append(df)
+                handle.close()
+            self.sra_run_info = pd.concat(df_list)
+            self.sra_run_info.to_csv(self.parameters.sra_run_info_path)
+        else:
+            self.sra_run_info = pd.read_csv(self.parameters.sra_run_info_path)
+            
+
+    def check_existed_srainfo(self):
+        if not os.path.isfile(self.parameters.sra_run_info_path):
+            return False
+        else:
+            return True
             
     def download_fasta(self):
-        Entrez.mail = self.parameters.entrez_mail
-        genome_id = self.get_t_gene_annotation().get_genome_id()
-        with open(self.parameters.fasta_path, SequencingRetrievalConstant.WRITEMODE.value) as outfile:
-            for id in genome_id:
-                print(id)
-                handle = Entrez.efetch( id = id,
-                                        db = SequencingRetrievalConstant.NUCLEOTIDEDB.value,
-                                        rettype = SequencingRetrievalConstant.FASTA.value,
-                                        retmode = SequencingRetrievalConstant.TEXT.value)
-                outfile.write(handle.read())
-                outfile.write(SequencingRetrievalConstant.NEWLINE.value)
+        if self.parameters.skip_fasta_download == False or self.check_existed_fasta() == False:
+            Entrez.mail = self.parameters.entrez_mail
+            genome_id = self.get_t_gene_annotation().get_genome_id()
+            with open(self.parameters.fasta_path, SequencingRetrievalConstant.WRITEMODE.value) as outfile:
+                for id in genome_id:
+                    print(id)
+                    handle = Entrez.efetch( id = id,
+                                            db = SequencingRetrievalConstant.NUCLEOTIDEDB.value,
+                                            rettype = SequencingRetrievalConstant.FASTA.value,
+                                            retmode = SequencingRetrievalConstant.TEXT.value)
+                    outfile.write(handle.read())
+                    outfile.write(SequencingRetrievalConstant.NEWLINE.value)
+        else:
+            #Do nothing ==> fasta is ready!
+            pass
                                     
+    def check_existed_fasta(self):
+        if not os.path.isfile(self.parameters.fasta_path):
+            return False
+        else:
+            return True
         
     def complete_data_independent_metadata(self):
         #Note: You should manage the experiment - run mapping information
-        self.mapping_experiment_runs = {}
         experiments = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_EXP.value].tolist()
         
         metadata = self.get_s_metadata()
@@ -147,64 +151,58 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
             idx = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_EXP.value] == exp
             self.mapping_experiment_runs[exp] = self.sra_run_info[SequencingRetrievalConstant.SRAINFO_COL_RUN.value][idx].tolist()
         
-        self.results.update_complete_data_independent_metadata(self.mapping_experiment_runs)
-        self.results.update_download_data(self.parameters.sra_file_dir)
+        self.results.update_mapping_experiment_runs(self.mapping_experiment_runs)
         
-    def filter_entry(self):
-        self.data = None #Fake
         
-    def prepare_workers(self):
-        for exp in self.mapping_experiment_runs:
-            for run in self.mapping_experiment_runs[exp]:
-                self.workers[run] = self.prepare_worker(run)
+        #For each row, build the metadata entry
+        for index, row in self.sra_run_info.iterrows():
+            metadata.new_sequencing_entry(  platform_id = row[SequencingRetrievalConstant.SRAINFO_COL_PLATFORM.value],
+                                            series_id = row[SequencingRetrievalConstant.SRAINFO_COL_SERIES.value],
+                                            experiment_id = row[SequencingRetrievalConstant.SRAINFO_COL_EXP.value])
         
-    def prepare_worker(self, run):
-        download_data_command = self.parameters.get_sratool_prefetch_command(run)
-        check_data_command = self.parameters.get_sratool_vdb_validate_command(run)
-        general_parameters = self.get_general_parameters()
-        general_constant = self.get_general_constant()
-        worker = SequencingRetrievalWorker(run, download_data_command, check_data_command, general_parameters, general_constant)
-        return worker
-        
-    def download_data(self):
-        #For each entry in metadata table, download each run
-        for exp in self.mapping_experiment_runs:
-            for run in self.mapping_experiment_runs[exp]:
-                self.workers[run].download_data_run_independent()
-                
-                        
-        #self.results.update_download_data(self.parameters.sra_file_dir)
-        
-    
-        
+        df = metadata.get_table()
+        df.to_csv("TestMetadataTable.csv")
 
-class SequencingRetrievalWorker:
-    def __init__(self, run, download_data_command, check_data_command, general_parameters, general_constant):
-        self.run = run
-        self.download_data_command = download_data_command
-        self.check_data_command = check_data_command
-        self.general_parameters = general_parameters
-        self.general_constant = general_constant
-        
-    def do_run(self):
-        self.download_data_run_independent()
-        
-    def download_data_run_independent(self):
-        if self.check_data_independent() == False:
-            print(self.download_data_command)
-            subprocess.call(self.download_data_command, stdout=subprocess.PIPE, shell = self.general_parameters.use_shell)
-            if self.check_data_independent() == False:
-                raise s_data_retrieval_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + self.run)
+    def filter_entry(self, platform_id_remove = [], series_id_remove = [], experiment_id_remove = [], run_id_remove = []):
+        for exp in self.mapping_experiment_runs:
+            for run in self.mapping_experiment_runs[exp]:
+                if run in run_id_remove:
+                    self.mapping_experiment_runs[exp].remove(run)
+            
+            if len(self.mapping_experiment_runs[exp]) == 0:
+                experiment_id_remove.append(exp)
+    
+        metadata = self.get_s_metadata()
+        for exp in metadata.entries:
+            if metadata.entries[exp].platform_id in platform_id_remove:
+                experiment_id_remove.append(exp)
+            elif metadata.entries[exp].series_id in series_id_remove:
+                experiment_id_remove.append(exp)
                 
-    def check_data_independent(self):
-        try:
-            binary_result = subprocess.check_output(self.check_data_command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
-        except subprocess.CalledProcessError as e:
-            return False
-        result = binary_result.decode(self.general_constant.CODEC.value)
-        result = result.split(SequencingRetrievalConstant.SPACE.value)
-        result = result[-1].replace(SequencingRetrievalConstant.NEWLINE.value,"")
-        if result == SequencingRetrievalConstant.SRA_RESULT_OK.value:
-            return True
-        else:
-            return False
+        for exp in experiment_id_remove:
+            if exp in metadata.entries.keys():
+                metadata.entries[exp].set_remove_ind()
+                metadata.entries_removed[exp] = copy.copy(metadata.entries[exp])
+                self.mapping_experiment_runs_removed[exp] = copy.copy(self.mapping_experiment_runs[exp])
+                del metadata.entries[exp]
+                del self.mapping_experiment_runs[exp]
+                
+        self.results.update_mapping_experiment_runs(self.mapping_experiment_runs)
+        self.results.update_mapping_experiment_runs_removed(self.mapping_experiment_runs_removed)
+        
+        #For Testing
+        for exp in metadata.entries:
+            print(exp)
+            
+        for exp in metadata.entries_removed:
+            print(exp + '(removed)')
+            
+        #Update sra information after remove the runs/experiment
+        print(self.sra_run_info)
+        df_list = []
+        for exp in self.mapping_experiment_runs:
+            for run in self.mapping_experiment_runs[exp]:
+                df_list.append(self.sra_run_info[self.sra_run_info.Run == run])
+                
+        self.sra_run_info = pd.concat(df_list)
+        self.sra_run_info.to_csv(self.parameters.sra_run_info_path)

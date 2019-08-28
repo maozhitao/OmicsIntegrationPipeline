@@ -8,6 +8,9 @@ else:
 from enum import Enum
 import datetime
 
+import pandas as pd
+
+
 class Separator(Enum):
     CHANNEL_NUM     = "_"
     SERIES          = "/"
@@ -71,9 +74,9 @@ class ValueValidIndicator(Enum):
 class SampleID:
     #For SRA data, we have to take care of cases with multiple runs...
     def __init__(   self, 
-                    source_type = SourceType.GEO,
-                    channel_num  = ChannelNum.TWO,
-                    channel = Channel.CY3,
+                    source_type = SourceType.GEO.value,
+                    channel_num  = ChannelNum.TWO.value,
+                    channel = Channel.CY3.value,
                     series_id = "", #Only for arrayexpress data
                     experiment_id = ""
                     ):
@@ -85,21 +88,17 @@ class SampleID:
         self.id = ""
         
     def create_id(self):
-        if self.source_type == SourceType.GEO:
-            if series_id:
-                raise t_metadata_exceptions.FailedToCreateID("No series id should be provided to create id for a GEO entry")
+        if self.source_type == SourceType.GEO.value:
             self.id = add_channel_surfix(self.experiment_id)
             
-        elif self.source_type == SourceType.ARRAYEXPRESS:
+        elif self.source_type == SourceType.ARRAYEXPRESS.value:
             if not series_id:
                 raise t_metadata_exceptions.FailedToCreateID("Series id should be provided to create id for a ArrayExpress entry")
-            self.id = add_channel_surfix(self.series_id + Separator.SERIES + self.experiment_id)
+            self.id = add_channel_surfix(self.series_id + Separator.SERIES.value + self.experiment_id)
             
-        elif self.source_type == SourceType.SRA:
+        elif self.source_type == SourceType.SRA.value or self.source_type == SourceType.SEQUENCING.value:
             #SRA data:
             #NOTE: One experiment should be mapped into only ONE entry even there are more than one runs
-            if series_id:
-                raise t_metadata_exceptions.FailedToCreateID("No series id should be provided to create id for a SRA entry")
             self.id = self.experiment_id
             
         else:
@@ -107,10 +106,10 @@ class SampleID:
         
     
     def add_channel_surfix(self, prefix_id):
-        if self.channel == Channel.CY3:
-            result = prefix_id + Separator.CHANNEL_NUM + Channel.CY3
-        elif self.channel == Channel.CY5:
-            result = prefix_id + Separator.CHANNEL_NUM + Channel.CY5
+        if self.channel == Channel.CY3.value:
+            result = prefix_id + Separator.CHANNEL_NUM.value + Channel.CY3.value
+        elif self.channel == Channel.CY5.value:
+            result = prefix_id + Separator.CHANNEL_NUM.value + Channel.CY5.value
         else:
             result = prefix_id
         return(result)
@@ -122,19 +121,19 @@ class MetadataEntry:
     #2. Fill the necessary elements
     def __init__(self,
                 sample_id = SampleID(), #Should be prepared well before you call the constructor
-                channel_num = ChannelNum.TWO,
-                first_channel = Channel.CY3,
-                second_channel = Channel.CY5,
-                source_type = SourceType.GEO,
+                channel_num = ChannelNum.TWO.value,
+                first_channel = Channel.CY3.value,
+                second_channel = Channel.CY5.value,
+                source_type = SourceType.GEO.value,
                 series_id = "",
                 platform_id = "",
-                removed = RemovedIndicator.FALSE,
-                used_data = UsedDataType.GEOSOFT,
-                paired = PairedType.NA,
-                stranded = StrandedType.NA,
-                bg_available = BGAvailableIndicator.TRUE,
-                used_value = UsedValueType.MEDIAN,
-                value_valid = ValueValidIndicator.TRUE,
+                removed = RemovedIndicator.FALSE.value,
+                used_data = UsedDataType.GEOSOFT.value,
+                paired = PairedType.NA.value,
+                stranded = StrandedType.NA.value,
+                bg_available = BGAvailableIndicator.TRUE.value,
+                used_value = UsedValueType.MEDIAN.value,
+                value_valid = ValueValidIndicator.TRUE.value,
                 pmid = [], #Should be prepared well before you call the constructor
                 author = [], #Should be prepared well before you call the constructor
                 date = datetime.date(1,1,1) #Should be prepared well before you call the constructor
@@ -158,6 +157,30 @@ class MetadataEntry:
         self.author = author
         self.date = date
         
-    def to_dict(self):
-        return vars(self)
+    def to_df(self):
+        columns = list(vars(self).keys())
+        del columns[0]
+    
+        df = pd.DataFrame([ [self.channel_num,
+                            self.first_channel,
+                            self.second_channel,
+                            self.source_type,
+                            self.series_id,
+                            self.platform_id,
+                            self.removed,
+                            self.used_data,
+                            self.paired,
+                            self.stranded,
+                            self.bg_available,
+                            self.used_value,
+                            self.value_valid,
+                            "|".join(self.pmid),
+                            "|".join(self.author),
+                            self.date.strftime("%m/%d/%Y")]
+                            ],
+                            index = [self.sample_id.id],
+                            columns = columns)
+        return df
         
+    def set_remove_ind(self):
+        self.removed = RemovedIndicator.TRUE.value

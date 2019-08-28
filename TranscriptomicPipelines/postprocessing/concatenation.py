@@ -7,10 +7,9 @@ else:
 import pandas as pd
 
 class ConcatenationParameters:
-    def __init__(   self, owner, 
+    def __init__(   self, 
                     merged_metadata_table_path = "MergedMetadataTable.csv",
                     merged_data_matrix_path = "MergedDataMatrix.csv"):
-        self.owner = owner
         self.merged_metadata_table_path = merged_metadata_table_path
         self.merged_data_matrix_path = merged_data_matrix_path
         
@@ -23,7 +22,7 @@ class ConcatenationParameters:
 class Concatenation(p_module_template.PostprocessingSubModule):
     def __init__(self, owner):
         self.owner = owner
-        self.parameters = ConcatenationParameters(self)
+        self.parameters = ConcatenationParameters()
         
     def concat_compendium_to_t_compendium_collections(self, compendium_list):
         t_compendium_collections = self.get_t_compendium_collections()
@@ -52,12 +51,14 @@ class Concatenation(p_module_template.PostprocessingSubModule):
         metadata_table_list = []
         data_matrix_list = []
         for compendium in t_compendium_collections.compendium_list:
-            cur_metadata_table = compendium.get_metadata().metadata_table
+            cur_metadata_table = compendium.get_metadata().get_table()
             cur_data_matrix = compendium.get_data().ori_data_matrix #Can be changed later :)
-
-            metadata_table_list.append(cur_metadata_table)
+            
+            if cur_metadata_table is not None:
+                metadata_table_list.append(cur_metadata_table)
             data_matrix_list.append(cur_data_matrix)
             
+        print(metadata_table_list)
         merged_metadata_table = pd.concat(metadata_table_list)
         merged_data_matrix = pd.concat(data_matrix_list, axis = 1)
         

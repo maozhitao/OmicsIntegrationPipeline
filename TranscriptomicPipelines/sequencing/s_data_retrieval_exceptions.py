@@ -2,5 +2,3 @@
 class InvalidSRAFilePathException(Exception):
     pass
     
-class FailedToDownloadSRAFileException(Exception):
-    pass

@@ -17,3 +17,8 @@ class PostprocessingPipeline(p_module_template.PostprocessingModule):
         self.data_concatenation = concatenation.Concatenation(self)
         self.data_imputation = imputation.Imputation(self)
         self.data_normalization = normalization.Normalization(self)
+        
+    def run_postprocessing_pipeline(self):
+        self.data_concatenation.concat_compendium()
+        self.data_imputation.impute_data_matrix()
+        self.data_normalization.normalize_data_matrix()

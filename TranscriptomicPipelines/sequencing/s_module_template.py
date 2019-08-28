@@ -12,6 +12,9 @@ class SequencingModule:
     def get_general_constant(self):
         return self.owner.get_general_constant()
         
+    def get_parallel_engine(self):
+        return self.owner.get_parallel_engine()
+        
 class SequencingSubModule(SequencingModule):
     def __init__(self, owner):
         self.owner = owner

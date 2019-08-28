@@ -1,7 +1,7 @@
 #Missing Value Imputation Class
 #Each feature should be separated for parallel design
 from enum import Enum
-
+from sklearn.ensemble import RandomForestRegressor
 
 import numpy as np
 import pickle
@@ -10,6 +10,7 @@ import time
 
 import subprocess
 import copy
+import os
 
 class InitialGuessOptions(Enum):
     AVERAGE = "average"
@@ -24,26 +25,34 @@ class ParallelOptions(Enum):
 class MissForestImputationParameters:
     def __init__(self):
         self.initial_guess_mode = InitialGuessOptions.AVERAGE.value
-        self.parallel_options = ParallelOptions.SLURM.value
+        self.parallel_options = ParallelOptions.LOCAL.value
         self.max_iter = 10
-        self.num_node = 4
-        self.num_core_local = 12
+        self.num_node = 1
+        self.num_feature_local = 8
+        self.num_core_local = 32
         self.slurm_parameters = SlurmImputationParameters()
         
+        self.slurm_parameters.num_core_each_node = self.num_core_local
         self.tmp_X_file = 'tmp_X.dat'
         
+    def get_arguments_varidx_file(self, varidx):
+        s = "-"
+        return 'arguments_varidx_' + s.join([str(x) for x in varidx]) + '.dat'
+        
     def get_results_varidx_file(self, varidx):
-        return 'results_varidx_' + str(varidx) + '.dat'
+        s = "-"
+        return 'results_varidx_' + s.join([str(x) for x in varidx]) + '.dat'
+        
         
 class SlurmImputationParameters:
     def __init__(self):
         self.par_num_node = '-N'
-        self.num_node = 1
+        self.num_node = 1 #Should always be 1
         self.par_num_core_each_node = '-c'
-        self.num_core_each_node = 2
+        self.num_core_each_node = 32 #Should be the same as num_core_local
         self.par_time_limit = '--time'
-        self.time_limit_hr = 1
-        self.time_limit_min = 0
+        self.time_limit_hr = 0
+        self.time_limit_min = 10
         self.par_job_name = '-J'
         self.job_name = "Imputation"
         self.par_output = '-o'
@@ -54,15 +63,16 @@ class SlurmImputationParameters:
         self.script_path = "job.py"
         self.shell_script_path = 'job.sh'
         
-    def get_command_shell(self, x_path, result_path):
+    def get_command_shell(self, x_path, argument_path, result_path):
         python_path = 'python'
         exe_path = 'srun'
 
         script_path = self.script_path
         x_path = x_path
+        argument_path = argument_path
         result_path = result_path
         
-        return ([exe_path, python_path, script_path, x_path, result_path])
+        return ([exe_path, python_path, script_path, x_path, argument_path, result_path])
     
     def get_command(self, varidx):
         exe_path = 'sbatch'
@@ -74,7 +84,8 @@ class SlurmImputationParameters:
         par_time_limit = self.par_time_limit
         time_limit = str(self.time_limit_hr) + ":" + (format(self.time_limit_min,'02')) + ":00"
         par_job_name = self.par_job_name
-        job_name = self.job_name + '_' + str(varidx)
+        s = "-"
+        job_name = self.job_name + '_' + s.join([str(x) for x in varidx])
         par_output = self.par_output
         output_file = job_name + self.output_ext
         par_error = self.par_error
@@ -84,17 +95,20 @@ class SlurmImputationParameters:
         return ([exe_path, par_num_node, num_node, par_num_core_each_node, num_core_each_node, par_time_limit, time_limit, \
                 par_job_name, job_name, par_output, output_file, par_error, error_file, shell_script_path])
 
-class MissForestImputationResults_SLURM:
-    def __init__(self, vari = None, obsi = [], misi = []):
-        self.imp = None
+class MissForestImputationArguments_SLURM:
+    def __init__(self, rf = None, vari = None, obsi = [], misi = []):
+        self.rf = rf
         self.vari = vari
         self.obsi = obsi
         self.misi = misi
-        self.done = False
+        self.results = MissForestImputationResults_SLURM()
+        
+class MissForestImputationResults_SLURM:
+    def __init__(self):
+        self.imp_list = []
+        self.done = True
         self.err = None #Exception object
-        
-        
-        
+
 
 class MissForestImputation:
     def __init__(self):
@@ -119,42 +133,117 @@ class MissForestImputation:
 
         if self.parameters.parallel_options == ParallelOptions.SLURM.value:
             self.miss_forest_imputation_SLURM()
-            
+        elif self.parameters.parallel_options == ParallelOptions.LOCAL.value:
+            self.miss_forest_imputation_local()
         
         return self.result_matrix
+        
+    def miss_forest_imputation_local(self):
+        self.previous_iter_matrix = copy.copy(self.initial_guess_matrix)
+        self.cur_iter_matrix = copy.copy(self.initial_guess_matrix)
+        cur_iter = 0
+        
+        rf = RandomForestImputation()
+        while True:
+            print("Iteration " + str(cur_iter))
+            if cur_iter >= self.parameters.max_iter:
+                self.result_matrix = self.previous_iter_matrix
+                return
+        
+            
+            for i in range(len(self.vari)):
+                cur_X = self.cur_iter_matrix
+                _, p = np.shape(cur_X)
+                
+                cur_vari = self.vari[i]
+                cur_obsi = self.obsi[cur_vari]
+                cur_misi = self.misi[cur_vari]
+                if (len(cur_misi) == 0):
+                    continue
+                
+                p_train = np.delete(np.arange(p), cur_vari)
+                X_train = cur_X[cur_obsi, :]
+                X_train = X_train[:, p_train]
+                
+                X_test = cur_X[cur_misi, :]
+                X_test = X_test[:, p_train]
+                
+                y_train = cur_X[cur_obsi, :]
+                y_train = y_train[:, cur_vari]
+                
+                imp = rf.fit_predict(X_train, y_train, X_test)
+                print(imp.shape)
+                print(self.cur_iter_matrix[cur_misi,cur_vari].shape)
+                self.cur_iter_matrix[cur_misi,cur_vari] = imp
+                
+            #raise Exception('!!!')    
+            if self.check_converge() == True:
+                self.result_matrix = self.previous_iter_matrix
+                return
+                
+            #Update the previous_iter_matrix
+            self.previous_iter_matrix = copy.copy(self.cur_iter_matrix)
+            
+            cur_iter = cur_iter + 1
+                
         
     def miss_forest_imputation_SLURM(self):
         vari_node = self.split_var()
         self.previous_iter_matrix = copy.copy(self.initial_guess_matrix)
         self.cur_iter_matrix = copy.copy(self.initial_guess_matrix)
         cur_iter = 0
+        
+        rf = RandomForestImputation()
+        
+        for i in range(len(vari_node)):
+            for j in range(len(vari_node[i])):
+                cur_vari = vari_node[i][j]
+                cur_obsi = []
+                cur_misi = []
+                for k in range(len(vari_node[i][j])):
+                    cur_obsi.append(self.obsi[cur_vari[k]])
+                    cur_misi.append(self.misi[cur_vari[k]])
+                argument_path = self.parameters.get_arguments_varidx_file(cur_vari)
+                with open(argument_path, 'wb') as tmp:
+                    argument_object = MissForestImputationArguments_SLURM(rf, cur_vari, cur_obsi, cur_misi)
+                    pickle.dump(argument_object, tmp)
+                
+        
         while True:
+            print("Iteration " + str(cur_iter))
             if cur_iter >= self.parameters.max_iter:
                 self.result_matrix = self.previous_iter_matrix
                 return
-        
+            
+            
             for i in range(len(vari_node)):
                 cur_X = self.cur_iter_matrix
                 
                 x_path = self.parameters.tmp_X_file
                 
+                print('dump X')
                 with open(x_path, 'wb') as tmp:
                     pickle.dump(cur_X, tmp)
-                    
+                
                 for j in range(len(vari_node[i])):
                     #Prepare the jobs
                     cur_vari = vari_node[i][j]
-                    cur_obsi = self.obsi[cur_vari]
-                    cur_misi = self.misi[cur_vari]
-                    
+                    cur_obsi = []
+                    cur_misi = []
+                    for k in range(len(vari_node[i][j])):
+                        cur_obsi.append(self.obsi[cur_vari[k]])
+                        cur_misi.append(self.misi[cur_vari[k]])
+
+                    argument_path = self.parameters.get_arguments_varidx_file(cur_vari)
                     result_path = self.parameters.get_results_varidx_file(cur_vari)
                     with open(result_path, 'wb') as tmp:
-                        results_object = MissForestImputationResults_SLURM(cur_vari, cur_obsi, cur_misi)
-                        pickle.dump(results_object, tmp)
-                        
+                        argument_object = MissForestImputationArguments_SLURM(rf, cur_vari, cur_obsi, cur_misi)
+                        argument_object.results.done = False
+                        pickle.dump(argument_object.results, tmp)
+                    
                     #Submit the jobs
                     #Write the bash
-                    command_shell = self.parameters.slurm_parameters.get_command_shell(x_path, result_path)
+                    command_shell = self.parameters.slurm_parameters.get_command_shell(x_path, argument_path, result_path)
                     command_shell =' '.join(command_shell)
                     with open(self.parameters.slurm_parameters.shell_script_path,'w') as tmp:
                         tmp.writelines('#!/bin/bash\n')
@@ -167,55 +256,41 @@ class MissForestImputation:
                 print('Polling!')
                 #Polling:
                 finish = False
+                finished_ind = [False]*len(vari_node[i])
+                
                 while finish == False:
-                    time.sleep(1)
+                    time.sleep(0.1)
                     finish = True
-                    
                     for j in range(len(vari_node[i])):
+                        if finished_ind[j] == True:
+                            continue
+                            
                         cur_vari = vari_node[i][j]
+                        cur_obsi = []
+                        cur_misi = []
+                        for k in range(len(vari_node[i][j])):
+                            cur_obsi.append(self.obsi[cur_vari[k]])
+                            cur_misi.append(self.misi[cur_vari[k]])
+                            
                         result_path = self.parameters.get_results_varidx_file(cur_vari)
                         try:
-                            with open(result_path,"rb") as tmp:
+                            with open(result_path,'rb') as tmp:
                                 cur_result = pickle.load(tmp)
-
+                                if cur_result.done == False:
+                                    finish = False
+                                    break
+                                else:
+                                    for k in range(len(cur_vari)):
+                                        self.cur_iter_matrix[cur_misi[k],cur_vari[k]] = cur_result.imp_list[k]
+                                    finished_ind[j] = True
+                                
                         except Exception as e:
                             finish = False
                             break
                             
-                        if cur_result.done == False:
-                            finish = False
-                            break
-                            
-                            
-                
-                #Update the cur_iter_matrix
-                for j in range(len(vari_node[i])):
-                    cur_vari = vari_node[i][j]
-                    result_path = self.parameters.get_results_varidx_file(cur_vari)
-                    cur_result = pickle.load(open(result_path,"rb"))
-                    cur_misi = cur_result.misi
-                    cur_obsi = cur_result.obsi
-                    
-                    '''from sklearn.ensemble import RandomForestRegressor
-                    regr = RandomForestRegressor(n_estimators = 100)
-                    p_train = np.delete(np.arange(len(self.vari)), cur_vari)
-                    tmp_X = cur_X[cur_obsi,:]
-                    tmp_X = tmp_X[:,p_train]
-                    
-                    regr.fit(tmp_X, cur_X[cur_obsi,cur_vari])
-                    
-                    tmp_X = cur_X[cur_misi,:]
-                    tmp_X = tmp_X[:,p_train]
-                    
-                    imp = regr.predict(tmp_X)
-                    
-                    print(imp)
-                    print(cur_result.imp)'''
-                    
-                    
-                    self.cur_iter_matrix[cur_misi,cur_result.vari] = cur_result.imp
-                    
-                    
+                print("DONE!")
+                        
+
             #raise Exception('!!!')    
             if self.check_converge() == True:
                 self.result_matrix = self.previous_iter_matrix
@@ -227,68 +302,40 @@ class MissForestImputation:
             cur_iter = cur_iter + 1
         
     def split_var(self):
+        #[NODES,[JOBS,[FEATURE]],]
+    
         vari_node = []
-        cur_idx = 0
+        cur_node_idx = 0
+        cur_job_idx = 0
+        
+        cur_jobs = []
         cur_vari = []
         
         for i in range(len(self.vari)):
+            cur_vari.append(self.vari[i])
+            if len(cur_vari) == self.parameters.num_feature_local:
+                cur_jobs.append(cur_vari)
+                cur_vari = []
+                if len(cur_jobs) == self.parameters.num_node:
+                    vari_node.append(cur_jobs)
+                    cur_jobs = []
+        
+        if len(cur_vari) > 0:
+            cur_jobs.append(cur_vari)
+        if len(cur_jobs) > 0:
+            vari_node.append(cur_jobs)
             
-            if cur_idx == self.parameters.num_node:
-                vari_node.append(cur_vari)
-                cur_vari = [self.vari[i]]
-                cur_idx = 0
-                if i == (len(self.vari)-1):
-                    vari_node.append(cur_vari)
-            else:
-                cur_vari.append(self.vari[i])
-                if i == (len(self.vari)-1):
-                    vari_node.append(cur_vari)
-                
-            cur_idx = cur_idx + 1
         print(vari_node) 
         return vari_node
 
     def check_converge(self):
         diff_A = 0
         diff_B = 0
-        '''
-        for i in range(len(self.vari)):
-            cur_vari = self.vari[i]
-            result_path = self.parameters.get_results_varidx_file(cur_vari)
-            cur_result = pickle.load(open(result_path,"rb"))
-            cur_misi = cur_result.misi
 
-            old_val = self.previous_iter_matrix[cur_misi,cur_result.vari]
-            new_val = self.cur_iter_matrix[cur_misi,cur_result.vari]
-            
-            if cur_vari == 1:
-                print('==============')
-                print(cur_misi)
-                print(cur_vari)
-                print(old_val)
-                print(new_val)
-                print('===============')
-            
-            
-            diff_A += np.sum((old_val-new_val)**2)
-            diff_B += np.sum(new_val**2)
-            
-            print((old_val-new_val)**2)
-            print(new_val**2)
-        '''
         diff_A = np.sum((self.previous_iter_matrix - self.cur_iter_matrix)**2)
         diff_B = np.sum((self.cur_iter_matrix)**2)
         
-        print(self.previous_iter_matrix)
-        print(self.cur_iter_matrix)
-        
-        print(diff_A)
-        print(diff_B)
-
         cur_diff = diff_A/diff_B
-        print(self.previous_diff)
-        print(cur_diff)
-        print('')
         if self.previous_diff is None:
             self.previous_diff = cur_diff
             return False
@@ -365,4 +412,65 @@ class MissForestImputation:
         self.misi = misi
         self.obsi = obsi
         
+
         
+
+class RandomForestImputation(object):
+
+    def __init__(self, n_estimators=100,
+         criterion="mse", max_depth=None, min_samples_split=2,
+         min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features="sqrt",
+         max_leaf_nodes=None, min_impurity_decrease=0.0, bootstrap=True,
+         oob_score=False, n_jobs=-1, random_state=None, verbose=0,
+         warm_start=False):
+        self.n_estimators = n_estimators
+        self.criterion = criterion
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.min_weight_fraction_leaf = min_weight_fraction_leaf
+        self.max_features = max_features 
+        self.max_leaf_nodes = max_leaf_nodes 
+        self.min_impurity_decrease = min_impurity_decrease
+        self.bootstrap = bootstrap
+        self.oob_score = oob_score 
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+        self.verbose = verbose
+        self.warm_start = warm_start
+        self.err = None
+        self.done = False
+
+    def _check_input(self):
+        pass
+
+    def fit_predict(self, X_train, y, X_test):
+        imp = None
+        try:
+            '''regr = RandomForestRegressor(
+            self.n_estimators,
+            self.criterion,
+            self.max_depth, 
+            self.min_samples_split, 
+            self.min_samples_leaf, 
+            self.min_weight_fraction_leaf, 
+            self.max_features,  
+            self.max_leaf_nodes,  
+            self.min_impurity_decrease, 
+            self.bootstrap, 
+            self.oob_score,  
+            self.n_jobs, 
+            self.random_state, 
+            self.verbose, 
+            self.warm_start)'''
+            regr = RandomForestRegressor(n_estimators = 100, verbose=1, n_jobs = -1)
+            regr.fit(X_train, y)
+            imp = regr.predict(X_test)
+            self.done = True
+        except Exception as e:
+            self.err = e
+        
+        if imp is None:
+            raise Exception('NONE!')
+
+        return imp

@@ -9,10 +9,9 @@ else:
     from . import t_compendium_exceptions
 
 class TranscriptomeCompendium:
-    def __init__(self):
-        self.metadata = t_metadata.TranscriptomeMetadata()
+    def __init__(self, query_string = "", query_ids = []):
+        self.metadata = t_metadata.TranscriptomeMetadata(query_string = query_string, query_ids = query_ids)
         self.data = t_data.TranscriptomeData()
-        
         
     def get_metadata(self):
         return self.metadata
@@ -70,6 +69,7 @@ class TranscriptomeCompendiumCollections:
     def set_imputed_data_matrix(self, imputed_data_matrix, imputation_mode, imputed_data_matrix_path):
         self.imputed_data_matrix = imputed_data_matrix
         self.imputation_mode = imputation_mode
+        self.imputed_data_matrix_path = imputed_data_matrix_path
         
     def output_imputed_data_matrix(self):
         try:
@@ -83,6 +83,7 @@ class TranscriptomeCompendiumCollections:
     def set_normalized_data_matrix(self, normalized_data_matrix, normalization_mode, normalized_data_matrix_path):
         self.normalized_data_matrix = normalized_data_matrix
         self.normalization_mode = normalization_mode
+        self.normalized_data_matrix_path = normalized_data_matrix_path
         
     def output_normalized_data_matrix(self):
         try:

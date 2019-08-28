@@ -2,6 +2,7 @@ import microarray_pipeline
 import sequencing_pipeline
 import postprocessing_pipeline
 import validation_pipeline
+import parallel_engine
 
 import sys
 if (sys.version_info < (3, 0)):
@@ -67,8 +68,11 @@ class TranscriptomicDataPreparationPipeline:
         self.t_gene_annotation.read_file()
         self.t_compendium_collections = t_compendium.TranscriptomeCompendiumCollections()
         
+        #Parallel Engine
+        self.parallel_engine = parallel_engine.ParallelEngine()
+        
         self.microarray_pipeline = microarray_pipeline.MicroarrayPipeline(self, m_query_id, t_compendium.TranscriptomeCompendium())
-        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(self, s_query_id, t_compendium.TranscriptomeCompendium())
+        self.sequencing_pipeline = sequencing_pipeline.SequencingPipeline(self, s_query_id, t_compendium.TranscriptomeCompendium(query_ids = s_query_id))
         self.postprocessing_pipeline = postprocessing_pipeline.PostprocessingPipeline(self)
         self.validation_pipeline = validation_pipeline.ValidationPipeline(self)
         
@@ -90,13 +94,27 @@ class TranscriptomicDataPreparationPipeline:
     def get_general_constant(self):
         return self.general_constant
         
+    def get_parallel_engine(self):
+        return self.parallel_engine
+        
         
 if __name__ == "__main__":
     #For Testing
-    transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],['SRX5961261','SRX3266939'],['../TestFiles/LT2_pSLT.gff3','../TestFiles/LT2.gff3'])
+    import pandas as pd
+    tmp = pd.read_csv("../TestFiles/SraRunInfo2.csv")
+    exp_list = tmp["Experiment"].tolist()
+    print(exp_list)
+    #exp_list = ["SRX3266939","SRX5961261"],
+    
+    transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],exp_list,['../TestFiles/LT2_pSLT.gff3','../TestFiles/LT2.gff3'])
     
     #Start Working
-    transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline()
-
-    transcriptome_pipeline.postprocessing_pipeline.data_concatenation.concat_compendium()
+    s_platform_id_remove = []
+    s_series_id_remove = []
+    s_experiment_id_remove = []
+    s_run_id_remove = ['SRR6266053']
+    
+    transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline(s_platform_id_remove,s_series_id_remove,s_experiment_id_remove,s_run_id_remove)
+    transcriptome_pipeline.postprocessing_pipeline.run_postprocessing_pipeline()
+    transcriptome_pipeline.validation_pipeline.run_validation_pipeline()
     

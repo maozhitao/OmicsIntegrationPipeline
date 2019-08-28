@@ -12,20 +12,38 @@ from enum import Enum
 import random
 import pandas as pd
 
+import pickle
+import subprocess
+
+
+class SequencingSampleMappingConstant(Enum):
+    JOB_NAME                    = 's_sample_mapping_'
+
+
 class DifferentRunMergeMode(Enum):
     DROP_EXPERIMENT = "drop"
     RANDOM_RUN      = "random"
     SPECIFIED_RUN   = "specified"
     AVERAGE         = "average"
+    
+    
+class SequencingSampleMappingParallelParameters:
+    def __init__(self, default_parallel_parameters):
+        self.parallel_parameters = default_parallel_parameters
+        self.pyscripts = 'script_merge_runs.py'
 
 
 class SequencingSampleMappingParameters:
-    def __init__(   self, owner, 
+    def __init__(   self, 
                     different_run_merge_mode = DifferentRunMergeMode.AVERAGE.value,
                     specified_mapping_experiment_runs = None):
-        self.owner = owner
         self.different_run_merge_mode = different_run_merge_mode
         self.specified_mapping_experiment_runs = specified_mapping_experiment_runs
+        
+        self.skip_merge_different_run = True
+        
+        self.clean_existed_worker_file = True
+        self.clean_existed_results = True
 
 class SequencingSampleMappingResults:
     def __init__(self):
@@ -34,6 +52,9 @@ class SequencingSampleMappingResults:
         self.count_reads_matrix = None
         self.done = False
         self.exception = None
+        
+        self.worker_file = {} #worker_*
+        self.result_file = {} #result_*
         
     def update_mapping_experiment_runs_after_merge(self, exp, runs):
         self.mapping_experiment_runs_after_merge[exp] = runs
@@ -44,32 +65,32 @@ class SequencingSampleMappingResults:
     def update_count_reads_matrix(self, count_reads_matrix):
         self.count_reads_matrix = count_reads_matrix
         
+    def update_worker_file(self, exp, worker_file):
+        self.worker_file[exp] = worker_file
+        
+    def update_result_file(self, exp, result_file):
+        self.result_file[exp] = result_file
+        
         
 class SequencingSampleMapping(s_module_template.SequencingSubModule):
     def __init__(self, owner):
         self.owner = owner
         self.s_retrieval_results = owner.get_s_data_retrieval_results() #Get Mapping Results
         self.s_value_extraction_results = owner.get_s_value_extraction_results() #Get Read Counts Results
-        self.parameters = SequencingSampleMappingParameters(self)
+        self.parameters = SequencingSampleMappingParameters()
+        self.parallel_parameters = SequencingSampleMappingParallelParameters(self.owner.get_parallel_engine().get_parameters())
         self.results = SequencingSampleMappingResults()
         
         self.workers = {}
         
-    def prepare_workers(self, count_reads_result_2D = None):
+    def prepare_workers(self):
         for exp in self.s_retrieval_results.mapping_experiment_runs:
-            if count_reads_result_2D == None:
-                self.workers[exp] = self.prepare_worker(exp)
-            else:
-                self.workers[exp] = self.prepare_worker(exp, count_reads_result_2D[exp])
+            self.workers[exp] = self.prepare_worker(exp)
             
-    def prepare_worker(self, exp, count_reads_result = None):
-        different_run_merge_mode = self.parameters.different_run_merge_mode
+    def prepare_worker(self, exp):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
-        if count_reads_result == None:
-            count_reads_result = self.s_value_extraction_results.count_reads_result
-        specified_mapping_experiment_runs = self.parameters.specified_mapping_experiment_runs
-        worker = SequencingSampleMappingWorker(exp, different_run_merge_mode, mapping_experiment_runs, count_reads_result, 
-                                        specified_mapping_experiment_runs)
+        count_reads_result = self.s_value_extraction_results.count_reads_result
+        worker = SequencingSampleMappingWorker(exp, self.parameters, mapping_experiment_runs, count_reads_result)
         
         return worker
     
@@ -89,35 +110,167 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         
         self.results.update_count_reads_matrix(count_reads_matrix)
         
+    def complete_data_dependent_metadata(self):
+        metadata = self.get_s_metadata()
+        
+        for exp in self.results.mapping_experiment_runs_after_merge:
+            prev_paired = None
+            prev_stranded = None
+            for run in self.results.mapping_experiment_runs_after_merge[exp]:
+                cur_paired = self.s_value_extraction_results.paired_info[run]
+                cur_stranded = self.s_value_extraction_results.infer_experiment_result[run].check_stranded_info()
+                if prev_paired is None:
+                    prev_paired = cur_paired
+                elif prev_paired != cur_paired:
+                    prev_paired = cur_paired
+                    print("Warning: Exp" + str(exp) + "has multiple runs with different paired info!")
+                
+                if prev_stranded is None:
+                    prev_stranded = cur_stranded
+                elif prev_stranded != cur_stranded:
+                    prev_stranded = cur_stranded
+                    print("Warning: Exp" + str(exp) + "has multiple runs with different stranded info!")
+            
+            metadata.update_sequencing_entry_data_dependent_info(exp, cur_paired, cur_stranded)
+        
+        df = metadata.get_table()
+        df.to_csv("TestMetadataTable_DataDependent.csv")
+        
     def get_results(self):
         return self.results
         
     def get_parameters(self):
         return self.parameters
         
+    def prepare_worker_file(self, exp):
+        pickle.dump(self.workers[exp], open(self.get_worker_file(exp), 'wb'))
+    def get_worker_file(self, exp):
+        return 'worker_s_sample_mapping_' + str(exp) + '.dat'
+    def get_worker_results_file(self, exp):
+        return 'results_s_sample_mapping_' + str(exp) + '.dat'
+    def get_worker_results(self, exp):
+        return pickle.load(open(self.get_worker_results_file(exp), 'rb'))
+        
+    def get_local_submit_command(self, exp):
+        python_path = 'python'
+        script_path = self.parallel_parameters.pyscripts
+        worker_path = self.get_worker_file(exp)
+        result_path = self.get_worker_results_file(exp)
+        
+        command = [python_path, script_path, 
+                worker_path, 
+                result_path]
+                
+        return command
+        
+        
+    def submit_job(self):
+        if self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.NONE.value:
+            for exp in self.s_retrieval_results.mapping_experiment_runs:
+                if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
+                    self.workers[exp].do_run()
+                    pickle.dump(self.workers[exp].results, open(self.get_worker_results_file(exp),'rb'))
+        elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.LOCAL.value:
+            commands = []
+            for exp in self.s_retrieval_results.mapping_experiment_runs:
+                if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
+                    self.prepare_worker_file(exp)
+                    commands.append(self.get_local_submit_command(exp))
+            #Run It !
+            parallel_engine = self.get_parallel_engine()
+            parallel_engine.do_run_local_parallel(commands)
+        elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.SLURM.value:
+            result_path_list = []
+            parallel_engine = self.get_parallel_engine()
+            for exp in self.s_retrieval_results.mapping_experiment_runs:
+                if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
+                    self.prepare_worker_file(exp)
+                    parallel_engine.prepare_shell_file(self.get_local_submit_command(exp))
+                    command = parallel_engine.get_command_sbatch(SequencingSampleMappingConstant.JOB_NAME.value + exp)
+                    #Run It!
+                    subprocess.call(command)
+                    result_path_list.append(self.get_worker_results_file(exp))
+            #Polling
+            parallel_engine.do_polling(result_path_list)
+            
+    def join_results(self):
+        mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
+        
+        exception_occurred = False
+        for exp in mapping_experiment_runs:
+            cur_exp_results = self.get_worker_results(exp)
+            if cur_exp_results.exception is not None:
+                print(exp + ": Exception Occurred : " + str(cur_exp_results.exception))
+                exception_occurred = True
+                continue
+            #Update the current results
+            if cur_exp_results.mapping_experiment_runs_after_merge != {}:
+                self.results.update_mapping_experiment_runs_after_merge(exp, cur_exp_results.mapping_experiment_runs_after_merge[exp])
+            if cur_exp_results.merged_count_reads_result != {}:
+                self.results.update_merged_count_reads_result(exp, cur_exp_results.merged_count_reads_result[exp])
+                
+                
+            if self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.NONE.value:
+                self.results.update_worker_file(exp, None)
+            else:
+                self.results.update_worker_file(exp, self.get_worker_file(exp))
+            self.results.update_result_file(exp, self.get_worker_results_file(exp))
+            
+        if exception_occurred == True:
+            raise s_sample_mapping_exceptions.JoinResultsException('Some exception occurred!')
+        
+    def check_existed_results(self, exp):
+        try:
+            cur_exp_results = self.get_worker_results(exp)
+        except Exception as e:
+            return False
+            
+        #We have to check the completeness of the results here!
+        if cur_exp_results.exception is not None:
+            os.remove(self.get_worker_results_file(exp))
+            return False
+        return True
+        
+    def clean_intermediate_files(self):
+        mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
+        for exp in mapping_experiment_runs:            
+            try:
+                self.clean_intermediate_files_run(exp)
+            except Exception:
+                pass
+                
+    def clean_intermediate_files_run(self, run):
+        if self.parameters.clean_existed_worker_file == True:
+            if os.path.isfile(self.results.worker_file[exp]):
+                os.remove(self.results.worker_file[exp])
+        if self.parameters.clean_existed_results == True:
+            if os.path.isfile(self.results.result_file[exp]):
+                os.remove(self.results.result_file[exp])
 
 class SequencingSampleMappingWorker:
-    def __init__(self, exp, different_run_merge_mode, mapping_experiment_runs, count_reads_result,
-                    specified_mapping_experiment_runs = None):
+    def __init__(self, exp, parameters, 
+                    mapping_experiment_runs, count_reads_result):
         self.exp = exp
-        self.different_run_merge_mode = different_run_merge_mode
+        self.parameters = parameters
         self.mapping_experiment_runs = mapping_experiment_runs
         self.count_reads_result = count_reads_result
-        self.specified_mapping_experiment_runs = specified_mapping_experiment_runs
         
         self.results = SequencingSampleMappingResults()
         
     def do_run(self):
-        self.merge_different_run_exp()
+        try:
+            self.merge_different_run_exp()
+        except Exception as e:
+            self.results.exception = e
         
     def merge_different_run_exp(self):
-        if self.different_run_merge_mode == DifferentRunMergeMode.DROP_EXPERIMENT.value:
+        if self.parameters.different_run_merge_mode == DifferentRunMergeMode.DROP_EXPERIMENT.value:
             self.merge_different_run_drop_experiment_exp()
-        elif self.different_run_merge_mode == DifferentRunMergeMode.RANDOM_RUN.value:
+        elif self.parameters.different_run_merge_mode == DifferentRunMergeMode.RANDOM_RUN.value:
             self.merge_different_run_random_run_exp()
-        elif self.different_run_merge_mode == DifferentRunMergeMode.SPECIFIED_RUN.value:
+        elif self.parameters.different_run_merge_mode == DifferentRunMergeMode.SPECIFIED_RUN.value:
             self.merge_different_run_specified_run_exp()
-        elif self.different_run_merge_mode == DifferentRunMergeMode.AVERAGE.value:
+        elif self.parameters.different_run_merge_mode == DifferentRunMergeMode.AVERAGE.value:
             self.merge_different_run_average_exp()
         else:
             raise s_sample_mapping_exceptions.InvalidDifferentRunMergeMode('Invalid different run merge mode!')
@@ -141,7 +294,7 @@ class SequencingSampleMappingWorker:
             
     def merge_different_run_specified_run_exp(self):
         try:
-            run = self.specified_mapping_experiment_runs[self.exp]
+            run = self.parameters.specified_mapping_experiment_runs[self.exp]
         except Exception as e:
             raise s_sample_mapping_exceptions.InvalidSpecifiedExperimentMapping('Invalid specified run')
             
