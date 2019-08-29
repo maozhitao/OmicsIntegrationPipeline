@@ -50,12 +50,15 @@ class SequencingExtractionParameters:
                     infer_experiment_record_file_ext = ".infer_experiment_out",
                     infer_experiment_threshold = 0.9,
                     count_reads_file_ext = '.count_reads',
-                    general_parameters = None):
+                    general_parameters = None,
+                    n_trial = 10):
         self.working_file_dir = working_file_dir
         self.alignment_record_file_ext = alignment_record_file_ext
         self.infer_experiment_record_file_ext = infer_experiment_record_file_ext
         self.infer_experiment_threshold = infer_experiment_threshold
         self.count_reads_file_ext = count_reads_file_ext
+        
+        self.n_trial = n_trial
         
         self.skip_all = True
         self.skip_fastq_dump = True
@@ -282,6 +285,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             parallel_engine = self.get_parallel_engine()
             parallel_engine.do_run_local_parallel(commands)
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.SLURM.value:
+            local_commands = []
             commands = []
             result_path_list = []
             parallel_engine = self.get_parallel_engine()
@@ -289,14 +293,15 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
                         self.prepare_worker_file(run)
-                        parallel_engine.prepare_shell_file(self.get_local_submit_command(run))
+                        local_command = self.get_local_submit_command(run)
+                        local_commands.append(local_command)
                         command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME.value + run)
                         #Run It!
                         commands.append(command)
                         result_path_list.append(self.get_worker_results_file(run))
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(commands, result_path_list)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
@@ -343,16 +348,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             os.remove(self.get_worker_results_file(run))
             return False
         return True
-        
-    def clean_intermediate_files(self):
-        mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
-        for exp in mapping_experiment_runs:            
-            for run in mapping_experiment_runs[exp]:
-                self.clean_intermediate_files_run(run)
 
-                
-    
-                    
 
         
     
@@ -379,22 +375,35 @@ class SequencingExtractionWorker:
         self.results = SequencingExtractionResults()
         
     def do_run(self):
-        try:
-            self.download_data_run_independent()
-            self.prepare_fastq_file_run_independent()
-            self.align_data_run_independent()
-            self.infer_stranded_information_run_independent()
-            self.count_reads_run_independent()
-            self.clean_intermediate_files_independent()
-        except Exception as e:
-            self.results.exception = e
+        cur_n = 0
+        while True:
+            exception_occurred = False
+            self.results.exception = None
+            try:
+                self.download_data_run_independent()
+                self.prepare_fastq_file_run_independent()
+                self.align_data_run_independent()
+                self.infer_stranded_information_run_independent()
+                self.count_reads_run_independent()
+                self.clean_intermediate_files_independent()
+            except Exception as e:
+                print(str(self.run) + ': Exception Occurred' + str(e) + ': Try Again')
+                self.results.exception = e
+                self.clean_intermediate_files_independent(force = True)
+                exception_occurred = True
+                cur_n = cur_n + 1
+
+            if exception_occurred == False or cur_n == self.parameters.n_trial:
+                break
         
         
     def get_sratool_prefetch_command(self):
         executive_path = self.sratool_parameters.dir + self.general_parameters.executive_prefix + self.sratool_parameters.prefetch_exe_file + self.general_parameters.executive_surfix
+        force_par = self.sratool_parameters.prefetch_par_force
+        force = self.sratool_parameters.prefetch_force
         output_par = self.sratool_parameters.prefetch_par_output_file
         output_file_name = self.parameters.working_file_dir + self.run
-        command = [executive_path, self.run, output_par, output_file_name]
+        command = [executive_path, self.run, force_par, force, output_par, output_file_name]
         return(command)
         
     def get_sratool_vdb_validate_command(self):
@@ -676,34 +685,28 @@ class SequencingExtractionWorker:
         return infer_experiment_result[self.run].check_stranded_info()
         
 
-    def clean_intermediate_files_independent(self):
+    def clean_intermediate_files_independent(self, force = False):
         try:
-            if self.parameters.clean_existed_sra_files == True:
+            if self.parameters.clean_existed_sra_files == True or force == True:
                 if os.path.isfile(self.results.sra_file[self.run]):
                     os.remove(self.results.sra_file[self.run])
-            if self.parameters.clean_existed_fastqdump_results == True:
+            if self.parameters.clean_existed_fastqdump_results == True or force == True:
                 for file in self.results.fastq_files[self.run]:
                     if os.path.isfile(file):
                         os.remove(file)
-            if self.parameters.clean_existed_alignment_sequence_results == True:
+            if self.parameters.clean_existed_alignment_sequence_results == True or force == True:
                 sam_file = self.results.alignment_sequence_file[self.run]
                 if os.path.isfile(sam_file):
                     os.remove(sam_file)
-            if self.parameters.clean_existed_alignment_results == True:
+            if self.parameters.clean_existed_alignment_results == True or force == True:
                 if os.path.isfile(self.results.alignment_result_file[self.run]):
                     os.remove(self.results.alignment_result_file[self.run])
-            if self.parameters.clean_existed_infer_experiment_results == True:
+            if self.parameters.clean_existed_infer_experiment_results == True or force == True:
                 if os.path.isfile(self.results.infer_experiment_result_file[self.run]):
                     os.remove(self.results.infer_experiment_result_file[self.run])
-            if self.parameters.clean_existed_count_read_results == True:
+            if self.parameters.clean_existed_count_read_results == True or force == True:
                 if os.path.isfile(self.results.count_reads_file[self.run]):
                     os.remove(self.results.count_reads_file[self.run])
-            if self.parameters.clean_existed_worker_file == True:
-                if os.path.isfile(self.results.worker_file[self.run]):
-                    os.remove(self.results.worker_file[self.run])
-            if self.parameters.clean_existed_results == True:
-                if os.path.isfile(self.results.result_file[self.run]):
-                    os.remove(self.results.result_file[self.run])
         except:
             pass
         

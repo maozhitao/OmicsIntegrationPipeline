@@ -15,6 +15,9 @@ import pandas as pd
 import pickle
 import subprocess
 
+import os
+
+
 
 class SequencingSampleMappingConstant(Enum):
     JOB_NAME                    = 's_sample_mapping_'
@@ -36,9 +39,11 @@ class SequencingSampleMappingParallelParameters:
 class SequencingSampleMappingParameters:
     def __init__(   self, 
                     different_run_merge_mode = DifferentRunMergeMode.AVERAGE.value,
-                    specified_mapping_experiment_runs = None):
+                    specified_mapping_experiment_runs = None,
+                    n_trial = 10):
         self.different_run_merge_mode = different_run_merge_mode
         self.specified_mapping_experiment_runs = specified_mapping_experiment_runs
+        self.n_trial = n_trial
         
         self.skip_merge_different_run = True
         
@@ -180,18 +185,25 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             parallel_engine = self.get_parallel_engine()
             parallel_engine.do_run_local_parallel(commands)
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.SLURM.value:
+            local_commands = []
+            commands = []
             result_path_list = []
             parallel_engine = self.get_parallel_engine()
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
                     self.prepare_worker_file(exp)
-                    parallel_engine.prepare_shell_file(self.get_local_submit_command(exp))
+                    local_command = self.get_local_submit_command(exp)
+                    local_commands.append(local_command)
                     command = parallel_engine.get_command_sbatch(SequencingSampleMappingConstant.JOB_NAME.value + exp)
-                    #Run It!
-                    subprocess.call(command)
+                    commands.append(command)
+                    
+                    print(local_command)
+                    print(command)
+                    
                     result_path_list.append(self.get_worker_results_file(exp))
             #Polling
-            parallel_engine.do_polling(result_path_list)
+            parallel_engine = self.get_parallel_engine()
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
@@ -231,21 +243,6 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             return False
         return True
         
-    def clean_intermediate_files(self):
-        mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
-        for exp in mapping_experiment_runs:            
-            try:
-                self.clean_intermediate_files_run(exp)
-            except Exception:
-                pass
-                
-    def clean_intermediate_files_run(self, run):
-        if self.parameters.clean_existed_worker_file == True:
-            if os.path.isfile(self.results.worker_file[exp]):
-                os.remove(self.results.worker_file[exp])
-        if self.parameters.clean_existed_results == True:
-            if os.path.isfile(self.results.result_file[exp]):
-                os.remove(self.results.result_file[exp])
 
 class SequencingSampleMappingWorker:
     def __init__(self, exp, parameters, 
@@ -258,10 +255,7 @@ class SequencingSampleMappingWorker:
         self.results = SequencingSampleMappingResults()
         
     def do_run(self):
-        try:
-            self.merge_different_run_exp()
-        except Exception as e:
-            self.results.exception = e
+        self.merge_different_run_exp()
         
     def merge_different_run_exp(self):
         if self.parameters.different_run_merge_mode == DifferentRunMergeMode.DROP_EXPERIMENT.value:
@@ -323,3 +317,4 @@ class SequencingSampleMappingWorker:
             self.results.update_merged_count_reads_result(self.exp, merged_count_reads_result)
     
             print(merged_count_reads_result)
+            

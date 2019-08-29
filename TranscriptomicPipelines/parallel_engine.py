@@ -15,7 +15,7 @@ class ParallelOptions(Enum):
 class ParallelParameters:
     def __init__(self):
         self.parallel_option = ParallelOptions
-        self.parallel_mode = self.parallel_option.SLURM.value
+        self.parallel_mode = self.parallel_option.LOCAL.value
         self.n_processes_local = 2
         self.n_jobs_slurm = 8
         self.parameters_SLURM = ParallelParameters_SLURM()
@@ -109,12 +109,13 @@ class ParallelEngine:
                 break
                 
                 
-    def do_run_slurm_parallel(self, command_list, result_path_list):
+    def do_run_slurm_parallel(self, local_command_list, command_list, result_path_list):
         running_idx = [-1]*self.parameters.n_jobs_slurm
         next_entry_idx = 0
         while True:
             finish = True
             time.sleep(1)
+            print(running_idx)
             for i in range(self.parameters.n_jobs_slurm):
                 if running_idx[i] != -1:
                     #Working ==> Try to read results
@@ -137,8 +138,11 @@ class ParallelEngine:
                 if next_entry_idx < len(command_list):
                     #New job has to be assigned
                     running_idx[i] = next_entry_idx
+                    self.prepare_shell_file(local_command_list[next_entry_idx])
                     subprocess.call(command_list[next_entry_idx])
+                    print(command_list[next_entry_idx])
                     next_entry_idx = next_entry_idx + 1
+                    print('New')
                     finish = False
                     
             if finish == True:

@@ -64,6 +64,8 @@ class SRAToolkitParameters:
         self.dir = ''
         self.prefetch_exe_file          = 'prefetch'
         self.prefetch_par_output_file   = '-o'
+        self.prefetch_par_force         = '-f'
+        self.prefetch_force             = 'all'
         
         self.validate_exe_file          = 'vdb-validate'
         
