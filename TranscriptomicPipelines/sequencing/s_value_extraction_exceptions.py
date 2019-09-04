@@ -1,4 +1,10 @@
+class JoinResultsException(Exception):
+    pass
+
 class InvalidFastqFilePathException(Exception):
+    pass
+    
+class FailedToDownloadSRAFileException(Exception):
     pass
     
 class FastqdumpFailedException(Exception):

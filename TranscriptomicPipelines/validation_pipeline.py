@@ -14,6 +14,16 @@ class ValidationPipeline(v_module_template.ValidationModule):
         self.owner = owner
         self.supervised_validation = supervised.SupervisedValidation(self)
         self.unsupervised_validation = unsupervised.UnsupervisedValidation(self)
+       
+        self.configure_parameter_set()
+       
+    def configure_parameter_set_all(self):
+        self.configure_parameter_set()
+        self.supervised_validation.configure_parameter_set()
+        self.unsupervised_validation.configure_parameter_set()
+       
+    def configure_parameter_set(self):
+        return
         
     def run_validation_pipeline(self, input_corr_path = None, input_knowledge_capture_path = None):
         self.unsupervised_validation.validate_data()

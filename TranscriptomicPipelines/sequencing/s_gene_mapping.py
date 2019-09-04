@@ -7,13 +7,12 @@ else:
     from . import s_gene_mapping_exceptions
 
 class SequencingGeneMappingParameters:
-    def __init__(self, owner, 
+    def __init__(self, 
                     drop_unnamed_genes = False,
                     use_gene_names = False,
                     data_matrix_table_path = 'SequencingDataMatrix.csv',
                     gene_mapping_table_path = 'SequencingGeneMappingTable.csv'
                 ):
-        self.owner = owner
         self.drop_unnamed_genes = drop_unnamed_genes
         self.use_gene_names = use_gene_names
         self.data_matrix_table_path = data_matrix_table_path
@@ -30,8 +29,17 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
     def __init__(self, owner):
         self.owner = owner
         self.s_sample_mapping_results = owner.get_s_sample_mapping_results()
-        self.parameters = SequencingGeneMappingParameters(self)
+        self.parameters = SequencingGeneMappingParameters()
         self.results = SequencingGeneMappingResults()
+        
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.drop_unnamed_genes              = parameter_set.s_gene_mapping_parameters_drop_unnamed_genes
+        self.parameters.use_gene_names                  = parameter_set.s_gene_mapping_parameters_use_gene_names
+        self.parameters.data_matrix_table_path          = parameter_set.s_gene_mapping_parameters_data_matrix_table_path
+        self.parameters.gene_mapping_table_path         = parameter_set.s_gene_mapping_parameters_gene_mapping_table_path
         
     def map_gene(self):
         gene_mapping_table = self.owner.get_t_gene_annotation().get_gene_mapping_table()

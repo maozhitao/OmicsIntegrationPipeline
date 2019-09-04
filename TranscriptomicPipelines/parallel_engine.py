@@ -15,7 +15,7 @@ class ParallelOptions(Enum):
 class ParallelParameters:
     def __init__(self):
         self.parallel_option = ParallelOptions
-        self.parallel_mode = self.parallel_option.LOCAL.value
+        self.parallel_mode = self.parallel_option.SLURM.value
         self.n_processes_local = 2
         self.n_jobs_slurm = 8
         self.parameters_SLURM = ParallelParameters_SLURM()
@@ -109,8 +109,12 @@ class ParallelEngine:
                 break
                 
                 
-    def do_run_slurm_parallel(self, local_command_list, command_list, result_path_list):
+    def do_run_slurm_parallel(self, local_command_list, command_list, result_path_list, worker_list, time_limit = None):
+        if not time_limit:
+            time_limit = self.parameters.parameters_SLURM.time_limit_hr *3600 + self.parameters.parameters_SLURM.time_limit_min*60
+    
         running_idx = [-1]*self.parameters.n_jobs_slurm
+        running_time = [0]*self.parameters.n_jobs_slurm
         next_entry_idx = 0
         while True:
             finish = True
@@ -121,18 +125,30 @@ class ParallelEngine:
                     #Working ==> Try to read results
                     try:
                         cur_results = pickle.load(open(result_path_list[running_idx[i]],'rb'))
-                    except IOError as e:
+                    except Exception as e:
                         finish = False
+                        running_time[i] = running_time[i] + 1
+                        if running_time[i] > time_limit:
+                            print("TIMEOUT!")
+                            worker_list[running_idx[i]].clean_intermediate_files_independent(force = True)
+                            running_idx[i] = -1
+                            
                         continue
                         
                     if cur_results.done == False and cur_result.exception is None:
                         finish = False
+                        running_time[i] = running_time[i] + 1
+                        if running_time[i] > time_limit:
+                            print("TIMEOUT!")
+                            worker_list[running_idx[i]].clean_intermediate_files_independent(force = True)
+                            running_idx[i] = -1
                         continue
                     else:
                         #Done (or failed)!
                         if cur_results.exception is not None:
                             print(command_list[running_idx[i]])
                             print(cur_results.exception)
+                        running_time[i] = 0
                         running_idx[i] = -1
                         
                 if next_entry_idx < len(command_list):
@@ -143,6 +159,7 @@ class ParallelEngine:
                     print(command_list[next_entry_idx])
                     next_entry_idx = next_entry_idx + 1
                     print('New')
+                    running_time[i] = 0
                     finish = False
                     
             if finish == True:

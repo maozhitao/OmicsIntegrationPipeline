@@ -18,6 +18,17 @@ class PostprocessingPipeline(p_module_template.PostprocessingModule):
         self.data_imputation = imputation.Imputation(self)
         self.data_normalization = normalization.Normalization(self)
         
+        self.configure_parameter_set()
+        
+    def configure_parameter_set_all(self):
+        self.configure_parameter_set()
+        self.data_concatenation.configure_parameter_set()
+        self.data_imputation.configure_parameter_set()
+        self.data_normalization.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        pass
+        
     def run_postprocessing_pipeline(self):
         self.data_concatenation.concat_compendium()
         self.data_imputation.impute_data_matrix()

@@ -35,7 +35,7 @@ class SequencingExtractionConstant(Enum):
     COUNT_TOO_LOW_AQUAL         = '__too_low_aQual'
     COUNT_NOT_ALIGNED           = '__not_aligned'
     COUNT_ALIGNMENT_NOT_UNIQUE  = '__alignment_not_unique'
-    SRA_RESULT_OK   = 'consistent'
+    SRA_RESULT_OK               = 'consistent'
     JOB_NAME                    = 's_value_extraction_'
     
 class SequencingExtractionParallelParameters:
@@ -163,6 +163,63 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         self.results = SequencingExtractionResults()
         self.workers = {}
         
+        self.configure_parameter_set(general_parameters = self.get_general_parameters())
+        
+    def configure_parameter_set(self, general_parameters):
+        parameter_set = self.get_parameter_set()
+        
+        self.parameters.working_file_dir                    = parameter_set.s_value_extraction_parameters_working_file_dir
+        self.parameters.alignment_record_file_ext           = parameter_set.s_value_extraction_parameters_alignment_record_file_ext
+        self.parameters.infer_experiment_record_file_ext    = parameter_set.s_value_extraction_parameters_infer_experiment_record_file_ext
+        self.parameters.infer_experiment_threshold          = parameter_set.s_value_extraction_parameters_infer_experiment_threshold
+        self.parameters.count_reads_file_ext                = parameter_set.s_value_extraction_parameters_count_reads_file_ext
+        
+        self.parameters.n_trial                             = parameter_set.s_value_extraction_parameters_n_trial
+        
+        self.parameters.skip_all                            = parameter_set.s_value_extraction_parameters_skip_all
+        self.parameters.skip_fastq_dump                     = parameter_set.s_value_extraction_parameters_skip_fastq_dump
+        self.parameters.skip_alignment                      = parameter_set.s_value_extraction_parameters_skip_alignment
+        self.parameters.skip_infer_experiment               = parameter_set.s_value_extraction_parameters_skip_infer_experiment
+        self.parameters.skip_count_reads                    = parameter_set.s_value_extraction_parameters_skip_count_reads
+        
+        self.parameters.clean_existed_sra_files                     = parameter_set.s_value_extraction_parameters_clean_existed_sra_files
+        self.parameters.clean_existed_fastqdump_results             = parameter_set.s_value_extraction_parameters_clean_existed_fastqdump_results
+        self.parameters.clean_existed_alignment_sequence_results    = parameter_set.s_value_extraction_parameters_clean_existed_alignment_sequence_results
+        self.parameters.clean_existed_alignment_results             = parameter_set.s_value_extraction_parameters_clean_existed_alignment_results
+        self.parameters.clean_existed_infer_experiment_results      = parameter_set.s_value_extraction_parameters_clean_existed_infer_experiment_results
+        self.parameters.clean_existed_count_read_results            = parameter_set.s_value_extraction_parameters_clean_existed_count_read_results
+        self.parameters.clean_existed_worker_file                   = parameter_set.s_value_extraction_parameters_clean_existed_worker_file
+        self.parameters.clean_existed_results                       = parameter_set.s_value_extraction_parameters_clean_existed_results
+        
+        if self.parameters.working_file_dir == "":
+            raise s_data_retrieval_exceptions.InvalidSRAFilePathException('You should provide the working directory')
+        if not self.parameters.working_file_dir.endswith(general_parameters.dir_sep):
+            self.parameters.working_file_dir = self.parameters.working_file_dir + general_parameters.dir_sep
+
+    def configure_parameter_set_parallel(self):
+        parameter_set = self.get_parameter_set()
+        self.parallel_parameters.pyscripts                              = parameter_set.s_value_extraction_parallel_parameters_pyscript
+        
+        self.parallel_parameters.parallel_parameters.parallel_mode      = parameter_set.s_value_extraction_parallel_parameters_parallel_mode
+        self.parallel_parameters.parallel_parameters.n_processes_local  = parameter_set.s_value_extraction_parallel_parameters_n_processes_local
+        self.parallel_parameters.parallel_parameters.n_jobs_slurm       = parameter_set.s_value_extraction_parallel_parameters_n_jobs_slurm
+        
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_node              = parameter_set.constants.parallel_slurm_parameters_par_num_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_node                  = 1
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_core_each_node    = parameter_set.constants.parallel_slurm_parameters_par_num_core_each_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_core_each_node        = parameter_set.s_value_extraction_parallel_parameters_slurm_num_core_each_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_time_limit            = parameter_set.constants.parallel_slurm_parameters_par_time_limit
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_hr             = parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_hr
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_min            = parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_min
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_job_name              = parameter_set.constants.parallel_slurm_parameters_par_job_name
+
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_output                = parameter_set.constants.parallel_slurm_parameters_par_output
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.output_ext                = parameter_set.s_value_extraction_parallel_parameters_slurm_output_ext
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_error                 = parameter_set.constants.parallel_slurm_parameters_par_error
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.error_ext                 = parameter_set.s_value_extraction_parallel_parameters_slurm_error_ext
+        
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.shell_script_path         = parameter_set.s_value_extraction_parallel_parameters_slurm_shell_script_path
+        
     def get_parameters(self):
         return self.parameters
         
@@ -265,6 +322,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         return command
         
     def submit_job(self):
+        self.configure_parameter_set_parallel()
         if self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.NONE.value:
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
@@ -288,11 +346,13 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             local_commands = []
             commands = []
             result_path_list = []
+            worker_list = []
             parallel_engine = self.get_parallel_engine()
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
                         self.prepare_worker_file(run)
+                        worker_list.append(self.workers[run])
                         local_command = self.get_local_submit_command(run)
                         local_commands.append(local_command)
                         command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME.value + run)
@@ -301,7 +361,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                         result_path_list.append(self.get_worker_results_file(run))
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs

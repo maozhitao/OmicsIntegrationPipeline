@@ -45,7 +45,7 @@ class SequencingRetrievalParameters:
         self.sra_run_info_path = sra_run_info_path
         self.fasta_path = fasta_path
         
-        self.skip_srainfo_download = False
+        self.skip_srainfo_download = True
         self.skip_fasta_download = True
         
 class SequencingRetrievalResults:
@@ -79,6 +79,18 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
         self.mapping_experiment_runs_removed = {}
         
         self.workers = {}
+        
+        self.configure_parameter_set(general_parameters = self.get_general_parameters())
+        
+    def configure_parameter_set(self, general_parameters):
+        parameter_set = self.get_parameter_set()
+        
+        self.parameters.entrez_mail             = parameter_set.s_data_retrieval_parameters_entrez_mail
+        self.parameters.sra_run_info_path       = parameter_set.s_data_retrieval_parameters_sra_run_info_path
+        self.parameters.fasta_path              = parameter_set.s_data_retrieval_parameters_fasta_path
+        
+        self.parameters.skip_srainfo_download   = parameter_set.s_data_retrieval_parameters_skip_srainfo_download
+        self.parameters.skip_fasta_download     = parameter_set.s_data_retrieval_parameters_skip_fasta_download
         
         
     def get_parameters(self):

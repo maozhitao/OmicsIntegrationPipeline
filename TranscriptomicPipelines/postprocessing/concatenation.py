@@ -23,6 +23,12 @@ class Concatenation(p_module_template.PostprocessingSubModule):
     def __init__(self, owner):
         self.owner = owner
         self.parameters = ConcatenationParameters()
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.merged_metadata_table_path  = parameter_set.p_concatenation_parameters_merged_metadata_table_path
+        self.parameters.merged_data_matrix_path     = parameter_set.p_concatenation_parameters_merged_data_matrix_path
         
     def concat_compendium_to_t_compendium_collections(self, compendium_list):
         t_compendium_collections = self.get_t_compendium_collections()

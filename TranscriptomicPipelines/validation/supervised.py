@@ -35,6 +35,15 @@ class SupervisedValidation(v_module_template.ValidationSubModule):
         self.owner = owner
         self.parameters = SupervisedValidationParameters()
         
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.n_trial                                     = parameter_set.v_supervised_parameters_n_trial
+        self.parameters.noise_ratio                                 = parameter_set.v_supervised_parameters_noise_ratio
+        self.parameters.correlation_validation_results_path         = parameter_set.v_supervised_parameters_correlation_validation_results_path
+        self.parameters.knowledge_capture_validation_results_path   = parameter_set.v_supervised_parameters_knowledge_capture_validation_results_path
+        
     def correlation_validation(self, input_corr_path):
         input_corr = pd.read_csv(input_corr_path)
         t_compendium_collections = self.get_t_compendium_collections()

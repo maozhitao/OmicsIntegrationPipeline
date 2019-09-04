@@ -2,6 +2,9 @@ class MicroarrayModule:
     def __init__(self, owner):
         self.owner = owner
         
+    def get_parameter_set(self):
+        return self.owner.get_parameter_set()
+        
     def get_m_query_id(self):
         return self.owner.get_m_query_id()
         

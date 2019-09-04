@@ -88,6 +88,46 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         
         self.workers = {}
         
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.different_run_merge_mode            = parameter_set.s_sample_mapping_parameters_different_run_merge_mode
+        self.parameters.n_trial                             = parameter_set.s_sample_mapping_parameters_n_trial
+        self.parameters.skip_merge_different_run            = parameter_set.s_sample_mapping_parameters_skip_merge_different_run
+        self.parameters.clean_existed_worker_file           = parameter_set.s_sample_mapping_parameters_clean_existed_worker_file
+        self.parameters.clean_existed_results               = parameter_set.s_sample_mapping_parameters_clean_existed_results
+        
+    def configure_parameter_set_parallel(self):
+        parameter_set = self.get_parameter_set()
+        self.parallel_parameters.pyscripts                              = parameter_set.s_sample_mapping_parallel_parameters_pyscript
+        
+        self.parallel_parameters.parallel_parameters.parallel_mode      = parameter_set.s_sample_mapping_parallel_parameters_parallel_mode
+        self.parallel_parameters.parallel_parameters.n_processes_local  = parameter_set.s_sample_mapping_parallel_parameters_n_processes_local
+        self.parallel_parameters.parallel_parameters.n_jobs_slurm       = parameter_set.s_sample_mapping_parallel_parameters_n_jobs_slurm
+        
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_node              = parameter_set.constants.parallel_slurm_parameters_par_num_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_node                  = 1
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_core_each_node    = parameter_set.constants.parallel_slurm_parameters_par_num_core_each_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_core_each_node        = parameter_set.s_sample_mapping_parallel_parameters_slurm_num_core_each_node
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_time_limit            = parameter_set.constants.parallel_slurm_parameters_par_time_limit
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_hr             = parameter_set.s_sample_mapping_parallel_parameters_slurm_time_limit_hr
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_min            = parameter_set.s_sample_mapping_parallel_parameters_slurm_time_limit_min
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_job_name              = parameter_set.constants.parallel_slurm_parameters_par_job_name
+
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_output                = parameter_set.constants.parallel_slurm_parameters_par_output
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.output_ext                = parameter_set.s_sample_mapping_parallel_parameters_slurm_output_ext
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_error                 = parameter_set.constants.parallel_slurm_parameters_par_error
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.error_ext                 = parameter_set.s_sample_mapping_parallel_parameters_slurm_error_ext
+        
+        self.parallel_parameters.parallel_parameters.parameters_SLURM.shell_script_path         = parameter_set.s_sample_mapping_parallel_parameters_slurm_shell_script_path
+        
+    
+    
+    def configure_specified_mapping_experiment_runs(self, specified_mapping_experiment_runs = None):
+        self.parameters.specified_mapping_experiment_runs = specified_mapping_experiment_runs
+
+        
     def prepare_workers(self):
         for exp in self.s_retrieval_results.mapping_experiment_runs:
             self.workers[exp] = self.prepare_worker(exp)
@@ -170,6 +210,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         
         
     def submit_job(self):
+        self.configure_parameter_set_parallel()
         if self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.NONE.value:
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
@@ -256,6 +297,9 @@ class SequencingSampleMappingWorker:
         
     def do_run(self):
         self.merge_different_run_exp()
+        
+    def clean_intermediate_files_independent(self, force = False):
+        return
         
     def merge_different_run_exp(self):
         if self.parameters.different_run_merge_mode == DifferentRunMergeMode.DROP_EXPERIMENT.value:

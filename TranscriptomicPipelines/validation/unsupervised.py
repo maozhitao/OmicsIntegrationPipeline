@@ -36,6 +36,16 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
         self.rfimpute = rfimpute.MissForestImputation()
         self.parameters = UnsupervisedValidationParameters()
         
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.n_trial                                 = parameter_set.v_unsupervised_parameters_n_trial
+        self.parameters.noise_ratio                             = parameter_set.v_unsupervised_parameters_noise_ratio
+        self.parameters.missing_value_ratio                     = parameter_set.v_unsupervised_parameters_missing_value_ratio
+        self.parameters.unsupervised_validation_results_path    = parameter_set.v_unsupervised_parameters_results_path
+        self.parameters.skip_validate_data                      = parameter_set.v_unsupervised_parameters_skip_validate_data
+        
     def validate_data(self):
         if self.parameters.skip_validate_data == False or self.check_existed_result() == False:
             self.rfimpute.parameters.parallel_options = rfimpute.ParallelOptions.LOCAL.value #FOR TESTING

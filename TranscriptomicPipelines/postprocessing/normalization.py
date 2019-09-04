@@ -13,7 +13,7 @@ class NormalizationOptions(Enum):
 
 class NormalizationParameters:
     def __init__(   self,
-                    normalized_data_matrix_path = "NormlizedDataMatrix.csv"):
+                    normalized_data_matrix_path = "NormalizedDataMatrix.csv"):
         self.normalization_options = NormalizationOptions.QUANTILE.value
         self.normalized_data_matrix_path = normalized_data_matrix_path
        
@@ -26,6 +26,13 @@ class Normalization(p_module_template.PostprocessingSubModule):
     def __init__(self, owner):
         self.owner = owner
         self.parameters = NormalizationParameters()
+        
+        self.configure_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.normalization_options       = parameter_set.p_normalization_parameters_normalization_option
+        self.parameters.normalized_data_matrix_path = parameter_set.p_normalization_parameters_normalized_data_matrix_path
         
     def normalize_data_matrix(self):
         if self.parameters.normalization_options == NormalizationOptions.QUANTILE.value:

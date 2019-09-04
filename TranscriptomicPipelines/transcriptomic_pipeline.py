@@ -9,9 +9,11 @@ if (sys.version_info < (3, 0)):
     sys.path.insert(0, "t_utilities")
     import t_compendium
     import t_gff
+    import t_parameters
 else:
     import t_utilities.t_compendium as t_compendium
     import t_utilities.t_gff as t_gff
+    import t_utilities.t_parameters as t_parameters
 
 from enum import Enum 
 import sys
@@ -56,6 +58,9 @@ class TranscriptomicDataPreparationPipeline:
                     owner = None
                     ):
                     
+        #Initialize Parameter Set:
+        self.parameter_set = t_parameters.TranscriptomicParameters(self)
+                    
         #Initialize Environment:
         self.general_constant = GeneralConstant
         self.general_parameters = GeneralParameters() #Temp arrangement, it should be moved to upper layer (OmicsDataPreparationPipeline)
@@ -76,6 +81,23 @@ class TranscriptomicDataPreparationPipeline:
         self.postprocessing_pipeline = postprocessing_pipeline.PostprocessingPipeline(self)
         self.validation_pipeline = validation_pipeline.ValidationPipeline(self)
         
+        #Configure Parameters
+    
+    def configure_parameter_set_all(self):
+        self.configure_parameter_set()
+        self.sequencing_pipeline.configure_parameter_set_all(self.general_constant, self.general_parameters)
+        self.postprocessing_pipeline.configure_parameter_set_all()
+        self.validation_pipeline.configure_parameter_set_all()
+    
+    def configure_parameter_set(self):
+        self.general_parameters.executive_prefix    = self.parameter_set.general_parameters_executive_prefix
+        self.general_parameters.executive_surfix    = self.parameter_set.general_parameters_executive_surfix
+        self.general_parameters.dir_sep             = self.parameter_set.general_parameters_dir_sep
+        self.general_parameters.check_os()
+        
+    def get_parameter_set(self):
+        return self.parameter_set
+
     def get_t_compendium_collections(self):
         return self.t_compendium_collections
         
@@ -107,6 +129,10 @@ if __name__ == "__main__":
     #exp_list = ["SRX3266939","SRX5961261"],
     
     transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],exp_list,['../TestFiles/LT2_pSLT.gff3','../TestFiles/LT2.gff3'])
+    
+    tmp_t_parameters = t_parameters.TranscriptomicParameters(transcriptome_pipeline)
+    transcriptome_pipeline.configure_parameter_set_all()
+    
     
     #Start Working
     s_platform_id_remove = []

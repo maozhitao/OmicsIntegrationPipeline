@@ -26,10 +26,8 @@ class ImputationParameters:
                     imputed_data_matrix_path = "ImputedDataMatrix.csv"):
         self.imputation_options = ImputationOptions.RF.value
         self.imputed_data_matrix_path = imputed_data_matrix_path
-        
         self.skip_imputation = True
        
-        
     def get_imputed_data_matrix_path(self):
         return self.imputed_data_matrix_path
 
@@ -39,6 +37,45 @@ class Imputation(p_module_template.PostprocessingSubModule):
         self.owner = owner
         self.parameters = ImputationParameters()
         self.rfimpute = rfimpute.MissForestImputation()
+        
+        self.configure_parameter_set()
+        self.configure_rfimpute_parameter_set()
+        
+    def configure_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.parameters.imputation_options          = parameter_set.p_imputation_parameters_imputation_option
+        self.parameters.imputed_data_matrix_path    = parameter_set.p_imputation_parameters_imputed_data_matrix_path
+        self.parameters.skip_imputation             = parameter_set.p_imputation_parameters_skip_imputation
+        
+    def configure_rfimpute_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.rfimpute.parameters.initial_guess_mode                 = parameter_set.p_imputation_rfimpute_parameters_initial_guess_option
+        self.rfimpute.parameters.parallel_options                   = parameter_set.p_imputation_rfimpute_parallel_parameters_parallel_mode
+        self.rfimpute.parameters.max_iter                           = parameter_set.p_imputation_rfimpute_parameters_max_iter
+        self.rfimpute.parameters.num_node                           = 1
+        self.rfimpute.parameters.num_feature_local                  = parameter_set.p_imputation_rfimpute_parallel_parameters_n_feature_local
+        self.rfimpute.parameters.num_core_local                     = parameter_set.p_imputation_rfimpute_parallel_parameters_n_core_local
+        self.rfimpute.parameters.tmp_X_file                         = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_tmp_X_file
+        
+        self.rfimpute.parameters.slurm_parameters.par_num_node                  = parameter_set.constants.parallel_slurm_parameters_par_num_node
+        self.rfimpute.parameters.slurm_parameters.num_node                      = 1 #Should always be 1
+        self.rfimpute.parameters.slurm_parameters.par_num_core_each_node        = parameter_set.constants.parallel_slurm_parameters_par_num_core_each_node
+        self.rfimpute.parameters.slurm_parameters.num_core_each_node            = parameter_set.p_imputation_rfimpute_parallel_parameters_n_core_local
+        self.rfimpute.parameters.slurm_parameters.par_time_limit                = parameter_set.constants.parallel_slurm_parameters_par_time_limit
+        self.rfimpute.parameters.slurm_parameters.time_limit_hr                 = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_hr
+        self.rfimpute.parameters.slurm_parameters.time_limit_min                = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_min
+        self.rfimpute.parameters.slurm_parameters.par_job_name                  = parameter_set.constants.parallel_slurm_parameters_par_job_name
+        self.rfimpute.parameters.slurm_parameters.job_name                      = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_job_name
+        self.rfimpute.parameters.slurm_parameters.par_output                    = parameter_set.constants.parallel_slurm_parameters_par_output
+        self.rfimpute.parameters.slurm_parameters.output_ext                    = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_output_ext
+        self.rfimpute.parameters.slurm_parameters.par_error                     = parameter_set.constants.parallel_slurm_parameters_par_error
+        self.rfimpute.parameters.slurm_parameters.error_ext                     = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_error_ext
+        
+        self.rfimpute.parameters.slurm_parameters.script_path                   = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_script_path
+        self.rfimpute.parameters.slurm_parameters.shell_script_path             = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_shell_script_path
+
+        
+        
         
     def impute_data_matrix(self):
         t_compendium_collections = self.get_t_compendium_collections()
