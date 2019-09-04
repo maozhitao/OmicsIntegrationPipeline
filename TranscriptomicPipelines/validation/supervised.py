@@ -143,20 +143,90 @@ class SupervisedValidation(v_module_template.ValidationSubModule):
         
         for project in input_corr_project_name_unique:
             input_corr_exp_name_this_project = input_corr_exp_name[np.where(input_corr_project_name == project)]
-            split_exp_indice_project.append(self.get_exp_indice(data_matrix_exp_name, input_corr_exp_name_this_project))
+            split_exp_indice_project.append(self.get_indice(data_matrix_exp_name, input_corr_exp_name_this_project))
             
         for cond in input_corr_cond_name_unique:
             input_corr_exp_name_this_cond = input_corr_exp_name[np.where(input_corr_cond_name == cond)]
-            split_exp_indice_cond.append(self.get_exp_indice(data_matrix_exp_name, input_corr_exp_name_this_cond))
+            split_exp_indice_cond.append(self.get_indice(data_matrix_exp_name, input_corr_exp_name_this_cond))
             
         return split_exp_indice_project, split_exp_indice_cond
             
-    def get_exp_indice(self, data_matrix_exp_name, query_exp_name):
+    def get_indice(self, name, query_names):
         result = []
-        for exp_name in query_exp_name:
-            idx = np.where(data_matrix_exp_name == exp_name)[0][0]
+        for query_name in query_names:
+            idx = np.where(name == query_name)[0][0]
             result.append(idx)
         return result
+        
+        
+    def knowledge_capture_validation(self, input_grouping_file_path, input_related_gene_file_path):
+        t_compendium_collections = self.get_t_compendium_collections()
+        normalized_data_matrix = t_compendium_collections.get_normalized_data_matrix()
+        normalized_data_matrix_nparray = np.array(normalized_data_matrix)
+        
+        data_matrix_exp_name = np.array(normalized_data_matrix.columns.tolist())
+        data_matrix_gene_name = np.array(normalized_data_matrix.index.tolist())
+        
+        input_grouping = pd.read_csv(input_grouping_file_path)
+        input_related_gene = pd.read_csv(input_related_gene_file_path)
+        
+        input_grouping_exp_name = np.array(input_grouping["exp_id"])
+        input_grouping_indicator = np.array(input_grouping["indicator"]).astype(int)
+        input_related_gene = np.array(input_related_gene["gene_list"])
+        
+        exp_name_0 = input_grouping_exp_name[np.where(input_grouping_indicator == 0)]
+        exp_name_1 = input_grouping_exp_name[np.where(input_grouping_indicator == 1)]
+        
+        exp_indice_0 = self.get_indice(data_matrix_exp_name, exp_name_0)
+        exp_indice_1 = self.get_indice(data_matrix_exp_name, exp_name_1)
+        gene_indice = self.get_indice(data_matrix_gene_name, input_related_gene)
+        
 
+        
+        ranking_dataset = self.knowledge_capture_validation_internal(normalized_data_matrix_nparray, exp_indice_0, exp_indice_1, gene_indice)
+        ranking_dataset = np.expand_dims(ranking_dataset,axis=1)
+        #Add Noise
+        std = np.std(normalized_data_matrix_nparray)
+        mean = np.mean(normalized_data_matrix_nparray)
+        
+        ranking_noise = np.zeros((len(gene_indice)+1, len(self.parameters.noise_ratio)))
+        for i in range(self.parameters.n_trial):
+            print("Trial : " + str(i))
+            cur_ranking_noise = np.zeros((len(gene_indice)+1, len(self.parameters.noise_ratio)))
+            noise = np.random.normal(mean,std,normalized_data_matrix_nparray.shape)
+            
+            for j in range(len(self.parameters.noise_ratio)):
+                noise_ratio = self.parameters.noise_ratio[j]
+                cur_matrix = noise*noise_ratio + normalized_data_matrix_nparray*(1-noise_ratio)
+                cur_ranking_noise[:,j] = self.knowledge_capture_validation_internal(cur_matrix, exp_indice_0, exp_indice_1, gene_indice)
+                
+            ranking_noise = ranking_noise + cur_ranking_noise
+            
+        ranking_noise = ranking_noise/self.parameters.n_trial
+        
+        
+        
+        ref = np.expand_dims(np.linspace(0,len(data_matrix_gene_name),len(gene_indice)+1),axis=1)
+        final_results = np.concatenate((ranking_dataset,ranking_noise,ref),axis=1)
+        
+        
+        ratio = np.array(range(len(gene_indice)+1))/len(gene_indice)
+        final_results_columns = ["results_data"]
+        final_results_columns.extend(self.parameters.noise_ratio)
+        final_results_columns.extend(["ref"])
+        final_results = pd.DataFrame(final_results, index = ratio, columns = final_results_columns)
+        final_results.to_csv(self.parameters.knowledge_capture_validation_results_path)
+        
+    def knowledge_capture_validation_internal(self, matrix, exp_indice_0, exp_indice_1, gene_indice):
+        val_0 = np.mean(matrix[:,exp_indice_0],axis=1)
+        val_1 = np.mean(matrix[:,exp_indice_1],axis=1)
+        
+        fc = (val_1+1e-5)/(val_0+1e-5) #To Avoid nan
+        ranking = len(fc) - fc.argsort().argsort()
+        
+        return np.sort(np.pad(ranking[gene_indice],(1,0),'constant',constant_values=(0)))
+        
+        
+        
         
         
