@@ -7,7 +7,6 @@
 *.fastq.gz
 *.fasta
 *.bt2
-*.gff
 *.output
 *.bed
 *.cpython*
@@ -15,7 +14,6 @@
 *.align_out
 *.count_reads
 *.infer_experiment_out
-*.txt
 *.csv
 *.cpython-36.pyc
 *.xls
