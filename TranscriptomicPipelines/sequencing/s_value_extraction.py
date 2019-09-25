@@ -18,6 +18,7 @@ class SequencingExtractionConstant(Enum):
     TABSEP                      = '\t'
     SPACE                       = ' '
     PERCENT                     = '%'
+    EXT_SRA                     = '.sra'
     EXT_PAIR_1                  = '_1.fastq.gz'
     EXT_PAIR_2                  = '_2.fastq.gz'
     EXT_SINGLE                  = '.fastq.gz'
@@ -66,7 +67,7 @@ class SequencingExtractionParameters:
         self.skip_infer_experiment = True
         self.skip_count_reads = True
         
-        self.clean_existed_sra_files = True
+        self.clean_existed_sra_files = False
         self.clean_existed_fastqdump_results = True
         self.clean_existed_alignment_sequence_results = True
         self.clean_existed_alignment_results = True
@@ -90,7 +91,7 @@ class SequencingExtractionResults:
         self.count_reads_result = {}
         self.count_reads_result_exceptions = {}
 
-        self.sra_file = {} #*
+        self.sra_file = {} #*.sra
         self.fastq_files = {} #*.fastq.gz
         self.alignment_sequence_file = {} #*.sam
         self.alignment_result_file = {} #*.align_out
@@ -163,65 +164,37 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         self.results = SequencingExtractionResults()
         self.workers = {}
         
-        self.configure_parameter_set(general_parameters = self.get_general_parameters())
+    def get_parameters(self):
+        return self.parameters
         
     def configure_parameter_set(self, general_parameters):
         parameter_set = self.get_parameter_set()
         
-        self.parameters.working_file_dir                    = parameter_set.s_value_extraction_parameters_working_file_dir
-        self.parameters.alignment_record_file_ext           = parameter_set.s_value_extraction_parameters_alignment_record_file_ext
-        self.parameters.infer_experiment_record_file_ext    = parameter_set.s_value_extraction_parameters_infer_experiment_record_file_ext
-        self.parameters.infer_experiment_threshold          = parameter_set.s_value_extraction_parameters_infer_experiment_threshold
-        self.parameters.count_reads_file_ext                = parameter_set.s_value_extraction_parameters_count_reads_file_ext
+        self.parameters.working_file_dir = parameter_set.s_value_extraction_parameters_working_file_dir
+        self.parameters.alignment_record_file_ext = parameter_set.s_value_extraction_parameters_alignment_record_file_ext
+        self.parameters.infer_experiment_record_file_ext = parameter_set.s_value_extraction_parameters_infer_experiment_record_file_ext
+        self.parameters.infer_experiment_threshold = parameter_set.s_value_extraction_parameters_infer_experiment_threshold
+        self.parameters.count_reads_file_ext = parameter_set.s_value_extraction_parameters_count_reads_file_ext
         
-        self.parameters.n_trial                             = parameter_set.s_value_extraction_parameters_n_trial
+        self.parameters.n_trial = parameter_set.s_value_extraction_parameters_n_trial
         
-        self.parameters.skip_all                            = parameter_set.s_value_extraction_parameters_skip_all
-        self.parameters.skip_fastq_dump                     = parameter_set.s_value_extraction_parameters_skip_fastq_dump
-        self.parameters.skip_alignment                      = parameter_set.s_value_extraction_parameters_skip_alignment
-        self.parameters.skip_infer_experiment               = parameter_set.s_value_extraction_parameters_skip_infer_experiment
-        self.parameters.skip_count_reads                    = parameter_set.s_value_extraction_parameters_skip_count_reads
+        self.parameters.skip_all = parameter_set.s_value_extraction_parameters_skip_all
+        self.parameters.skip_fastq_dump = parameter_set.s_value_extraction_parameters_skip_fastq_dump
+        self.parameters.skip_alignment = parameter_set.s_value_extraction_parameters_skip_alignment
+        self.parameters.skip_infer_experiment = parameter_set.s_value_extraction_parameters_skip_infer_experiment
+        self.parameters.skip_count_reads = parameter_set.s_value_extraction_parameters_skip_count_reads
         
-        self.parameters.clean_existed_sra_files                     = parameter_set.s_value_extraction_parameters_clean_existed_sra_files
-        self.parameters.clean_existed_fastqdump_results             = parameter_set.s_value_extraction_parameters_clean_existed_fastqdump_results
-        self.parameters.clean_existed_alignment_sequence_results    = parameter_set.s_value_extraction_parameters_clean_existed_alignment_sequence_results
-        self.parameters.clean_existed_alignment_results             = parameter_set.s_value_extraction_parameters_clean_existed_alignment_results
-        self.parameters.clean_existed_infer_experiment_results      = parameter_set.s_value_extraction_parameters_clean_existed_infer_experiment_results
-        self.parameters.clean_existed_count_read_results            = parameter_set.s_value_extraction_parameters_clean_existed_count_read_results
-        self.parameters.clean_existed_worker_file                   = parameter_set.s_value_extraction_parameters_clean_existed_worker_file
-        self.parameters.clean_existed_results                       = parameter_set.s_value_extraction_parameters_clean_existed_results
+        self.parameters.clean_existed_sra_files = parameter_set.s_value_extraction_parameters_clean_existed_sra_files
+        self.parameters.clean_existed_fastqdump_results = parameter_set.s_value_extraction_parameters_clean_existed_fastqdump_results
+        self.parameters.clean_existed_alignment_sequence_results = parameter_set.s_value_extraction_parameters_clean_existed_alignment_sequence_results
+        self.parameters.clean_existed_alignment_results = parameter_set.s_value_extraction_parameters_clean_existed_alignment_results
+        self.parameters.clean_existed_infer_experiment_results = parameter_set.s_value_extraction_parameters_clean_existed_infer_experiment_results
+        self.parameters.clean_existed_count_read_results = parameter_set.s_value_extraction_parameters_clean_existed_count_read_results
+        self.parameters.clean_existed_worker_file = parameter_set.s_value_extraction_parameters_clean_existed_worker_file
+        self.parameters.clean_existed_results = parameter_set.s_value_extraction_parameters_clean_existed_results
         
-        if self.parameters.working_file_dir == "":
-            raise s_data_retrieval_exceptions.InvalidSRAFilePathException('You should provide the working directory')
         if not self.parameters.working_file_dir.endswith(general_parameters.dir_sep):
             self.parameters.working_file_dir = self.parameters.working_file_dir + general_parameters.dir_sep
-
-    def configure_parameter_set_parallel(self):
-        parameter_set = self.get_parameter_set()
-        self.parallel_parameters.pyscripts                              = parameter_set.s_value_extraction_parallel_parameters_pyscript
-        
-        self.parallel_parameters.parallel_parameters.parallel_mode      = parameter_set.s_value_extraction_parallel_parameters_parallel_mode
-        self.parallel_parameters.parallel_parameters.n_processes_local  = parameter_set.s_value_extraction_parallel_parameters_n_processes_local
-        self.parallel_parameters.parallel_parameters.n_jobs_slurm       = parameter_set.s_value_extraction_parallel_parameters_n_jobs_slurm
-        
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_node              = parameter_set.constants.parallel_slurm_parameters_par_num_node
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_node                  = 1
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_num_core_each_node    = parameter_set.constants.parallel_slurm_parameters_par_num_core_each_node
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.num_core_each_node        = parameter_set.s_value_extraction_parallel_parameters_slurm_num_core_each_node
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_time_limit            = parameter_set.constants.parallel_slurm_parameters_par_time_limit
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_hr             = parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_hr
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.time_limit_min            = parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_min
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_job_name              = parameter_set.constants.parallel_slurm_parameters_par_job_name
-
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_output                = parameter_set.constants.parallel_slurm_parameters_par_output
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.output_ext                = parameter_set.s_value_extraction_parallel_parameters_slurm_output_ext
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.par_error                 = parameter_set.constants.parallel_slurm_parameters_par_error
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.error_ext                 = parameter_set.s_value_extraction_parallel_parameters_slurm_error_ext
-        
-        self.parallel_parameters.parallel_parameters.parameters_SLURM.shell_script_path         = parameter_set.s_value_extraction_parallel_parameters_slurm_shell_script_path
-        
-    def get_parameters(self):
-        return self.parameters
         
     def get_results(self):
         return self.results
@@ -322,7 +295,6 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         return command
         
     def submit_job(self):
-        self.configure_parameter_set_parallel()
         if self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.NONE.value:
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
@@ -352,13 +324,13 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
                         self.prepare_worker_file(run)
-                        worker_list.append(self.workers[run])
                         local_command = self.get_local_submit_command(run)
                         local_commands.append(local_command)
                         command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME.value + run)
                         #Run It!
                         commands.append(command)
                         result_path_list.append(self.get_worker_results_file(run))
+                        worker_list.append(self.workers[run])
             #Polling
             parallel_engine = self.get_parallel_engine()
             parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list)
@@ -463,12 +435,13 @@ class SequencingExtractionWorker:
         force = self.sratool_parameters.prefetch_force
         output_par = self.sratool_parameters.prefetch_par_output_file
         output_file_name = self.parameters.working_file_dir + self.run
-        command = [executive_path, self.run, force_par, force, output_par, output_file_name]
+        output_dir_par = self.sratool_parameters.prefetch_par_output_dir
+        command = [executive_path, self.run, force_par, force, output_dir_par, self.parameters.working_file_dir]
         return(command)
         
     def get_sratool_vdb_validate_command(self):
         executive_path = self.sratool_parameters.dir + self.general_parameters.executive_prefix + self.sratool_parameters.validate_exe_file + self.general_parameters.executive_surfix
-        check_file_name = self.parameters.working_file_dir + self.run
+        check_file_name = self.parameters.working_file_dir + self.run + SequencingExtractionConstant.EXT_SRA.value
         command = [executive_path, check_file_name]
         return(command)
         
@@ -480,7 +453,7 @@ class SequencingExtractionWorker:
             if self.check_data_independent() == False:
                 raise s_value_extraction_exceptions.FailedToDownloadSRAFileException('Failed to download this run:' + self.run)
         
-        file_name = self.parameters.working_file_dir + self.run
+        file_name = self.parameters.working_file_dir + self.run + SequencingExtractionConstant.EXT_SRA.value
         self.results.update_sra_file(self.run, file_name)
         
         
@@ -489,13 +462,19 @@ class SequencingExtractionWorker:
         try:
             binary_result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
         except subprocess.CalledProcessError as e:
+            print('FAILED DURING RUNNING VDB_VALIDATE')
+            print(e)
             return False
         result = binary_result.decode(self.general_constant.CODEC.value)
         result = result.split(SequencingExtractionConstant.SPACE.value)
         result = result[-1].replace(SequencingExtractionConstant.NEWLINE.value,"")
         if result == SequencingExtractionConstant.SRA_RESULT_OK.value:
+            print('GOOD!')
             return True
         else:
+            print('FAILED AFTER RUNNING VDB_VALIDATE!')
+            print(result)
+            print(binary_result)
             return False
         
         
@@ -506,7 +485,8 @@ class SequencingExtractionWorker:
             try:
                 binary_output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell = self.general_parameters.use_shell)
             except Exception as e:
-                raise s_value_extraction_exceptions.FastqdumpFailedException('Failed to run fastqdump')
+                print(e)
+                raise s_value_extraction_exceptions.FastqdumpFailedException(' '.join(command) + 'Failed to run fastqdump')
             
             try:
                 output = binary_output.decode(self.general_constant.CODEC.value)
@@ -776,7 +756,7 @@ class SequencingExtractionWorker:
         fastqdump_par_gzip = self.sratool_parameters.fastqdump_par_gzip
         fastqdump_par_split3 = self.sratool_parameters.fastqdump_par_split3
         fastqdump_par_dir = self.sratool_parameters.fastqdump_par_output_dir
-        command = [executive_path, self.parameters.working_file_dir + self.run, fastqdump_par_gzip, fastqdump_par_split3, fastqdump_par_dir, self.parameters.working_file_dir]
+        command = [executive_path, self.parameters.working_file_dir + self.run + SequencingExtractionConstant.EXT_SRA.value, fastqdump_par_gzip, fastqdump_par_split3, fastqdump_par_dir, self.parameters.working_file_dir]
         return(command)
         
         

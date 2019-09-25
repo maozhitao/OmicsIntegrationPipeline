@@ -27,7 +27,7 @@ class ParallelParameters_SLURM:
         self.par_num_core_each_node = '-c'
         self.num_core_each_node = 1
         self.par_time_limit = '--time'
-        self.time_limit_hr = 1
+        self.time_limit_hr = 10
         self.time_limit_min = 0
         self.par_job_name = '-J'
 

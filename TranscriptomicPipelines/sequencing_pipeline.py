@@ -153,6 +153,7 @@ class SequencingPipeline(s_module_template.SequencingModule):
         self.sratool_parameters.prefetch_par_output_file   = parameter_set.constants.s_sratool_parameters_prefetch_par_output_file
         self.sratool_parameters.prefetch_par_force         = parameter_set.constants.s_sratool_parameters_prefetch_par_force
         self.sratool_parameters.prefetch_force             = parameter_set.s_sratool_parameters_prefetch_force
+        self.sratool_parameters.prefetch_par_output_dir    = parameter_set.constants.s_sratool_parameters_prefetch_par_output_dir
         
         self.sratool_parameters.validate_exe_file          = parameter_set.s_sratool_parameters_validate_exe_file
         

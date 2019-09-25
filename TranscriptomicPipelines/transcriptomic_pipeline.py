@@ -123,7 +123,7 @@ class TranscriptomicDataPreparationPipeline:
 if __name__ == "__main__":
     #For Testing
     import pandas as pd
-    tmp = pd.read_csv("../TestFiles/SraRunInfo2.csv")
+    tmp = pd.read_csv("../TestFiles/SraRunInfo3.csv")
     exp_list = tmp["Experiment"].tolist()
     print(exp_list)
     #exp_list = ["SRX3266939","SRX5961261"],

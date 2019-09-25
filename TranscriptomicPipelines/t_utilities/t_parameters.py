@@ -28,6 +28,7 @@ class TranscriptomicConstants:
         #       SRATool -- Prefetch
         self.s_sratool_parameters_prefetch_par_output_file                          = '-o'
         self.s_sratool_parameters_prefetch_par_force                                = '-f'
+        self.s_sratool_parameters_prefetch_par_output_dir                           = '-O'
         
         #       SRATool -- Validate
         #(EMPTY)

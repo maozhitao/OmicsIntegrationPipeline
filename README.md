@@ -1,8 +1,24 @@
 
 # AutomatedOmicsCompendiumPreparationPipeline
-07242019 Note: So far this version does not support Windows. Please use Ubuntu subsystem if you use Windows. (The testing will be in Ubuntu subsystem)
+This toolkit can prepare the compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database.
+(In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
+<div id = "usage">
+<h1> How to use it </h1>
+<ol>
+<li> Download all <a href="#software">necessary software and toolkits</a> </li>
+<li> Add all installed software to PATH environment variables </li>
+<li> Download the entire directory of this project </li>
+<li> Prepare a list of experiment ID you would like to collect (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/input_exp1.txt">example</a>)</li>
+<li> Download the template files from NCBI genome database in GFF3 format (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/LT2.gff3">example</a>) </li>
+<li> Prepare a list of templates for alignment (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/input_template1.txt">example</a>) </li>
+<li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
+<li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/transcriptomic_pipeline.py">transcriptomic_pipeline.py</a> <experiment_idlist_file> <template_list_file> </li>
+<li> For the validation part, please refer <a href="#validation">validation part</a></li>
+</ol>
+</div>
 
+<div id = "software">
 <h3>Required Software</h3>
 <ol>
 <li>Python3 (>=3.6.9) or Python2 (>=2.7.1)</li>
@@ -16,42 +32,10 @@
 <li>RSeQC (For Python3: >=3.0.0, For Python2: 2.6.4)</li>
 <li>HTSeq (>=0.11.2) </li>
 </ol>
+</div>
 
 
-#
-<h3>Update</h3>
-<ul>
-<li>08/17/2019 sequencing pipeline support parallel in local machine or cluster (SLURM)
-<li>07/24/2019 implementation of fetching SRA data and convert SRA data to fastq file </li>
-<li>07/24/2019 Use more set/get methods, wrapper of bowtie2-build, and compatability of the toolkit (sratoolkit) and packages (RSeQC and HTSeq) </li>
-<li>07/23/2019 Gene Annotation Data Definition and SRA metadata download implementation</li>
-<li>07/22/2019 01:43 Update: Metadata definitions</li>
-<li>07/18/2019 21:20 Update: (TEST) Create the directories and files</li>
-<li>07/18/2019 Update: Create the new repository</li>
-
-</ul>
-
-
-
-<h4>08/17/2019 Update</h4>
-<ol>
-<li>Sequencing Pipeline (Parallel Version) : (Finished functional part, need to implement API including parameters settings)</li>
-<li>Data Postprocessing<br>
-    <ol>
-    <li>Concatenation (DONE)</li>
-    <li>Imputation<br>
-        <ol>
-        <li>Missing Forest (Finished function part including parallel version, need to implement API and performance evaluation) </li>
-        </ol>
-    </li>
-    <li>Normalization (ONGOING)</li>
-    </ol>
-</li>
-
-<li>Data Validation<br>    
-    <ol>
-    <li>Unsupervised data validation (Will start after data postprocessing)</li>
-    <li>Supervised data validation (Will start after data postprocessing)<br>
-    </li>
-</li>
-</ol>
+<div id = "validation">
+<h3>Validation Part</h3>
+Need to be updated...
+</div>
