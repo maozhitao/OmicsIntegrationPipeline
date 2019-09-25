@@ -3,6 +3,15 @@
 
 ## Purpose
 
+## How to use
+
+## Dependencies
+
+## Architecture
+
+## Notes
+
+
 This toolkit can prepare the compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database.
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
