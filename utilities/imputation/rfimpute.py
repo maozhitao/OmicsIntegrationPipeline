@@ -18,17 +18,17 @@ class InitialGuessOptions(Enum):
     KNN     = "knn"
     
 class ParallelOptions(Enum):
-    SLURM   = "slurm"
+    SLURM   = "SLURM"
     LOCAL   = "local"
 
 
 class MissForestImputationParameters:
     def __init__(self):
         self.initial_guess_mode = InitialGuessOptions.AVERAGE.value
-        self.parallel_options = ParallelOptions.LOCAL.value
+        self.parallel_options = ParallelOptions.SLURM.value
         self.max_iter = 10
         self.num_node = 1
-        self.num_feature_local = 8
+        self.num_feature_local = 128
         self.num_core_local = 32
         self.slurm_parameters = SlurmImputationParameters()
         
@@ -37,11 +37,11 @@ class MissForestImputationParameters:
         
     def get_arguments_varidx_file(self, varidx):
         s = "-"
-        return 'arguments_varidx_' + s.join([str(x) for x in varidx]) + '.dat'
+        return 'arguments_varidx_' + s.join([str(x) for x in varidx])[0:20] + '.dat'
         
     def get_results_varidx_file(self, varidx):
         s = "-"
-        return 'results_varidx_' + s.join([str(x) for x in varidx]) + '.dat'
+        return 'results_varidx_' + s.join([str(x) for x in varidx])[0:20] + '.dat'
         
         
 class SlurmImputationParameters:
@@ -85,7 +85,7 @@ class SlurmImputationParameters:
         time_limit = str(self.time_limit_hr) + ":" + (format(self.time_limit_min,'02')) + ":00"
         par_job_name = self.par_job_name
         s = "-"
-        job_name = self.job_name + '_' + s.join([str(x) for x in varidx])
+        job_name = self.job_name + '_' + s.join([str(x) for x in varidx])[0:20]
         par_output = self.par_output
         output_file = job_name + self.output_ext
         par_error = self.par_error
@@ -135,6 +135,8 @@ class MissForestImputation:
             self.miss_forest_imputation_SLURM()
         elif self.parameters.parallel_options == ParallelOptions.LOCAL.value:
             self.miss_forest_imputation_local()
+        else:
+            raise Exception('Undefined Imputation ParallelOptions!')
         
         return self.result_matrix
         
@@ -197,12 +199,14 @@ class MissForestImputation:
         
         for i in range(len(vari_node)):
             for j in range(len(vari_node[i])):
-                cur_vari = vari_node[i][j]
+                cur_vari = []
                 cur_obsi = []
                 cur_misi = []
                 for k in range(len(vari_node[i][j])):
-                    cur_obsi.append(self.obsi[cur_vari[k]])
-                    cur_misi.append(self.misi[cur_vari[k]])
+                    if (len(self.misi[vari_node[i][j][k]]) > 0):
+                        cur_vari.append(vari_node[i][j][k])
+                        cur_obsi.append(self.obsi[vari_node[i][j][k]])
+                        cur_misi.append(self.misi[vari_node[i][j][k]])
                 argument_path = self.parameters.get_arguments_varidx_file(cur_vari)
                 with open(argument_path, 'wb') as tmp:
                     argument_object = MissForestImputationArguments_SLURM(rf, cur_vari, cur_obsi, cur_misi)
@@ -227,12 +231,18 @@ class MissForestImputation:
                 
                 for j in range(len(vari_node[i])):
                     #Prepare the jobs
-                    cur_vari = vari_node[i][j]
+                    cur_vari = []
                     cur_obsi = []
                     cur_misi = []
                     for k in range(len(vari_node[i][j])):
-                        cur_obsi.append(self.obsi[cur_vari[k]])
-                        cur_misi.append(self.misi[cur_vari[k]])
+                        if (len(self.misi[vari_node[i][j][k]]) > 0):
+                            cur_vari.append(vari_node[i][j][k])
+                            cur_obsi.append(self.obsi[vari_node[i][j][k]])
+                            cur_misi.append(self.misi[vari_node[i][j][k]])
+                            
+                    if len(cur_vari) == 0:
+                        #No need to send to slurm for imputation
+                        continue
 
                     argument_path = self.parameters.get_arguments_varidx_file(cur_vari)
                     result_path = self.parameters.get_results_varidx_file(cur_vari)
@@ -265,12 +275,18 @@ class MissForestImputation:
                         if finished_ind[j] == True:
                             continue
                             
-                        cur_vari = vari_node[i][j]
+                        cur_vari = []
                         cur_obsi = []
                         cur_misi = []
                         for k in range(len(vari_node[i][j])):
-                            cur_obsi.append(self.obsi[cur_vari[k]])
-                            cur_misi.append(self.misi[cur_vari[k]])
+                            if (len(self.misi[vari_node[i][j][k]]) > 0):
+                                cur_vari.append(vari_node[i][j][k])
+                                cur_obsi.append(self.obsi[vari_node[i][j][k]])
+                                cur_misi.append(self.misi[vari_node[i][j][k]])
+                        
+                        if len(cur_vari) == 0:
+                            #No need to send to slurm for imputation
+                            continue
                             
                         result_path = self.parameters.get_results_varidx_file(cur_vari)
                         try:
@@ -336,11 +352,12 @@ class MissForestImputation:
         diff_B = np.sum((self.cur_iter_matrix)**2)
         
         cur_diff = diff_A/diff_B
+        print(cur_diff)
         if self.previous_diff is None:
             self.previous_diff = cur_diff
             return False
         else:
-            if cur_diff > self.previous_diff:
+            if cur_diff >= self.previous_diff:
                 return True
             else:
                 self.previous_diff = cur_diff

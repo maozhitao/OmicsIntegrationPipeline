@@ -133,9 +133,12 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             self.workers[exp] = self.prepare_worker(exp)
             
     def prepare_worker(self, exp):
-        mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
-        count_reads_result = self.s_value_extraction_results.count_reads_result
-        worker = SequencingSampleMappingWorker(exp, self.parameters, mapping_experiment_runs, count_reads_result)
+        mapping_experiment_runs_exp = {}
+        mapping_experiment_runs_exp[exp] = self.s_retrieval_results.mapping_experiment_runs[exp]
+        count_reads_result_exp = {}
+        for run in mapping_experiment_runs_exp[exp]:
+            count_reads_result_exp[run] = self.s_value_extraction_results.count_reads_result[run]
+        worker = SequencingSampleMappingWorker(exp, self.parameters, mapping_experiment_runs_exp, count_reads_result_exp)
         
         return worker
     
@@ -215,7 +218,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
                     self.workers[exp].do_run()
-                    pickle.dump(self.workers[exp].results, open(self.get_worker_results_file(exp),'rb'))
+                    pickle.dump(self.workers[exp].results.__dict__, open(self.get_worker_results_file(exp),'rb'))
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.LOCAL.value:
             commands = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
@@ -230,6 +233,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             commands = []
             result_path_list = []
             parallel_engine = self.get_parallel_engine()
+            workers = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
                     self.prepare_worker_file(exp)
@@ -237,21 +241,22 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
                     local_commands.append(local_command)
                     command = parallel_engine.get_command_sbatch(SequencingSampleMappingConstant.JOB_NAME.value + exp)
                     commands.append(command)
-                    
+                    workers.append(self.workers[exp])
                     print(local_command)
                     print(command)
                     
                     result_path_list.append(self.get_worker_results_file(exp))
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, workers)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
         
         exception_occurred = False
         for exp in mapping_experiment_runs:
-            cur_exp_results = self.get_worker_results(exp)
+            cur_exp_results = SequencingSampleMappingResults()
+            cur_exp_results.__dict__ = self.get_worker_results(exp).__dict__
             if cur_exp_results.exception is not None:
                 print(exp + ": Exception Occurred : " + str(cur_exp_results.exception))
                 exception_occurred = True
@@ -348,17 +353,28 @@ class SequencingSampleMappingWorker:
             
             self.results.update_mapping_experiment_runs_after_merge(self.exp, [run])
             self.results.update_merged_count_reads_result(self.exp, merged_count_reads_result)
+            print(merged_count_reads_result.shape)
+            print(self.exp + '(Normal)')
+            if merged_count_reads_result.shape[0] != 4548:
+                raise Exception(self.exp + '!!??')
         else:
             count_reads_results_exp = []
             for run in self.mapping_experiment_runs[self.exp]:
                 count_reads_results_exp.append(self.count_reads_result[run])
             
+            
             concat_count_reads_results_exp = pd.concat(count_reads_results_exp, axis = 1)
-            mean_concat_count_reads_results_exp = concat_count_reads_results_exp.mean(axis = 0)
+            print(concat_count_reads_results_exp.shape)
+            mean_concat_count_reads_results_exp = concat_count_reads_results_exp.mean(axis = 1)
+            print(mean_concat_count_reads_results_exp.shape)
             mean_concat_count_reads_results_exp.columns = [self.exp]
+            merged_count_reads_result = mean_concat_count_reads_results_exp
             
             self.results.update_mapping_experiment_runs_after_merge(self.exp, self.mapping_experiment_runs[self.exp])
             self.results.update_merged_count_reads_result(self.exp, merged_count_reads_result)
     
-            print(merged_count_reads_result)
+            print(merged_count_reads_result.shape)
+            print(self.exp + '(Mean)')
             
+            if merged_count_reads_result.shape[0] != 4548:
+                raise Exception(self.exp + '!!??')

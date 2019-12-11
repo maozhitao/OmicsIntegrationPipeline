@@ -8,7 +8,6 @@ import pickle
 import numpy as np 
 
 import rfimpute
-import mmap
 
 
 if __name__ == "__main__":
@@ -17,9 +16,8 @@ if __name__ == "__main__":
     arg_file = sys.argv[2]
     res_file = sys.argv[3]
     
-    with open(data_file, "r+b") as tmp:
-        mm = mmap.mmap(tmp.fileno(),0)
-        X = pickle.load(mm)
+    with open(data_file, "rb") as tmp:
+        X = pickle.load(tmp)
     with open(arg_file, "rb") as tmp:
         arg_obj = pickle.load(tmp)
 

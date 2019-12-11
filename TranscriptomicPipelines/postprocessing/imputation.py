@@ -11,6 +11,7 @@ import rfimpute
 
 from enum import Enum
 import pandas as pd
+import numpy as np
 
 import os
 
@@ -52,7 +53,7 @@ class Imputation(p_module_template.PostprocessingSubModule):
         self.rfimpute.parameters.initial_guess_mode                 = parameter_set.p_imputation_rfimpute_parameters_initial_guess_option
         self.rfimpute.parameters.parallel_options                   = parameter_set.p_imputation_rfimpute_parallel_parameters_parallel_mode
         self.rfimpute.parameters.max_iter                           = parameter_set.p_imputation_rfimpute_parameters_max_iter
-        self.rfimpute.parameters.num_node                           = 1
+        self.rfimpute.parameters.num_node                           = parameter_set.p_imputation_rfimpute_parallel_parameters_n_jobs
         self.rfimpute.parameters.num_feature_local                  = parameter_set.p_imputation_rfimpute_parallel_parameters_n_feature_local
         self.rfimpute.parameters.num_core_local                     = parameter_set.p_imputation_rfimpute_parallel_parameters_n_core_local
         self.rfimpute.parameters.tmp_X_file                         = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_tmp_X_file
@@ -80,14 +81,13 @@ class Imputation(p_module_template.PostprocessingSubModule):
     def impute_data_matrix(self):
         t_compendium_collections = self.get_t_compendium_collections()
         #Parameter configuration:
-        self.rfimpute.parameters.parallel_options = rfimpute.ParallelOptions.LOCAL.value #FOR TESTING
+        #self.rfimpute.parameters.parallel_options = rfimpute.ParallelOptions.LOCAL.value #FOR TESTING
         
         merged_data_matrix = t_compendium_collections.get_merged_data_matrix()
 
         if self.parameters.skip_imputation == False or self.check_existed_imputation_results() == False:
-            
             if self.parameters.imputation_options == ImputationOptions.RF.value:
-                imputed_data_matrix = self.rfimpute.miss_forest_imputation(merged_data_matrix)
+                imputed_data_matrix = np.transpose(self.rfimpute.miss_forest_imputation(np.transpose(merged_data_matrix)))
             
             imputed_data_matrix = pd.DataFrame(data = imputed_data_matrix, index = merged_data_matrix.index, columns = merged_data_matrix.columns)
             

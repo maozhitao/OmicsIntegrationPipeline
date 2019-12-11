@@ -27,8 +27,10 @@ class SequencingExtractionConstant(Enum):
     READMODE                    = 'rb'
     SINGLE_PAIREDTYPE           = 'SingleEnd'
     PAIRED_PAIREDTYPE           = 'PairEnd'
+    UNKNOWN_PAIREDTYPE          = 'Unknown'
     STRANDEDTYPE                = 'STRANDED'
     UNSTRANDEDTYPE              = 'UNSTRANDED'
+    UNKNOWNSTRANDEDTYPE         = 'UNKNOWN'
     STRANDED_MODE               = 'yes'
     UNSTRANDED_MODE             = 'no'
     COUNT_NO_FEATURE            = '__no_feature'
@@ -37,6 +39,7 @@ class SequencingExtractionConstant(Enum):
     COUNT_NOT_ALIGNED           = '__not_aligned'
     COUNT_ALIGNMENT_NOT_UNIQUE  = '__alignment_not_unique'
     SRA_RESULT_OK               = 'consistent'
+    INFER_RESULT_UNKNOWN        = 'Unknown'
     JOB_NAME                    = 's_value_extraction_'
     
 class SequencingExtractionParallelParameters:
@@ -67,7 +70,7 @@ class SequencingExtractionParameters:
         self.skip_infer_experiment = True
         self.skip_count_reads = True
         
-        self.clean_existed_sra_files = False
+        self.clean_existed_sra_files = True
         self.clean_existed_fastqdump_results = True
         self.clean_existed_alignment_sequence_results = True
         self.clean_existed_alignment_results = True
@@ -151,7 +154,7 @@ class InferExperimentResults:
         
     def check_stranded_info(self):
         if self.stranded_info == SequencingExtractionConstant.STRANDEDTYPE.value:
-            return True
+            return False
         else:
             return False
 
@@ -301,13 +304,20 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
                         self.workers[run].do_run()
                         result_file = self.get_worker_results_file(run)
-                        pickle.dump(self.workers[run].results, open(result_file,'wb'))
+                        pickle.dump(self.workers[run].results.__dict__, open(result_file,'wb'))
                     
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.LOCAL.value:
             commands = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
+                        print(self.parameters.skip_all)
+                        print(run)
+                        print(self.check_existed_results(run))
+                        print(self.get_worker_results(run))
+                        print(self.get_worker_results_file(run))
+                        raise('?')
+                    
                         self.prepare_worker_file(run)
                         commands.append(self.get_local_submit_command(run))
                     
@@ -343,7 +353,8 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         for exp in mapping_experiment_runs:
             count_reads_result_2D[exp] = {}
             for run in mapping_experiment_runs[exp]:
-                cur_run_results = self.get_worker_results(run)
+                cur_run_results = SequencingExtractionResults()
+                cur_run_results.__dict__ = self.get_worker_results(run).__dict__
                 if cur_run_results.exception is not None:
                     print(run + ": Exception Occurred : " + str(cur_run_results.exception))
                     exception_occurred = True
@@ -412,23 +423,26 @@ class SequencingExtractionWorker:
             exception_occurred = False
             self.results.exception = None
             try:
-                self.download_data_run_independent()
-                self.prepare_fastq_file_run_independent()
-                self.align_data_run_independent()
-                self.infer_stranded_information_run_independent()
-                self.count_reads_run_independent()
-                self.clean_intermediate_files_independent()
+                self.download_data_run_independent()        
             except Exception as e:
-                print(str(self.run) + ': Exception Occurred' + str(e) + ': Try Again')
+                print(str(self.run) + ': Exception Occurred ' + str(e) + ': Try Again')
                 self.results.exception = e
                 self.clean_intermediate_files_independent(force = True)
                 exception_occurred = True
                 cur_n = cur_n + 1
 
             if exception_occurred == False or cur_n == self.parameters.n_trial:
+                if cur_n == self.parameters.n_trial:
+                    raise Exception('Retrial Failed!')
                 break
         
-        
+        self.prepare_fastq_file_run_independent()
+        self.align_data_run_independent()
+        self.infer_stranded_information_run_independent()
+        self.count_reads_run_independent()
+        self.clean_intermediate_files_independent()
+
+
     def get_sratool_prefetch_command(self):
         executive_path = self.sratool_parameters.dir + self.general_parameters.executive_prefix + self.sratool_parameters.prefetch_exe_file + self.general_parameters.executive_surfix
         force_par = self.sratool_parameters.prefetch_par_force
@@ -609,26 +623,34 @@ class SequencingExtractionWorker:
             output = binary_output.decode(self.general_constant.CODEC.value)
             output = output.split(SequencingExtractionConstant.NEWLINE.value)
             
-            paired_type = output[-5].split(SequencingExtractionConstant.SPACE.value)[2]
-            if paired_type != SequencingExtractionConstant.SINGLE_PAIREDTYPE.value and paired_type != SequencingExtractionConstant.PAIRED_PAIREDTYPE.value:
-                raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
-            
-            ratio_failed = float(output[-4].split(SequencingExtractionConstant.SPACE.value)[-1])
-            if ratio_failed < 0 or ratio_failed > 1:
-                raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
-            
-            ratio_direction1 = float(output[-3].split(SequencingExtractionConstant.SPACE.value)[-1])
-            if ratio_direction1 < 0 or ratio_direction1 > 1:
-                raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
-            
-            ratio_direction2 = float(output[-2].split(SequencingExtractionConstant.SPACE.value)[-1])
-            if ratio_direction2 < 0 or ratio_direction2 > 1:
-                raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
-            
-            if ratio_direction1 > self.parameters.infer_experiment_threshold or ratio_direction2 > self.parameters.infer_experiment_threshold:
-                stranded_info = SequencingExtractionConstant.STRANDEDTYPE.value
-            else:
+            if output[-2].split(SequencingExtractionConstant.SPACE.value)[0] == SequencingExtractionConstant.INFER_RESULT_UNKNOWN.value:
+                print('WARNING: Unknown data type: Assume unstranded!')
+                paired_type = SequencingExtractionConstant.UNKNOWN_PAIREDTYPE.value
+                ratio_failed = -1
+                ratio_direction1 = -1
+                ratio_direction2 = -1
                 stranded_info = SequencingExtractionConstant.UNSTRANDEDTYPE.value
+            else:
+                paired_type = output[-5].split(SequencingExtractionConstant.SPACE.value)[2]
+                if paired_type != SequencingExtractionConstant.SINGLE_PAIREDTYPE.value and paired_type != SequencingExtractionConstant.PAIRED_PAIREDTYPE.value:
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                
+                ratio_failed = float(output[-4].split(SequencingExtractionConstant.SPACE.value)[-1])
+                if ratio_failed < 0 or ratio_failed > 1:
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                
+                ratio_direction1 = float(output[-3].split(SequencingExtractionConstant.SPACE.value)[-1])
+                if ratio_direction1 < 0 or ratio_direction1 > 1:
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                
+                ratio_direction2 = float(output[-2].split(SequencingExtractionConstant.SPACE.value)[-1])
+                if ratio_direction2 < 0 or ratio_direction2 > 1:
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                
+                if ratio_direction1 > self.parameters.infer_experiment_threshold or ratio_direction2 > self.parameters.infer_experiment_threshold:
+                    stranded_info = SequencingExtractionConstant.STRANDEDTYPE.value
+                else:
+                    stranded_info = SequencingExtractionConstant.UNSTRANDEDTYPE.value
                 
             infer_experiment_result_run = InferExperimentResults(paired_type, ratio_failed, ratio_direction1, ratio_direction2, stranded_info)
             

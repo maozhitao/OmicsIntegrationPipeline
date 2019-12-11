@@ -106,6 +106,12 @@ class TranscriptomicConstants:
         #
         #
         #
+        #Validation
+        self.v_unsupervised_parameters_impute_mode_randomforest                             = 'random_forest'
+        self.v_unsupervised_parameters_impute_mode_knn                                      = 'knn'
+        
+        
+        
         #Related Modules:
         #   Imputation
         self.p_imputation_parameters_imputation_options_average                             = 'average'
@@ -223,7 +229,7 @@ class TranscriptomicParameters:
         self.s_value_extraction_parameters_clean_existed_infer_experiment_results   = True
         self.s_value_extraction_parameters_clean_existed_count_read_results         = True
         self.s_value_extraction_parameters_clean_existed_worker_file                = True
-        self.s_value_extraction_parameters_clean_existed_results                    = False
+        self.s_value_extraction_parameters_clean_existed_results                    = True
         
         #Value Extraction (Parallel)=================================================
         self.s_value_extraction_parallel_parameters_pyscript                        = 'script_get_read_counts_run.py'
@@ -235,7 +241,7 @@ class TranscriptomicParameters:
         self.s_value_extraction_parallel_parameters_slurm_time_limit_min            = 0
         self.s_value_extraction_parallel_parameters_slurm_output_ext                = '.output'
         self.s_value_extraction_parallel_parameters_slurm_error_ext                 = '.error'
-        self.s_value_extraction_parallel_parameters_slurm_shell_script_path         = '.job.sh'
+        self.s_value_extraction_parallel_parameters_slurm_shell_script_path         = 'job.sh'
         
         #Sample Mapping
         self.s_sample_mapping_parameters_different_run_merge_mode                   = self.constants.s_sample_mapping_parameters_different_run_merge_mode_option_average
@@ -254,7 +260,7 @@ class TranscriptomicParameters:
         self.s_sample_mapping_parallel_parameters_slurm_time_limit_min              = 0
         self.s_sample_mapping_parallel_parameters_slurm_output_ext                  = '.output'
         self.s_sample_mapping_parallel_parameters_slurm_error_ext                   = '.error'
-        self.s_sample_mapping_parallel_parameters_slurm_shell_script_path           = '.job.sh'
+        self.s_sample_mapping_parallel_parameters_slurm_shell_script_path           = 'job.sh'
         
         #Gene Mapping
         self.s_gene_mapping_parameters_drop_unnamed_genes                           = False
@@ -276,7 +282,7 @@ class TranscriptomicParameters:
         #   Imputation
         self.p_imputation_parameters_imputation_option                              = self.constants.p_imputation_parameters_imputation_options_rf
         self.p_imputation_parameters_imputed_data_matrix_path                       = "ImputedDataMatrix.csv"
-        self.p_imputation_parameters_skip_imputation                                = True
+        self.p_imputation_parameters_skip_imputation                                = False
 
         
         #   Imputation (RFImpute)
@@ -284,15 +290,16 @@ class TranscriptomicParameters:
         self.p_imputation_rfimpute_parameters_max_iter                              = 10
         #   Imputation (RFImpute -- Parallel)
         self.p_imputation_rfimpute_parallel_parameters_parallel_mode                = self.constants.parallel_option_local
-        self.p_imputation_rfimpute_parallel_parameters_n_feature_local              = 8
+        self.p_imputation_rfimpute_parallel_parameters_n_feature_local              = 200
+        self.p_imputation_rfimpute_parallel_parameters_n_jobs                       = 1
         self.p_imputation_rfimpute_parallel_parameters_n_core_local                 = 32
         self.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_hr          = 1
         self.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_min         = 0
         self.p_imputation_rfimpute_parallel_parameters_slurm_job_name               = 'RFImputation'
         self.p_imputation_rfimpute_parallel_parameters_slurm_output_ext             = '.output'
         self.p_imputation_rfimpute_parallel_parameters_slurm_error_ext              = '.error'
-        self.p_imputation_rfimpute_parallel_parameters_slurm_script_path            = '.job.py'
-        self.p_imputation_rfimpute_parallel_parameters_slurm_shell_script_path      = '.job.sh'
+        self.p_imputation_rfimpute_parallel_parameters_slurm_script_path            = '../utilities/imputation/job.py'
+        self.p_imputation_rfimpute_parallel_parameters_slurm_shell_script_path      = 'job.sh'
         self.p_imputation_rfimpute_parallel_parameters_slurm_tmp_X_file             = 'tmp_X.dat'
         
         #   Normalization
@@ -312,6 +319,7 @@ class TranscriptomicParameters:
         self.v_unsupervised_parameters_missing_value_ratio                          = np.arange(0.3,0.8,0.1)
         self.v_unsupervised_parameters_results_path                                 = 'UnsupervisedValidationResults.csv'
         self.v_unsupervised_parameters_skip_validate_data                           = True
+        self.v_unsupervised_parameters_impute_mode                                  = self.constants.v_unsupervised_parameters_impute_mode_knn
         #   (Share the imputation parameters)
         
         

@@ -6,6 +6,7 @@ else:
     
 import numpy as np
 import pandas as pd
+from missingpy import KNNImputer
 
 import os
 
@@ -18,11 +19,13 @@ class UnsupervisedValidationParameters:
     def __init__(   self, n_trial = 10,
                     noise_ratio = np.arange(0,1.1,0.1),
                     missing_value_ratio = np.arange(0.3,0.8,0.1),
-                    unsupervised_validation_results_path = "UnsupervisedValidationResults.csv"):
+                    unsupervised_validation_results_path = "UnsupervisedValidationResults.csv",
+                    impute_mode = 'knn'):
         self.n_trial = n_trial
         self.noise_ratio = noise_ratio
         self.missing_value_ratio = missing_value_ratio
         self.unsupervised_validation_results_path = unsupervised_validation_results_path
+        self.impute_mode = impute_mode
         
         self.skip_validate_data = True
        
@@ -37,6 +40,7 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
         self.parameters = UnsupervisedValidationParameters()
         
         self.configure_parameter_set()
+        self.configure_rfimpute_parameter_set()
         
     def configure_parameter_set(self):
         parameter_set = self.get_parameter_set()
@@ -44,11 +48,39 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
         self.parameters.noise_ratio                             = parameter_set.v_unsupervised_parameters_noise_ratio
         self.parameters.missing_value_ratio                     = parameter_set.v_unsupervised_parameters_missing_value_ratio
         self.parameters.unsupervised_validation_results_path    = parameter_set.v_unsupervised_parameters_results_path
+        self.parameters.impute_mode                             = parameter_set.v_unsupervised_parameters_impute_mode
         self.parameters.skip_validate_data                      = parameter_set.v_unsupervised_parameters_skip_validate_data
+        
+    def configure_rfimpute_parameter_set(self):
+        parameter_set = self.get_parameter_set()
+        self.rfimpute.parameters.initial_guess_mode                 = parameter_set.p_imputation_rfimpute_parameters_initial_guess_option
+        self.rfimpute.parameters.parallel_options                   = parameter_set.p_imputation_rfimpute_parallel_parameters_parallel_mode
+        self.rfimpute.parameters.max_iter                           = parameter_set.p_imputation_rfimpute_parameters_max_iter
+        self.rfimpute.parameters.num_node                           = parameter_set.p_imputation_rfimpute_parallel_parameters_n_jobs
+        self.rfimpute.parameters.num_feature_local                  = parameter_set.p_imputation_rfimpute_parallel_parameters_n_feature_local
+        self.rfimpute.parameters.num_core_local                     = parameter_set.p_imputation_rfimpute_parallel_parameters_n_core_local
+        self.rfimpute.parameters.tmp_X_file                         = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_tmp_X_file
+        
+        self.rfimpute.parameters.slurm_parameters.par_num_node                  = parameter_set.constants.parallel_slurm_parameters_par_num_node
+        self.rfimpute.parameters.slurm_parameters.num_node                      = 1 
+        self.rfimpute.parameters.slurm_parameters.par_num_core_each_node        = parameter_set.constants.parallel_slurm_parameters_par_num_core_each_node
+        self.rfimpute.parameters.slurm_parameters.num_core_each_node            = parameter_set.p_imputation_rfimpute_parallel_parameters_n_core_local
+        self.rfimpute.parameters.slurm_parameters.par_time_limit                = parameter_set.constants.parallel_slurm_parameters_par_time_limit
+        self.rfimpute.parameters.slurm_parameters.time_limit_hr                 = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_hr
+        self.rfimpute.parameters.slurm_parameters.time_limit_min                = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_time_limit_min
+        self.rfimpute.parameters.slurm_parameters.par_job_name                  = parameter_set.constants.parallel_slurm_parameters_par_job_name
+        self.rfimpute.parameters.slurm_parameters.job_name                      = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_job_name
+        self.rfimpute.parameters.slurm_parameters.par_output                    = parameter_set.constants.parallel_slurm_parameters_par_output
+        self.rfimpute.parameters.slurm_parameters.output_ext                    = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_output_ext
+        self.rfimpute.parameters.slurm_parameters.par_error                     = parameter_set.constants.parallel_slurm_parameters_par_error
+        self.rfimpute.parameters.slurm_parameters.error_ext                     = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_error_ext
+        
+        self.rfimpute.parameters.slurm_parameters.script_path                   = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_script_path
+        self.rfimpute.parameters.slurm_parameters.shell_script_path             = parameter_set.p_imputation_rfimpute_parallel_parameters_slurm_shell_script_path
         
     def validate_data(self):
         if self.parameters.skip_validate_data == False or self.check_existed_result() == False:
-            self.rfimpute.parameters.parallel_options = rfimpute.ParallelOptions.LOCAL.value #FOR TESTING
+            #self.rfimpute.parameters.parallel_options = rfimpute.ParallelOptions.LOCAL.value #FOR TESTING
             
             t_compendium_collections = self.get_t_compendium_collections()
             normalized_data_matrix = t_compendium_collections.get_normalized_data_matrix()
@@ -77,7 +109,7 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
                             cur_matrix_missing[cur_misi,colidx] = np.nan
                             missing_value_index.append(cur_misi)
                             
-                        imputed_cur_matrix = self.rfimpute.miss_forest_imputation(cur_matrix_missing)
+                        imputed_cur_matrix = self.do_impute(cur_matrix_missing)
                         
                         correct_values = []
                         imputed_values = []
@@ -100,11 +132,15 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
         else:
             return True
         
-                    
-                    
-                    
-                        
-                        
-                    
             
+    def do_impute(self, matrix_to_impute):
+        parameter_set = self.get_parameter_set()
+        matrix_to_impute.to_csv("test_matrix_to_impute.csv")
+        if self.parameters.impute_mode == parameter_set.constants.v_unsupervised_parameters_impute_mode_randomforest:
+            imputed_cur_matrix = np.transpose(self.rfimpute.miss_forest_imputation(np.transpose(cur_matrix_missing)))
+        elif self.parameters.impute_mode == parameter_set.constants.v_unsupervised_parameters_impute_mode_knn:
+            imputer = KNNImputer()
+            imputed_cur_matrix = np.transpose(imputer.fit_transform(np.transpose(matrix_to_impute)))
+        
+        return imputed_cur_matrix
             

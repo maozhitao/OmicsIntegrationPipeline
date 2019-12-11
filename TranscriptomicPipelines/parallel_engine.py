@@ -15,7 +15,7 @@ class ParallelOptions(Enum):
 class ParallelParameters:
     def __init__(self):
         self.parallel_option = ParallelOptions
-        self.parallel_mode = self.parallel_option.SLURM.value
+        self.parallel_mode = self.parallel_option.LOCAL.value
         self.n_processes_local = 2
         self.n_jobs_slurm = 8
         self.parameters_SLURM = ParallelParameters_SLURM()
