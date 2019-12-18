@@ -11,7 +11,7 @@ class ParallelOptions(Enum):
     LOCAL   = "local"
     SLURM   = "SLURM"
 
-class ParallelParameters:
+class ParallelParameters(object):
     def __init__(self):
         self.parallel_option    = ParallelOptions
         self.parallel_mode      = self.parallel_option.LOCAL.value
@@ -19,7 +19,7 @@ class ParallelParameters:
         self.n_jobs_slurm       = 8
         self.parameters_SLURM   = ParallelParameters_SLURM()
 
-class ParallelParameters_SLURM:
+class ParallelParameters_SLURM(object):
     def __init__(self):
         self.par_num_node           = '-N'
         self.par_num_core_each_node = '-c'
@@ -35,7 +35,7 @@ class ParallelParameters_SLURM:
         self.ext_error              = ".error"
         self.shell_script_path      = 'job.sh'
 
-class ParallelEngine:
+class ParallelEngine(object):
     def __init__(self):
         self.parameters = ParallelParameters()
 
