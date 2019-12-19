@@ -3,21 +3,21 @@ class JoinResultsException(Exception):
 
 class InvalidFastqFilePathException(Exception):
     pass
-    
+
 class FailedToDownloadSRAFileException(Exception):
     pass
-    
+
 class FastqdumpFailedException(Exception):
-    pass    
- 
+    pass
+
 class FastqFileNotFoundException(Exception):
-    pass 
-    
+    pass
+
 class Bowtie2AlignmentFailedException(Exception):
     pass
-    
+
 class RSeQCInferExperimentFailedException(Exception):
     pass
-    
+
 class HTSeqCountFailedException(Exception):
     pass
