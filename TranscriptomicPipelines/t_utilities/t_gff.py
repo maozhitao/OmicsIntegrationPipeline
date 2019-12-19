@@ -1,8 +1,11 @@
 #Parse GFF3 Files
 #Only for valid GFF3 files only (from RefSeq), rejected if the gff3 is invalid
+
+# CR: importation order: built-in > third-party > custom
 import pandas as pd
 from enum import Enum
 
+# CR: setup.py
 import sys
 if (sys.version_info < (3, 0)):
     import t_gff_exceptions
@@ -11,7 +14,7 @@ else:
 
 class GeneAnnotationConstants(Enum):
     SEP = '\t'
-    
+
 class GFF3Symbol(Enum):
     COMMENT = "#"
     EQUAL = "="
@@ -29,12 +32,12 @@ class GFF3Header(Enum):
     STRAND = "STRAND"
     PHASE = "PHASE"
     ATTRIBUTES = "ATTRIBUTES"
-    
+
 class GFF3Type(Enum):
     GENE = "gene"
     CDS = "CDS"
     SEQUENCE = "sequence"
-    
+
 class BEDHeader(Enum):
     __order__ = 'CHROMOSOME START STOP ID SCORE STRAND SOURCE TYPE PHASE ATTRIBUTES'
     #UCSC BED6 FORMAT
@@ -49,15 +52,14 @@ class BEDHeader(Enum):
     TYPE        = "TYPE"
     PHASE       = "PHASE"
     ATTRIBUTES = "ATTRIBUTES"
-    
-    
+
 class GFF3AttributesHeader(Enum):
     NAME = "gene"
     GENESYNONYM = "gene_synonym"
     LOCUSTAG = "locus_tag"
 
 class GeneAnnotation:
-    def __init__(   self, 
+    def __init__(   self,
                     file_paths = [],
                     output_bed = 'gene_annotation.bed',
                     output_gff = 'gene_annotation.gff',
@@ -70,70 +72,78 @@ class GeneAnnotation:
         self.target_type = target_type
         self.used_id = used_id
         self.gene_name_id = gene_name_id
-        
+
         self.gene_annotation_bed_file = output_bed
         self.gene_annotation_gff_file = output_gff
-        
+
     def read_file(self):
         #Initialize the gff3_data
         self.parse_refseq()
         self.parse_attributes()
         self.extract_target_type_entries()
-        
+
     def parse_refseq(self):
         for file_path in self.file_paths:
             if self.gff3_data is None:
+                # CR: long line, should be broken down. It is a good practice to make lines below 80, no more than 100.
                 self.gff3_data = pd.read_table(file_path, comment = GFF3Symbol.COMMENT.value, names = [e.name for e in GFF3Header])
             else:
+                # CR: long line
                 cur_data = pd.read_table(file_path, comment = GFF3Symbol.COMMENT.value, names = [e.name for e in GFF3Header])
-                self.gff3_data = pd.concat([self.gff3_data,cur_data],ignore_index = True)
+                self.gff3_data = pd.concat([self.gff3_data,cur_data], ignore_index = True)
 
     def parse_attributes(self):
         #try:
+
+        # CR: long line, and nested-lopps.
         attributes = pd.DataFrame("", index = self.gff3_data.index, columns = [e.name for e in GFF3AttributesHeader])
         for index, row in self.gff3_data.iterrows():
-            extracted_fields = self.parse_fields(row[GFF3Header.ATTRIBUTES.name],[e.value for e in GFF3AttributesHeader])
+            extracted_fields = self.parse_fields(row[GFF3Header.ATTRIBUTES.name], [e.value for e in GFF3AttributesHeader])
             for e in GFF3AttributesHeader:
                 attributes[e.name][index] = extracted_fields[e.value]
-                
-                
-        self.gff3_data = pd.concat([self.gff3_data,attributes],axis=1)
-        
+
+        # CR: spaces around the equal sign? Let it be consistent ;)
+        self.gff3_data = pd.concat([self.gff3_data,attributes], axis=1)
+
         #except Exception as e:
         #    raise t_gff_exceptions.FailedToExtractGFF3Attributes('Failed to extract GFF3 attributes.\n \
         #        Make sure this is the GFF3 file from NCBI genome database and the the genome is from RefSeq database.')
-                
+
     def parse_fields(self, input, patterns):
         result = {}
         for pattern in patterns:
             result[pattern] = ""
-            
+
+        # CR: nested-loops
         for s in input.split(GFF3Symbol.ATTRIBUTESEPERATOR.value):
             s2 = s.split(GFF3Symbol.EQUAL.value)
             for pattern in patterns:
-                if s2[0].replace(GFF3Symbol.BLANK.value,"") == pattern: 
+                if s2[0].replace(GFF3Symbol.BLANK.value, "") == pattern:
                     #A = B: if A is the field we want, return B
                     #No Blank should be left
                     result[pattern] = s2[1].replace(GFF3Symbol.BLANK.value,"")
-            
+
         return result
-        
+
     def extract_target_type_entries(self):
         idx = self.gff3_data[GFF3Header.TYPE.name] == self.target_type
         self.gff3_data_target_type = self.gff3_data.loc[idx]
-        
+
         #Check:
         possible_id_values = [e.value for e in GFF3AttributesHeader]
         possible_id_names = [e.name for e in GFF3AttributesHeader]
         if self.used_id not in possible_id_values:
+            # CR: long line
             raise t_gff_exceptions.InvalidIDSelectionInGFFFile('You selected a field as an ID, but this field is not annotated in GFF3 attributes')
-            
+
         idx = possible_id_values.index(self.used_id)
-        for index, row in self.gff3_data_target_type.iterrows(): 
+        for index, row in self.gff3_data_target_type.iterrows():
             if self.gff3_data_target_type[possible_id_names[idx]][index] == "":
+                # CR: long line
                 raise t_gff_exceptions.InvalidIDSelectionInGFFFile('You selected a field as an ID, but this field have some empty values for some entries')
-        
+
     def output_bed_file(self):
+        # CR: long line
         bed_format_data = pd.DataFrame("", index = self.gff3_data_target_type.index, columns = [e.name for e in BEDHeader])
         for index, row in self.gff3_data_target_type.iterrows():
             #UCSC BED6 Parts
@@ -148,7 +158,7 @@ class GeneAnnotation:
             bed_format_data[BEDHeader.TYPE.name][index] = row[GFF3Header.TYPE.name]
             bed_format_data[BEDHeader.PHASE.name][index] = row[GFF3Header.PHASE.name]
             bed_format_data[BEDHeader.ATTRIBUTES.name][index] = row[GFF3Header.ATTRIBUTES.name]
-        
+
         #Sort it according to START Column
         bed_format_data = bed_format_data.sort_values(by=[BEDHeader.START.name])
         try:
@@ -159,13 +169,14 @@ class GeneAnnotation:
                                     header = False)
         except Exception as e:
             raise t_gff_exceptions.FailedToOutputBEDFile('Failed to generate gene annotation file in BED format')
-            
+
     def output_gff_file(self):
+        # CR: long line, nested-loops
         gff_format_data = pd.DataFrame("", index = self.gff3_data_target_type.index, columns = [e.name for e in GFF3Header])
         for index, row in self.gff3_data_target_type.iterrows():
             for e in GFF3Header:
                 gff_format_data[e.name][index] = row[e.name]
-        
+
         #Sort it according to START Column
         gff_format_data = gff_format_data.sort_values(by=[GFF3Header.START.name])
         try:
@@ -176,37 +187,34 @@ class GeneAnnotation:
                                     header = False)
         except Exception as e:
             raise t_gff_exceptions.FailedToOutputGFFFile('Failed to generate gene annotation file in GFF format')
-            
-            
+
+
     def get_genome_id(self):
         return list(set(list(self.gff3_data[GFF3Header.SEQID.name])))
-        
+
     def get_bed_file_path(self):
         return self.gene_annotation_bed_file
-        
+
     def get_gff_file_path(self):
         return self.gene_annotation_gff_file
-        
+
     def get_target_type(self):
         return self.target_type
-        
+
     def get_used_id(self):
         return self.used_id
-        
+
     def get_gene_mapping_table_colname_id(self):
         possible_id_values = [e.value for e in GFF3AttributesHeader]
         possible_id_names = [e.name for e in GFF3AttributesHeader]
         idx = possible_id_values.index(self.used_id)
         return possible_id_names[idx]
-        
+
     def get_gene_mapping_table_colname_gene_name(self):
         possible_id_values = [e.value for e in GFF3AttributesHeader]
         possible_id_names = [e.name for e in GFF3AttributesHeader]
         idx = possible_id_values.index(self.gene_name_id)
         return possible_id_names[idx]
-        
+
     def get_gene_mapping_table(self):
         return self.gff3_data_target_type[[e.name for e in GFF3AttributesHeader]]
-        
-        
-    

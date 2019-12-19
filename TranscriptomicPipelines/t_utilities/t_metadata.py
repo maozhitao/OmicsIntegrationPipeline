@@ -1,3 +1,4 @@
+# CR: importation order, setup.py
 import sys
 if (sys.version_info < (3, 0)):
     import t_metadata_def
@@ -11,11 +12,11 @@ import pandas as pd
 
 
 class TranscriptomeMetadata:
-    def __init__(   self, 
+    def __init__(   self,
                     query_date = datetime.date(1,1,1),
                     query_string = "",
                     query_ids = []
-                    ):
+                    ): # CR: I saw you did not make a line for the last paranthesis in other codes, consistency
         self.source_type = None #{Microarray, Sequencing, All}
         self.query_date = query_date #A datetime object
         self.query_string = query_string
@@ -23,21 +24,21 @@ class TranscriptomeMetadata:
         self.entries = {} #(A List with entries)
         self.entries_removed = {}
 
-        
+
     def configure_sra(self):
         self.source_type = t_metadata_def.SourceType.SRA.value
-        
+
     def configure_sequencing(self):
         self.source_type = t_metadata_def.SourceType.SEQUENCING.value
-        
-    def new_sequencing_entry(self, 
-                                platform_id, 
-                                series_id, 
+
+    def new_sequencing_entry(self, # CR: alignment
+                                platform_id,
+                                series_id,
                                 experiment_id):
-        if self.source_type != t_metadata_def.SourceType.SRA.value and self.source_type != t_metadata_def.SourceType.SEQUENCING.value:
-            raise t_metadata_exceptions.FailedToCreateID('Incorrect SourceType for calling this entry constructor!')
-        
-        sample_id = t_metadata_def.SampleID(self.source_type, 
+        if self.source_type != t_metadata_def.SourceType.SRA.value and self.source_type != t_metadata_def.SourceType.SEQUENCING.value: # CR: long line
+            raise t_metadata_exceptions.FailedToCreateID('Incorrect SourceType for calling this entry constructor!') # CR: long line
+
+        sample_id = t_metadata_def.SampleID(self.source_type,
                                             t_metadata_def.ChannelNum.NA.value,
                                             t_metadata_def.Channel.NA.value,
                                             series_id, #SRPXXXXXX
@@ -46,8 +47,8 @@ class TranscriptomeMetadata:
         if sample_id in self.entries.keys():
             #Duplicate
             return
-            
-        metadata_entry = t_metadata_def.MetadataEntry(  sample_id,                                     
+
+        metadata_entry = t_metadata_def.MetadataEntry(  sample_id,
                                                         channel_num = t_metadata_def.ChannelNum.NA.value,
                                                         first_channel = t_metadata_def.Channel.NA.value,
                                                         second_channel = t_metadata_def.Channel.NA.value,
@@ -63,21 +64,21 @@ class TranscriptomeMetadata:
                                                         value_valid = t_metadata_def.ValueValidIndicator.TRUE.value,
                                                         pmid = [], #Should be prepared well before you call the constructor
                                                         author = [], #Should be prepared well before you call the constructor
-                                                        date = datetime.date(1900,1,1) #Should be prepared well before you call the constructor
+                                                        date = datetime.date(1900, 1, 1) #Should be prepared well before you call the constructor
                                                         )
         self.entries[sample_id.id] = metadata_entry
-        
+
     def update_sequencing_entry_data_dependent_info(self, experiment_id, paired = False, stranded = False):
         if paired == True:
             self.entries[experiment_id].paired = t_metadata_def.PairedType.PAIRED.value
         else:
             self.entries[experiment_id].paired = t_metadata_def.PairedType.UNPAIRED.value
-            
+
         if stranded == True:
             self.entries[experiment_id].stranded = t_metadata_def.StrandedType.STRANDED.value
         else:
             self.entries[experiment_id].stranded = t_metadata_def.StrandedType.UNSTRANDED.value
-        
+
     def get_table(self):
         df = []
         for exp in self.entries:
@@ -85,5 +86,4 @@ class TranscriptomeMetadata:
         if len(df) == 0:
             return None
         return pd.concat(df)
-        
-    
+

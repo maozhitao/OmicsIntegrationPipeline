@@ -4,9 +4,9 @@ class FailedToWriteMergedMetadataTable(Exception):
 
 class FailedToWriteMergedDataMatrix(Exception):
     pass
-    
+
 class FailedToWriteImputedDataMatrix(Exception):
     pass
-    
+
 class FailedToWriteNormalizedDataMatrix(Exception):
     pass
