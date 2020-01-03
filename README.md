@@ -66,7 +66,13 @@ If you failed to run these three program, please make sure that you located thes
 </div>
 
 <div id = "validation">
-<h3>Validation Part</h3>
-Need to be updated...
+<h1>Validation Part</h1>
+To evaluate the quality of the compendium, unsupervised and supervised approach are applied:
+
+<h3>Unsupervised validation</h3>
+Unsupervised validation evaluate the model quality without additional information from the metadata. The assumption is that the high quality data collected from the same species contains general gene expression pattern regardless of the culture conditions.
+Therefore, after intentionally remove partial data, the remain part of the data should be capable to recover the missing part.
+
+
 </div>
 

@@ -4,8 +4,6 @@ import postprocessing_pipeline
 import validation_pipeline
 import parallel_engine
 
-import pickle
-
 import sys
 if (sys.version_info < (3, 0)):
     sys.path.insert(0, "t_utilities")
@@ -144,7 +142,7 @@ if __name__ == "__main__":
     
     transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline(s_platform_id_remove,s_series_id_remove,s_experiment_id_remove,s_run_id_remove)
     transcriptome_pipeline.postprocessing_pipeline.run_postprocessing_pipeline()
-    transcriptome_pipeline.validation_pipeline.run_validation_pipeline( input_corr_path = "../TestFiles/Input_CorrTest.csv", 
+    transcriptome_pipeline.validation_pipeline.run_validation_pipeline( input_corr_path = "../TestFiles/Input_CorrTest2.csv", 
                                                                         input_knowledge_capture_groupping_path = "../TestFiles/Input_KnowledgeCapture_fur.csv", 
                                                                         input_knowledge_capture_gene_list_path = "../TestFiles/Input_KnowledgeCapture_fur_related_genes.csv")
     

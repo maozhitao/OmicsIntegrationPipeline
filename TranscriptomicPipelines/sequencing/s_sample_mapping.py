@@ -90,6 +90,15 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         
         self.configure_parameter_set()
         
+    def do_sample_mapping(self):
+        #Parallel (exp level)
+        self.prepare_workers()
+        self.submit_job()
+        self.join_results()
+        #Now the thing are the same as serial now :)
+        self.merge_sample()
+        self.complete_data_dependent_metadata()
+        
     def configure_parameter_set(self):
         parameter_set = self.get_parameter_set()
         self.parameters.different_run_merge_mode            = parameter_set.s_sample_mapping_parameters_different_run_merge_mode
@@ -200,7 +209,10 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         return pickle.load(open(self.get_worker_results_file(exp), 'rb'))
         
     def get_local_submit_command(self, exp):
-        python_path = 'python'
+        if (sys.version_info < (3, 0)):
+            python_path = 'python2'
+        else:
+            python_path = 'python3'
         script_path = self.parallel_parameters.pyscripts
         worker_path = self.get_worker_file(exp)
         result_path = self.get_worker_results_file(exp)
@@ -232,6 +244,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             local_commands = []
             commands = []
             result_path_list = []
+            job_name_list = []
             parallel_engine = self.get_parallel_engine()
             workers = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
@@ -239,16 +252,18 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
                     self.prepare_worker_file(exp)
                     local_command = self.get_local_submit_command(exp)
                     local_commands.append(local_command)
-                    command = parallel_engine.get_command_sbatch(SequencingSampleMappingConstant.JOB_NAME.value + exp)
+                    job_name = SequencingSampleMappingConstant.JOB_NAME.value + exp
+                    command = parallel_engine.get_command_sbatch(job_name)
                     commands.append(command)
                     workers.append(self.workers[exp])
                     print(local_command)
                     print(command)
                     
                     result_path_list.append(self.get_worker_results_file(exp))
+                    job_name_list.append(job_name)
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, workers)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, workers, job_name_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs

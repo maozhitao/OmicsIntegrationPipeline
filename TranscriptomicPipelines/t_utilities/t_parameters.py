@@ -164,7 +164,7 @@ class TranscriptomicParameters:
         
         #       Bowtie2 -- index building
         self.s_bowtie2_parameters_build_exe_file                                    = 'bowtie2-build'
-        self.s_bowtie2_parameters_build_nthreads                                    = 4
+        self.s_bowtie2_parameters_build_nthreads                                    = 31
         self.s_bowtie2_parameters_build_index_name                                  = 'TestTemplate'
         
         #       Bowtie2 -- alignment
@@ -205,7 +205,7 @@ class TranscriptomicParameters:
         #Data Retrieval==============================================================
         self.s_data_retrieval_parameters_entrez_mail                                = 'cetan@ucdavis.edu'
         self.s_data_retrieval_parameters_sra_run_info_path                          = 'sra_run_info.csv'
-        self.s_data_retrieval_parameters_fasta_path                                 = 'merged_fasta'
+        self.s_data_retrieval_parameters_fasta_path                                 = 'merged.fasta'
         self.s_data_retrieval_parameters_skip_srainfo_download                      = True
         self.s_data_retrieval_parameters_skip_fasta_download                        = True
         
@@ -222,6 +222,7 @@ class TranscriptomicParameters:
         self.s_value_extraction_parameters_skip_alignment                           = True
         self.s_value_extraction_parameters_skip_infer_experiment                    = True
         self.s_value_extraction_parameters_skip_count_reads                         = True
+        self.s_value_extraction_parameters_clean_reference_genome                   = False
         self.s_value_extraction_parameters_clean_existed_sra_files                  = True
         self.s_value_extraction_parameters_clean_existed_fastqdump_results          = True
         self.s_value_extraction_parameters_clean_existed_alignment_sequence_results = True
@@ -231,11 +232,23 @@ class TranscriptomicParameters:
         self.s_value_extraction_parameters_clean_existed_worker_file                = True
         self.s_value_extraction_parameters_clean_existed_results                    = True
         
+        #Value Extraction (Reference Genome Building)
+        self.s_value_extraction_refbuild_parameters_parallel_mode                    = self.constants.parallel_option_slurm
+        self.s_value_extraction_refbuild_parameters_n_processes_local               = 31
+        self.s_value_extraction_refbuild_parameters_n_jobs_slurm                    = 1
+        self.s_value_extraction_refbuild_parameters_slurm_num_core_each_node        = 31
+        self.s_value_extraction_refbuild_parameters_slurm_time_limit_hr             = 10
+        self.s_value_extraction_refbuild_parameters_slurm_time_limit_min            = 0
+        self.s_value_extraction_refbuild_parameters_slurm_output_ext                = '.output'
+        self.s_value_extraction_refbuild_parameters_slurm_error_ext                 = '.error'
+        self.s_value_extraction_refbuild_parameters_slurm_shell_script_path         = 'job.sh'
+        self.s_value_extraction_refbuild_parameters_skip_build                        = True
+        
         #Value Extraction (Parallel)=================================================
         self.s_value_extraction_parallel_parameters_pyscript                        = 'script_get_read_counts_run.py'
-        self.s_value_extraction_parallel_parameters_parallel_mode                   = self.constants.parallel_option_local
+        self.s_value_extraction_parallel_parameters_parallel_mode                   = self.constants.parallel_option_slurm
         self.s_value_extraction_parallel_parameters_n_processes_local               = 2
-        self.s_value_extraction_parallel_parameters_n_jobs_slurm                    = 8
+        self.s_value_extraction_parallel_parameters_n_jobs_slurm                    = 2
         self.s_value_extraction_parallel_parameters_slurm_num_core_each_node        = 4
         self.s_value_extraction_parallel_parameters_slurm_time_limit_hr             = 10
         self.s_value_extraction_parallel_parameters_slurm_time_limit_min            = 0
@@ -252,9 +265,9 @@ class TranscriptomicParameters:
         
         #Sample Mapping (Parallel)=================================================
         self.s_sample_mapping_parallel_parameters_pyscript                          = 'script_merge_runs.py'
-        self.s_sample_mapping_parallel_parameters_parallel_mode                     = self.constants.parallel_option_local
+        self.s_sample_mapping_parallel_parameters_parallel_mode                     = self.constants.parallel_option_slurm
         self.s_sample_mapping_parallel_parameters_n_processes_local                 = 2
-        self.s_sample_mapping_parallel_parameters_n_jobs_slurm                      = 8
+        self.s_sample_mapping_parallel_parameters_n_jobs_slurm                      = 2
         self.s_sample_mapping_parallel_parameters_slurm_num_core_each_node          = 4
         self.s_sample_mapping_parallel_parameters_slurm_time_limit_hr               = 1
         self.s_sample_mapping_parallel_parameters_slurm_time_limit_min              = 0
@@ -289,7 +302,7 @@ class TranscriptomicParameters:
         self.p_imputation_rfimpute_parameters_initial_guess_option                  = self.constants.p_imputation_parameters_imputation_options_average
         self.p_imputation_rfimpute_parameters_max_iter                              = 10
         #   Imputation (RFImpute -- Parallel)
-        self.p_imputation_rfimpute_parallel_parameters_parallel_mode                = self.constants.parallel_option_local
+        self.p_imputation_rfimpute_parallel_parameters_parallel_mode                = self.constants.parallel_option_slurm
         self.p_imputation_rfimpute_parallel_parameters_n_feature_local              = 200
         self.p_imputation_rfimpute_parallel_parameters_n_jobs                       = 1
         self.p_imputation_rfimpute_parallel_parameters_n_core_local                 = 32
@@ -314,9 +327,9 @@ class TranscriptomicParameters:
         #
         #Related Modules:
         #   Unsupervised
-        self.v_unsupervised_parameters_n_trial                                      = 10
-        self.v_unsupervised_parameters_noise_ratio                                  = np.arange(0,1.1,0.1)
-        self.v_unsupervised_parameters_missing_value_ratio                          = np.arange(0.3,0.8,0.1)
+        self.v_unsupervised_parameters_n_trial                                      = 1
+        self.v_unsupervised_parameters_noise_ratio                                  = np.arange(0,1.1,0.2)
+        self.v_unsupervised_parameters_missing_value_ratio                          = np.arange(0.3,0.8,0.2)
         self.v_unsupervised_parameters_results_path                                 = 'UnsupervisedValidationResults.csv'
         self.v_unsupervised_parameters_skip_validate_data                           = True
         self.v_unsupervised_parameters_impute_mode                                  = self.constants.v_unsupervised_parameters_impute_mode_knn

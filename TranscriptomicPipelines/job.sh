@@ -1,0 +1,2 @@
+#!/bin/bash
+srun python script_merge_runs.py worker_s_sample_mapping_SRX610253.dat results_s_sample_mapping_SRX610253.dat

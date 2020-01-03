@@ -2,14 +2,14 @@ import pickle
 import sys
 from transcriptomic_pipeline import GeneralParameters
 from transcriptomic_pipeline import GeneralConstant
-'''
+
 from sequencing_pipeline import *
 
 if (sys.version_info < (3, 0)):
     sys.path.insert(0, "sequencing")
-    from s_value_extraction import *
+    import s_value_extraction
 else:
-    from sequencing.s_value_extraction import *'''
+    import sequencing.s_value_extraction
 
 if __name__ == "__main__":
     value_extraction_worker = pickle.load(open(sys.argv[1], 'rb'))

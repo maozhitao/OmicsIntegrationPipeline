@@ -1,3 +1,4 @@
+import numpy as np
 class ValidationModule:
     def __init__(self, owner):
         self.owner = owner
@@ -18,3 +19,12 @@ class ValidationModule:
 class ValidationSubModule(ValidationModule):
     def __init__(self, owner):
         self.owner = owner
+
+    def get_noise(self, matrix):
+        #Get the noise by permute the data matrix
+        noise = matrix
+        noise = noise.reshape((matrix.shape[0]*matrix.shape[1],1))
+        noise = np.random.permutation(noise)
+        noise = noise.reshape(matrix.shape)
+
+        return noise

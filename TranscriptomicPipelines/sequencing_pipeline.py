@@ -240,24 +240,10 @@ class SequencingPipeline(s_module_template.SequencingModule):
         
         
     def run_sequencing_pipeline(self, platform_id_remove = [], series_id_remove = [], experiment_id_remove = [], run_id_remove = []):
-        self.s_data_retrieval.download_metadata()
-        self.s_data_retrieval.complete_data_independent_metadata()
-        self.s_data_retrieval.filter_entry(platform_id_remove, series_id_remove, experiment_id_remove, run_id_remove)
-        
-        #Parallel (run level)
-        self.s_value_extraction.prepare_gene_annotation()
-        self.s_value_extraction.prepare_workers()
-        self.s_value_extraction.submit_job()
-        self.s_value_extraction.join_results()
-        
-        #Parallel (exp level)
-        self.s_sample_mapping.prepare_workers()
-        self.s_sample_mapping.submit_job()
-        self.s_sample_mapping.join_results()
-        #Now the thing are the same as serial now :)
-        self.s_sample_mapping.merge_sample()
-        self.s_sample_mapping.complete_data_dependent_metadata()
-        self.s_gene_mapping.map_gene()
+        self.s_data_retrieval.do_retrieve(platform_id_remove, series_id_remove, experiment_id_remove, run_id_remove)
+        self.s_value_extraction.do_extract()
+        self.s_sample_mapping.do_sample_mapping()
+        self.s_gene_mapping.do_gene_mapping()
         
     def get_s_query_id(self):
         return self.s_query_id

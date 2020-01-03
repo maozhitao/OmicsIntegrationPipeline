@@ -11,6 +11,7 @@ import time
 import subprocess
 import copy
 import os
+import sys
 
 class InitialGuessOptions(Enum):
     AVERAGE = "average"
@@ -64,7 +65,10 @@ class SlurmImputationParameters:
         self.shell_script_path = 'job.sh'
         
     def get_command_shell(self, x_path, argument_path, result_path):
-        python_path = 'python'
+        if (sys.version_info < (3, 0)):
+            python_path = 'python2'
+        else:
+            python_path = 'python3'
         exe_path = 'srun'
 
         script_path = self.script_path

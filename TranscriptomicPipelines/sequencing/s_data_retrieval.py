@@ -82,6 +82,15 @@ class SequencingRetrieval(s_module_template.SequencingSubModule):
         
         self.configure_parameter_set(general_parameters = self.get_general_parameters())
         
+    def do_retrieve(self, platform_id_remove = [], series_id_remove = [], experiment_id_remove = [], run_id_remove = []):
+        print("metadata download")
+        self.download_metadata()
+        print("complete metadata")
+        self.complete_data_independent_metadata()
+        print("filter")
+        self.filter_entry(platform_id_remove, series_id_remove, experiment_id_remove, run_id_remove)
+        
+        
     def configure_parameter_set(self, general_parameters):
         parameter_set = self.get_parameter_set()
         

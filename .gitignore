@@ -19,3 +19,9 @@
 *.xls
 *.cpython.*
 pycache.*
+*gff
+*gff3
+*.txt
+*.fa
+*.xlsx
+*.ipynb

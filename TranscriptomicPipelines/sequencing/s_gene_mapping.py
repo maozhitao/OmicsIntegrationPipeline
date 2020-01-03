@@ -34,6 +34,9 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         
         self.configure_parameter_set()
         
+    def do_gene_mapping(self):
+        self.map_gene()
+        
     def configure_parameter_set(self):
         parameter_set = self.get_parameter_set()
         self.parameters.drop_unnamed_genes              = parameter_set.s_gene_mapping_parameters_drop_unnamed_genes

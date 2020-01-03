@@ -1,4 +1,5 @@
 import sys
+import copy
 if (sys.version_info < (3, 0)):
     import s_module_template
     import s_value_extraction_exceptions
@@ -40,6 +41,7 @@ class SequencingExtractionConstant(Enum):
     COUNT_ALIGNMENT_NOT_UNIQUE  = '__alignment_not_unique'
     SRA_RESULT_OK               = 'consistent'
     INFER_RESULT_UNKNOWN        = 'Unknown'
+    JOB_NAME_REFBUILD            = 's_value_extraction_refbuild_'
     JOB_NAME                    = 's_value_extraction_'
     
 class SequencingExtractionParallelParameters:
@@ -66,10 +68,12 @@ class SequencingExtractionParameters:
         
         self.skip_all = True
         self.skip_fastq_dump = True
+        self.skip_refbuild = True
         self.skip_alignment = True
         self.skip_infer_experiment = True
         self.skip_count_reads = True
         
+        self.clean_reference_genome = False
         self.clean_existed_sra_files = True
         self.clean_existed_fastqdump_results = True
         self.clean_existed_alignment_sequence_results = True
@@ -167,6 +171,19 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         self.results = SequencingExtractionResults()
         self.workers = {}
         
+    def do_extract(self):
+        print("gene_annotation")
+        self.configure_parallel_engine_create_bowtie2_index()
+        self.prepare_gene_annotation()
+        self.reset_parallel_engine()
+        
+        print("run extraction")
+        self.configure_parallel_engine()
+        self.prepare_workers()
+        self.submit_job()
+        self.join_results()
+        self.reset_parallel_engine()
+        
     def get_parameters(self):
         return self.parameters
         
@@ -183,10 +200,12 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         
         self.parameters.skip_all = parameter_set.s_value_extraction_parameters_skip_all
         self.parameters.skip_fastq_dump = parameter_set.s_value_extraction_parameters_skip_fastq_dump
+        self.parameters.skip_refbuild = parameter_set.s_value_extraction_refbuild_parameters_skip_build
         self.parameters.skip_alignment = parameter_set.s_value_extraction_parameters_skip_alignment
         self.parameters.skip_infer_experiment = parameter_set.s_value_extraction_parameters_skip_infer_experiment
         self.parameters.skip_count_reads = parameter_set.s_value_extraction_parameters_skip_count_reads
         
+        self.parameters.clean_reference_genome = parameter_set.s_value_extraction_parameters_clean_reference_genome
         self.parameters.clean_existed_sra_files = parameter_set.s_value_extraction_parameters_clean_existed_sra_files
         self.parameters.clean_existed_fastqdump_results = parameter_set.s_value_extraction_parameters_clean_existed_fastqdump_results
         self.parameters.clean_existed_alignment_sequence_results = parameter_set.s_value_extraction_parameters_clean_existed_alignment_sequence_results
@@ -229,10 +248,76 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                                             t_gene_annotation,
                                             general_parameters, general_constant)
         return worker
+        
+    def reset_parallel_engine(self):
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.reset()
+        
+    def configure_parallel_engine_create_bowtie2_index(self):
+        parameter_set = self.get_parameter_set()
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.set_parallel_mode(parameter_set.s_value_extraction_refbuild_parameters_parallel_mode)
+        parallel_engine.parameters.set_n_processes_local(parameter_set.s_value_extraction_refbuild_parameters_n_processes_local)
+        parallel_engine.parameters.set_n_jobs_slurm(parameter_set.s_value_extraction_refbuild_parameters_n_jobs_slurm)
+        parallel_engine.parameters.set_SLURM_num_node()
+        parallel_engine.parameters.set_SLURM_num_core_each_node(parameter_set.s_value_extraction_refbuild_parameters_slurm_num_core_each_node)
+        parallel_engine.parameters.set_SLURM_time_limit_hr(parameter_set.s_value_extraction_refbuild_parameters_slurm_time_limit_hr)
+        parallel_engine.parameters.set_SLURM_time_limit_min(parameter_set.s_value_extraction_refbuild_parameters_slurm_time_limit_min)
+        
+    def configure_parallel_engine(self):
+        parameter_set = self.get_parameter_set()
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.set_parallel_mode(parameter_set.s_value_extraction_parallel_parameters_parallel_mode)
+        parallel_engine.parameters.set_n_processes_local(parameter_set.s_value_extraction_parallel_parameters_n_processes_local)
+        parallel_engine.parameters.set_n_jobs_slurm(parameter_set.s_value_extraction_parallel_parameters_n_jobs_slurm)
+        parallel_engine.parameters.set_SLURM_num_node()
+        parallel_engine.parameters.set_SLURM_num_core_each_node(parameter_set.s_value_extraction_parallel_parameters_slurm_num_core_each_node)
+        parallel_engine.parameters.set_SLURM_time_limit_hr(parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_hr)
+        parallel_engine.parameters.set_SLURM_time_limit_min(parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_min)
 
+    def check_bowtie2_index(self):
+        bowtie2_parameters = self.get_bowtie2_parameters()
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".1.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".2.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".3.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".4.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".rev.1.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + bowtie2_parameters.build_index_name + ".rev.2.bt2"
+        if not os.path.isfile(file_check):
+            return False
+    
+        return True
+    
+    
     def create_bowtie2_index(self):
-        command = self.get_bowtie2_build_command()
-        subprocess.call(command, stdout=subprocess.PIPE, shell = self.get_general_parameters().use_shell)
+        if self.parameters.skip_refbuild == False or self.check_bowtie2_index() == False:
+            parallel_engine = self.get_parallel_engine()
+            if parallel_engine.parameters.parallel_mode == parallel_engine.parameters.parallel_option.SLURM.value:
+                local_command = self.get_bowtie2_build_command()
+                command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME_REFBUILD.value, wait = True)
+                print(local_command)
+                print(command)
+                try:
+                    parallel_engine.do_run_slurm_parallel_wait(local_command, command)
+                except:
+                    raise
+            else:
+                command = self.get_bowtie2_build_command()
+                subprocess.call(command, shell = self.get_general_parameters().use_shell)
+            
+            
+        else:
+            print("Skip RefBuild!")
         
     def get_bowtie2_build_command(self):
         bowtie2_parameters = self.get_bowtie2_parameters()
@@ -244,6 +329,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         fasta_path = self.s_retrieval_results.fasta_path
         bowtie2_index_name = bowtie2_parameters.build_index_name
         command = [executive_path, thread_par, nthread, fasta_path, bowtie2_index_name]
+        
         return(command)
         
     def download_data(self):
@@ -286,7 +372,10 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         return pickle.load(open(self.get_worker_results_file(run), 'rb'))
         
     def get_local_submit_command(self, run):
-        python_path = 'python'
+        if (sys.version_info < (3, 0)):
+            python_path = 'python2'
+        else:
+            python_path = 'python3'
         script_path = self.parallel_parameters.pyscripts
         worker_path = self.get_worker_file(run)
         result_path = self.get_worker_results_file(run)
@@ -329,6 +418,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             commands = []
             result_path_list = []
             worker_list = []
+            job_name_list = []
             parallel_engine = self.get_parallel_engine()
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
@@ -336,14 +426,16 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                         self.prepare_worker_file(run)
                         local_command = self.get_local_submit_command(run)
                         local_commands.append(local_command)
-                        command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME.value + run)
+                        job_name = SequencingExtractionConstant.JOB_NAME.value + run
+                        command = parallel_engine.get_command_sbatch(job_name)
                         #Run It!
                         commands.append(command)
                         result_path_list.append(self.get_worker_results_file(run))
                         worker_list.append(self.workers[run])
+                        job_name_list.append(job_name)
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list, job_name_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
@@ -391,10 +483,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             os.remove(self.get_worker_results_file(run))
             return False
         return True
-
-
         
-    
         
 class SequencingExtractionWorker:
     def __init__(self, run, 
@@ -413,7 +502,9 @@ class SequencingExtractionWorker:
         self.general_parameters = general_parameters
         self.general_constant = general_constant
         
-        self.t_gene_annotation = t_gene_annotation
+        self.t_gene_annotation = copy.copy(t_gene_annotation)
+        self.t_gene_annotation.gff3_data = None
+        self.t_gene_annotation.gff3_data_target_type = None
         
         self.results = SequencingExtractionResults()
         

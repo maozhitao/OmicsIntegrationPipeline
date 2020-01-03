@@ -7,6 +7,9 @@ else:
 import numpy as np
 import pandas as pd
 from missingpy import KNNImputer
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 import os
 
@@ -16,15 +19,17 @@ sys.path.insert(0,"../utilities/imputation")
 import rfimpute
     
 class UnsupervisedValidationParameters:
-    def __init__(   self, n_trial = 10,
+    def __init__(   self, n_trial = 2,
                     noise_ratio = np.arange(0,1.1,0.1),
-                    missing_value_ratio = np.arange(0.3,0.8,0.1),
+                    missing_value_ratio = np.arange(0.3,0.8,0.2),
                     unsupervised_validation_results_path = "UnsupervisedValidationResults.csv",
+                    unsupervised_validation_results_figure_path = "UnsupervisedValidationResults.png",
                     impute_mode = 'knn'):
         self.n_trial = n_trial
         self.noise_ratio = noise_ratio
         self.missing_value_ratio = missing_value_ratio
         self.unsupervised_validation_results_path = unsupervised_validation_results_path
+        self.unsupervised_validation_results_figure_path = unsupervised_validation_results_figure_path
         self.impute_mode = impute_mode
         
         self.skip_validate_data = True
@@ -93,13 +98,16 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
             for i in range(self.parameters.n_trial):
                 print("Trial : " + str(i))
                 cur_results = np.zeros((len(self.parameters.noise_ratio), len(self.parameters.missing_value_ratio)))
-                noise = np.random.normal(mean,std,normalized_data_matrix_nparray.shape)
+                noise = self.get_noise(normalized_data_matrix_nparray)
                 
                 for j in range(len(self.parameters.noise_ratio)):
+                    print("j: " + str(j) + "/" + str(len(self.parameters.noise_ratio))) 
                     noise_ratio = self.parameters.noise_ratio[j]
+                    print('!')
                     cur_matrix = noise*noise_ratio + normalized_data_matrix_nparray*(1-noise_ratio)
-                    
+                    print('!!')
                     for k in range(len(self.parameters.missing_value_ratio)):
+                        print("k: " + str(k) + "/" + str(len(self.parameters.missing_value_ratio)))
                         missing_value_ratio = self.parameters.missing_value_ratio[k]
                         missing_value_index = []
                         cur_matrix_missing = np.copy(cur_matrix)
@@ -126,6 +134,14 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
             results = pd.DataFrame(results, index = self.parameters.noise_ratio.tolist(), columns = self.parameters.missing_value_ratio.tolist())
             results.to_csv(self.parameters.unsupervised_validation_results_path)
         
+        results = pd.read_csv(self.parameters.unsupervised_validation_results_path, index_col = 0)
+        results.columns.name = 'missing value ratio'
+        fig = plt.figure()
+        unsupervised_plot = results.plot(title = 'Unsupervised validation results')
+        unsupervised_plot.set(xlabel='noise ratio',ylabel='average absolute error')
+        plt.savefig(self.parameters.unsupervised_validation_results_figure_path)
+        plt.close(fig)
+        
     def check_existed_result(self):
         if not os.path.isfile(self.parameters.unsupervised_validation_results_path):
             return False
@@ -135,11 +151,11 @@ class UnsupervisedValidation(v_module_template.ValidationSubModule):
             
     def do_impute(self, matrix_to_impute):
         parameter_set = self.get_parameter_set()
-        matrix_to_impute.to_csv("test_matrix_to_impute.csv")
+        np.savetxt('test_cur_matrix_missing.csv',matrix_to_impute)
         if self.parameters.impute_mode == parameter_set.constants.v_unsupervised_parameters_impute_mode_randomforest:
-            imputed_cur_matrix = np.transpose(self.rfimpute.miss_forest_imputation(np.transpose(cur_matrix_missing)))
+            imputed_cur_matrix = np.transpose(self.rfimpute.miss_forest_imputation(np.transpose(matrix_to_impute)))
         elif self.parameters.impute_mode == parameter_set.constants.v_unsupervised_parameters_impute_mode_knn:
-            imputer = KNNImputer()
+            imputer = KNNImputer(row_max_missing=1,col_max_missing=1)
             imputed_cur_matrix = np.transpose(imputer.fit_transform(np.transpose(matrix_to_impute)))
         
         return imputed_cur_matrix

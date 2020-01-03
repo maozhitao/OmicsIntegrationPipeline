@@ -6,6 +6,7 @@ else:
 
 from enum import Enum
 import pandas as pd
+import numpy as np
 
 class NormalizationOptions(Enum):
     QUANTILE = "quantile"
@@ -40,10 +41,23 @@ class Normalization(p_module_template.PostprocessingSubModule):
             
     def normalize_data_matrix_quantile(self):
         #Reference: https://intellipaat.com/community/5641/quantile-normalization-on-pandas-dataframe
+        #The direction is the same as preprocessCore in R
         t_compendium_collections = self.get_t_compendium_collections()
         imputed_data_matrix = t_compendium_collections.get_imputed_data_matrix()
         rank_mean = imputed_data_matrix.stack().groupby(imputed_data_matrix.rank(method='first').stack().astype(int)).mean()
-        normalized_data_matrix = imputed_data_matrix.rank(method='min').stack().astype(int).map(rank_mean).unstack()
+        #Update (20191210): take care of tie value, which is necessary when zeros appear:
+
+        normalized_data_matrix = imputed_data_matrix
+        for col in list(imputed_data_matrix):
+            sorted_rank = imputed_data_matrix.rank()[col].sort_values()
+            sorted_rank_unique = imputed_data_matrix.rank()[col].sort_values().unique()
+            for cur_rank in sorted_rank_unique:
+                idx = np.where(imputed_data_matrix.rank()[col] == cur_rank)[0] #idx to be assinged
+                idx2 = np.where(sorted_rank == cur_rank)[0] #idx to be extracted from rank_mean
+
+                new_val = np.mean(rank_mean.iloc[idx2])
+                normalized_data_matrix[col].iloc[idx] = new_val
+
         t_compendium_collections.set_normalized_data_matrix(normalized_data_matrix, 
                                                         self.parameters.normalization_options,
                                                         self.parameters.normalized_data_matrix_path)
