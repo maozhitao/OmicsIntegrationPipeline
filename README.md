@@ -3,11 +3,20 @@
 # Automated Omics Compendium Preparation Pipeline
 
 <h1> Propose</h1>
-This toolkit can prepare the compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database.
+This toolkit can prepare the transcriptomic compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database given the topic you are interested in and your target species.
+
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
-![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure1.png)
+The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:
 
+ 1. Given the topic your are interested in, the pipeline will find the corresponded experiments in SRA database.
+ 2. Given your targeted species, the pipeline will find the corresponded reference genome sequence and mRNA annotation information.
+ 3. Given the collected experiments (and optional experiment filter list), reference genome sequence and mRNA annotation information, the pipeline will download the RNA-seq data from SRA, and then count the reads for each mRNA to create the transcription profiles.
+ 4. After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.
+ 5. Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.
+
+![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure1.png)
+Figure 1. The entire transcriptomic compendium pipeline
 
 <div id = "usage">
 <h1> How to use it </h1>
