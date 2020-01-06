@@ -1,19 +1,12 @@
 
-# AutomatedOmicsCompendiumPreparationPipeline
 
-## Purpose
+# Automated Omics Compendium Preparation Pipeline
 
-## How to use
-
-## Dependencies
-
-## Architecture
-
-## Notes
-
-
+<h1> Propose</h1>
 This toolkit can prepare the compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database.
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
+![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure1.png)
+
 
 <div id = "usage">
 <h1> How to use it </h1>
@@ -72,7 +65,8 @@ To evaluate the quality of the compendium, unsupervised and supervised approach 
 <h3>Unsupervised validation</h3>
 Unsupervised validation evaluate the model quality without additional information from the metadata. The assumption is that the high quality data collected from the same species contains general gene expression pattern regardless of the culture conditions.
 Therefore, after intentionally remove partial data, the remain part of the data should be capable to recover the missing part.
-
-
 </div>
+
+![Figure 2. The demonstration of unsupervised validation. The transcription profiles in the compendium are added with noise in different noise ratio and then some values are removed randomly. The imputation method then recover the values. Then the imputed values can be compared with the original values. For the high quality compendium, the difference between original value and imputed value in low noise ratio cases should be significantly lower than the difference in high noise ratio cases.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure2.png)
+
 
