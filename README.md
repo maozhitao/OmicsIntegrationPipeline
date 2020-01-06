@@ -5,6 +5,7 @@
 <h1> Propose</h1>
 This toolkit can prepare the compendium by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database.
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
+
 ![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure1.png)
 
 
