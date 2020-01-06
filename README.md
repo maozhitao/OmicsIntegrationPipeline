@@ -26,11 +26,9 @@ Figure 1. The entire transcriptomic compendium pipeline
 <li> Download all <a href="#software">necessary software and toolkits</a> </li>
 <li> Add all installed software to <a href="#path_env">PATH environment variables</a> </li>
 <li> Download the entire directory of this project </li>
-<li> Prepare a list of experiment ID you would like to collect (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/input_exp1.txt">example</a>)</li>
-<li> Download the template files from NCBI genome database in GFF3 format (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/LT2.gff3">example</a>) </li>
-<li> Prepare a list of templates for alignment (<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TestFiles/input_template1.txt">example</a>) </li>
 <li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
-<li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/transcriptomic_pipeline.py">transcriptomic_pipeline.py</a> &lt;experiment_idlist_file&gt; &lt;template_list_file&gt; </li>
+<li> Install the keyword query module: switch to the directory meta-omics-master and then install the package by running setup.py: <br>'''python setup.py install'''</li>
+<li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/transcriptomic_pipeline_human_mergedFang.py">transcriptomic_pipeline_human_mergedFang.py </a> <br>'''transcriptomic_pipeline_human_mergedFang.py &lt;interested studies&gt; &lt;target species&gt;&lt;optional experiment filter file&gt;''' </li><br> The pipeline will filter all the samples NOT in the optional experiment filter file
 <li> For the validation part, please refer <a href="#validation">validation part</a></li>
 </ol>
 </div>

@@ -143,7 +143,7 @@ if __name__ == "__main__":
     print(len(srx_list))
     
     #Just keep the things we want
-    tmp = pd.read_csv("../TestFiles/SraRunInfo_Human_Stroke.csv")
+    tmp = pd.read_csv(sys.argv[3])
     exp_list = tmp["Experiment"].tolist()
     print(exp_list)
     print(len(exp_list))
