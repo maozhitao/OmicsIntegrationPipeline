@@ -370,8 +370,7 @@ class SequencingSampleMappingWorker:
             self.results.update_merged_count_reads_result(self.exp, merged_count_reads_result)
             print(merged_count_reads_result.shape)
             print(self.exp + '(Normal)')
-            if merged_count_reads_result.shape[0] != 4548:
-                raise Exception(self.exp + '!!??')
+
         else:
             count_reads_results_exp = []
             for run in self.mapping_experiment_runs[self.exp]:
@@ -391,5 +390,3 @@ class SequencingSampleMappingWorker:
             print(merged_count_reads_result.shape)
             print(self.exp + '(Mean)')
             
-            if merged_count_reads_result.shape[0] != 4548:
-                raise Exception(self.exp + '!!??')
