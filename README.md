@@ -38,11 +38,11 @@ python setup.py install --user
 <li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/transcriptomic_pipeline_human_mergedFang.py">transcriptomic_pipeline_human_mergedFang.py </a>
 
 ```
-python transcriptomic_pipeline_human_mergedFang.py <interested studies> <target species> <optional experiment filter file>;
+python transcriptomic_pipeline_human_mergedFang.py <interested studies> <target species> <correlation_validation_file> <knowledge_capture_validation_sample_list> <knowledge_capture_validation_gene_list> <optional experiment filter file>;
 ```
 
-</li><br> The pipeline will filter all the samples NOT in the optional experiment filter file
-<li> For the validation part, please refer <a href="#validation">validation part</a></li>
+</li><br> NOTE: For the test version, the pipeline will use the experiments in optional experiment filter file and overwrite all query results.
+<li> For the validation part (including three necessary for supervised validation: correlation_validation_file, knowledge_capture_validation_sample_list and knowledge_capture_validation_gene_list), please refer <a href="#validation">validation part</a></li>
 </ol>
 </div>
 

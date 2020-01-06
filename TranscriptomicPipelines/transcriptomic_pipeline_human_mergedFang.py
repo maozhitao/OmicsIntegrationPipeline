@@ -132,34 +132,54 @@ class TranscriptomicDataPreparationPipeline:
         
 if __name__ == "__main__":
     #For Testing
+    #python transcriptome_pipeline_human_mergedFang.py <target_studies> <target_species> <validate_corr_input> <validate_knowledge_input_samples> <validate_knowledge_input_genes> <(optional)sample_filter_list>
     import pandas as pd
     
-    #Obtain the target sample list
+    if len(sys.argv) != 6 and len(sys.argv) != 7:
+        print("You have to provide 5 or 6 input arguments!")
+        print("Usage:")
+        print("python transcriptome_pipeline_human_mergedFang.py <target_studies> <target_species> <validate_corr_input> <validate_knowledge_capture_input_samples> <validate_knowledge_capture_input_genes> <(optional)sample_filter_list>")
+        sys.exit(1)
+    
     target_studies = sys.argv[1]
+    target_species = sys.argv[2]
+    validate_corr_input = sys.argv[3]
+    validate_knowledge_capture_input_samples = sys.argv[4]
+    validate_knowledge_capture_input_genes = sys.argv[5]
+    
+    if len(sys.argv) == 7:
+        optional_sample_filter_list = sys.argv[6]
+    else:
+        optional_sample_filter_list = None
+    
+    
+    #Obtain the target sample list
     subprocess.call(['meta-omics',target_studies,"tmp_sample_list.csv"]) #Get the csv table
     metadata_extractor = extractor.Extractor()
-    srx_list = metadata_extractor.extract("tmp_sample_list.csv")
-    print(srx_list)
-    print(len(srx_list))
+    exp_list = metadata_extractor.extract("tmp_sample_list.csv")
+    print(exp_list)
+    print(len(exp_list))
     
     #Just keep the things we want
-    tmp = pd.read_csv(sys.argv[3])
-    exp_list = tmp["Experiment"].tolist()
-    print(exp_list)
-    print(len(exp_list))
-    
-    
-    exp_list = list(set(exp_list) & set(srx_list))
-    print(exp_list)
-    print(len(exp_list))
+    if optional_sample_filter_list is not None:
+        tmp = pd.read_csv(optional_sample_filter_list)
+        exp_list2 = tmp["Experiment"].tolist()
+        print(exp_list2)
+        print(len(exp_list2))
+        
+        
+        #exp_list = list(set(exp_list) & set(exp_list2))
+        exp_list = exp_list2
+        print(exp_list)
+        print(len(exp_list))
     
     
     #raise Exception
     
     #Obtain the reference genome
-    target_species = sys.argv[2]
     r_refgen = r_retrieval.RefGenRetriever()
     gff_file = r_refgen.download_refseq(target_species)
+    print(gff_file)
     
     #exp_list = ["SRX3266939","SRX5961261"],
     
@@ -177,7 +197,7 @@ if __name__ == "__main__":
     
     transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline(s_platform_id_remove,s_series_id_remove,s_experiment_id_remove,s_run_id_remove)
     transcriptome_pipeline.postprocessing_pipeline.run_postprocessing_pipeline()
-    transcriptome_pipeline.validation_pipeline.run_validation_pipeline( input_corr_path = "../TestFiles/Input_CorrTest2.csv", 
-                                                                        input_knowledge_capture_groupping_path = "../TestFiles/Input_KnowledgeCapture_fur.csv", 
-                                                                        input_knowledge_capture_gene_list_path = "../TestFiles/Input_KnowledgeCapture_fur_related_genes.csv")
+    transcriptome_pipeline.validation_pipeline.run_validation_pipeline( input_corr_path = validate_corr_input, 
+                                                                        input_knowledge_capture_groupping_path = validate_knowledge_capture_input_samples, 
+                                                                        input_knowledge_capture_gene_list_path = validate_knowledge_capture_input_genes)
     

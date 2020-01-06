@@ -54,16 +54,28 @@ def download(host, filename, local, mode):
         ftp.retrbinary(
             cmd         = FtpConst.SPACE.join([FtpConst.COMM_RETRIEVE, filename]),
             callback    = content_list.append)
-        content = gzip.decompress(FtpConst.EMPTY_BIN.join(content_list)).decode(FtpConst.FORMAT)
+        if sys.version_info < (3, 0):
+            import shutil
+            with open('tmp.gzip','wb') as f:
+                f.write((FtpConst.EMPTY_BIN.join(content_list)))
+            with gzip.open('tmp.gzip','rb') as f_in, open(local, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+                #content = f.read().decode(FtpConst.FORMAT)
+        else:
+            content = gzip.decompress(FtpConst.EMPTY_BIN.join(content_list)).decode(FtpConst.FORMAT)
+            with open(local, 'wb') as f:
+                f.write(bytes(content,'utf8'))
         
     else:
         raise ValueError("mode has to be either 't' (text) or 'b' (binary)")
     
     ftp.quit()
 
+    '''
     # Write to local
     with open(local, 'wb') as f:
         if sys.version_info < (3, 0):
             f.write(bytes(content))
         else:
             f.write(bytes(content,'utf8'))
+    '''

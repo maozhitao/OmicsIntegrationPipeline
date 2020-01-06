@@ -1,8 +1,10 @@
 import pandas as pd
 import os, sys
+
+
 if (sys.version_info < (3, 0)):
     import const
-    import utils.ftp
+    import utils.ftp as ftp
     import configurer
 else:
     from . import const
@@ -25,7 +27,7 @@ class RefGenRetriever(object):
             names   = ["asm_acc", "refseq_cat", "name", "level", "release",
                 "genome", "gbrs", "ftp"])
 
-    def _find_best_refseq(self):
+    def _find_best_refseq(self, term):
         """look for the best refence genome candidate"""
 
         self.candid = None
@@ -79,7 +81,7 @@ class RefGenRetriever(object):
 
     def download_refseq(self, term):
         self._load_summary()
-        self._find_best_refseq()
+        self._find_best_refseq(term)
 
         if self.candid is None:
             print("Quitting the process...")
