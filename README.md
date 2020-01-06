@@ -30,14 +30,15 @@ Figure 1. The entire transcriptomic compendium pipeline
 <li> Install the keyword query module: switch to the directory meta-omics-master and then install the package by running setup.py:
 
 ```
-python setup.py install
+cd meta-omics-master
+python setup.py install --user
 ```
 
 </li>
 <li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/transcriptomic_pipeline_human_mergedFang.py">transcriptomic_pipeline_human_mergedFang.py </a>
 
 ```
-transcriptomic_pipeline_human_mergedFang.py &lt;interested studies&gt; &lt;target species&gt;&lt;optional experiment filter file&gt;
+python transcriptomic_pipeline_human_mergedFang.py <interested studies> <target species> <optional experiment filter file>;
 ```
 
 </li><br> The pipeline will filter all the samples NOT in the optional experiment filter file
