@@ -26,7 +26,7 @@ Figure 1. The entire transcriptomic compendium pipeline
 <li> Download all <a href="#software">necessary software and toolkits</a> </li>
 <li> Add all installed software to <a href="#path_env">PATH environment variables</a> </li>
 <li> Download the entire directory of this project </li>
-<li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
+<li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
 <li> Install the keyword query module: switch to the directory meta-omics-master and then install the package by running setup.py:
 
 ```
