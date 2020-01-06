@@ -28,14 +28,18 @@ Figure 1. The entire transcriptomic compendium pipeline
 <li> Download the entire directory of this project </li>
 <li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/master/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
 <li> Install the keyword query module: switch to the directory meta-omics-master and then install the package by running setup.py:
-```c
+
+```
 python setup.py install
 ```
+
 </li>
 <li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/transcriptomic_pipeline_human_mergedFang.py">transcriptomic_pipeline_human_mergedFang.py </a>
+
 ```
 transcriptomic_pipeline_human_mergedFang.py &lt;interested studies&gt; &lt;target species&gt;&lt;optional experiment filter file&gt;
 ```
+
 </li><br> The pipeline will filter all the samples NOT in the optional experiment filter file
 <li> For the validation part, please refer <a href="#validation">validation part</a></li>
 </ol>
