@@ -40,6 +40,7 @@ Figure 1. The entire transcriptomic compendium pipeline
 <ol>
 <li>Python3 (>=3.6.9) or Python2 (>=2.7.1)</li>
 <li>sratoolkit (>=2.9.6) </li>
+<li>bowtie2(>=2.3.4)</li>
 </ol>
 
 <h3>Required Packages</h3>
@@ -57,17 +58,17 @@ You should add all path of installed toolkits to PATH environment variables <br>
 (Especially when you do not have root privileges and you install or compile the software/toolkits manually): <br>
 Here are the example path of those installed software/toolkits:
 <ol>
-<li> sratoolkit: ~/sratoolkit.2.9.6-1-ubuntu64/bin/ </li>
 <li> RSeQC: ~/.local/lib/python2.7/site-packages/RSeQC-2.6.4-py2.7.egg/EGG-INFO/scripts/ </li>
 <li> HTSeq: ~/.local/lib/python2.7/site-packages/HTSeq-0.6.1p1-py2.7-linux-x86_64.egg/EGG-INFO/scripts/</li>
 </ol>
 After you added these path to PATH variable, you should be capable to run the following program in any directory:
 <ul>
 <li>prefetch</li>
+<li>bowtie2</li>
 <li>infer_experiment.py</li>
 <li>htseq_count</li>
 </ul>
-If you failed to run these three program, please make sure that you located these three programs correctly and added the correct path to PATH variables before you run this pipeline.
+If you failed to run these four programs, please make sure that you located these four programs correctly and added the correct path to PATH variables before you run this pipeline.
 </div>
 
 <div id = "validation">
@@ -80,6 +81,7 @@ Therefore, after intentionally remove partial data, the remain part of the data 
 
 
 ![Figure 2. The demonstration of unsupervised validation. The transcription profiles in the compendium are added with noise in different noise ratio and then some values are removed randomly. The imputation method then recover the values. Then the imputed values can be compared with the original values. For the high quality compendium, the difference between original value and imputed value in low noise ratio cases should be significantly lower than the difference in high noise ratio cases.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure2.png)
+Figure 2. The demonstration of unsupervised validation. The transcription profiles in the compendium are added with noise in different noise ratio and then some values are removed randomly. The imputation method then recover the values. Then the imputed values can be compared with the original values. For the high quality compendium, the difference between original value and imputed value in low noise ratio cases should be significantly lower than the difference in high noise ratio cases.
 
 <h3>Supervised validation</h3>
 Supervised validation can provide more information of compendium quality evaluation. However, it needs more metadata curated by human. The pipeline provides two approaches for supervised validation
@@ -110,9 +112,21 @@ By evaluating these five types of average correlation and compared among them, a
 ![Figure 3. The demonstration of correlation validation. ](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure3.png)
 Figure 3. The demonstration of correlation validation.
 </li>
- 2. List item
+<li>Knowledge capture: If you know the genes that expressed significantly different in two specific conditions, you can provide the list of the genes and two sample lists of these two specific conditions. The pipeline will check whether the selected genes expressed significantly different in two specific conditions. <br> For example, we know that fur gene in Salmonella can regulate flagellar genes, SPI1 genes and SPI2 genes (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5001712/">PMC5001712</a>). In addition, we know that samples SRX1638996 and SRX1638997 are wildtype and SRX1638999 is fur mutant. By providing these three information: gene list, sample list of wildtype conditions and sample list of fur mutant, the pipeline will be capable to verify whether the compendium capture the information. The procedures are shown in figure 4:
+
+<ol>
+<li>Samples from two sample list of two different conditions are selected.</li>
+<li>The average profiles of these two conditions will be calculated.</li>
+<li>The absolute log fold change between these two conditions will be calculated.</li>
+<li>The corresponded rank will be calculated.</li>
+<li>Given the genes that expressed significantly different in these two specific conditions. We can pick the rank of the specified genes.</li>
+<li>The cumulative density function (cdf) of the rank of selected genes can be plotted. The baseline will be the diagonal line, which is the cdf of uniform distribution. The cumulative density function from good compendium should be significantly different then uniform distribution. (Significant p-value should be obtained by performing Kolmogorov–Smirnov test (K-S test))</li>
 </ol>
- 1. 
- 3. 
+
+![Figure 4. The demonstration of knowledge capture validation. ](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure4.png)
+Figure 4. The demonstration of knowledge capture validation.
+</li>
+</ol>
+
 
 </div>
