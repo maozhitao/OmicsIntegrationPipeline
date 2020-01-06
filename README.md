@@ -9,11 +9,13 @@ This toolkit can prepare the transcriptomic compendium by collecting the samples
 
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:
 
- 1. Given the topic your are interested in, the pipeline will find the corresponded experiments in SRA database.
- 2. Given your targeted species, the pipeline will find the corresponded reference genome sequence and mRNA annotation information.
- 3. Given the collected experiments (and optional experiment filter list), reference genome sequence and mRNA annotation information, the pipeline will download the RNA-seq data from SRA, and then count the reads for each mRNA to create the transcription profiles.
- 4. After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.
- 5. Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.
+<ol>
+<li>Given the topic your are interested in, the pipeline will find the corresponded experiments in SRA database.</li>
+<li>Given your targeted species, the pipeline will find the corresponded reference genome sequence and mRNA annotation information.</li>
+<li>Given the collected experiments (and optional experiment filter list), reference genome sequence and mRNA annotation information, the pipeline will download the RNA-seq data from SRA, and then count the reads for each mRNA to create the transcription profiles.</li>
+<li>After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.</li>
+<li>Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.</li>
+</ol>
 
 ![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure1.png)
 Figure 1. The entire transcriptomic compendium pipeline
@@ -75,8 +77,42 @@ To evaluate the quality of the compendium, unsupervised and supervised approach 
 <h3>Unsupervised validation</h3>
 Unsupervised validation evaluate the model quality without additional information from the metadata. The assumption is that the high quality data collected from the same species contains general gene expression pattern regardless of the culture conditions.
 Therefore, after intentionally remove partial data, the remain part of the data should be capable to recover the missing part.
-</div>
+
 
 ![Figure 2. The demonstration of unsupervised validation. The transcription profiles in the compendium are added with noise in different noise ratio and then some values are removed randomly. The imputation method then recover the values. Then the imputed values can be compared with the original values. For the high quality compendium, the difference between original value and imputed value in low noise ratio cases should be significantly lower than the difference in high noise ratio cases.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure2.png)
 
+<h3>Supervised validation</h3>
+Supervised validation can provide more information of compendium quality evaluation. However, it needs more metadata curated by human. The pipeline provides two approaches for supervised validation
 
+<ol>
+<li>Correlation validation: If you know the mapping between experiments and studies (or conditions), you can provide this information to the pipeline. The assumption is that the similarity between two transcription profiles should be high if they are from the same conditions. And then the similarity between two profiles should be high (but lower than the similarity if they are from the exact same condition) if they are from the same study because many factors (tissues, sample source, etc.) are the same. The similarity should be low if they are from the different studies.<br><br>The pipeline evaluate five types of average correlations:
+<ol>
+<li>Average correlation among all profiles: It will calculate all pairwise correlation in the compendium. Since it calculates all pairwise correlation including the correlation between two profiles from different conditions and studies, this value should be the lowest compared with different types of average correlation.</li>
+<li>Average correlation among profiles from the same conditions: It will calculate all pairwise correlation of the profiles from the same conditions. This value should be the highest because it only calculates correlations among profiles from the same conditions</li>
+<li>Average correlation among profiles from the same studies: It will calculate all pairwise correlation of the profiles from the same studies.<br>
+For the normal compendium, (2) should be the highest and (1) should be the lowest. <br><br>
+The following two average correlations show the diversity of the compendium. <br>
+</li>
+<li>Average correlation across different studies: For each study, all corresponded profiles are merged into representative one by taking the average. Then average correlation among different studies are calculated.</li>
+<li>Average correlation across different conditions: For each condition, all corresponded profiles are merged into representative one by taking the average. Then average correlation among different conditions are calculated.</li>
+</ol>
+By evaluating these five types of average correlation and compared among them, abnormal compendium can be observed. In addition, noise can be added into the compendium and these five values should decrease. <br> Figure 3. shows the entire flow of the correlation validation procedure. 
+<ol>
+<li>At the beginning, the compendium contains six samples from three different conditions and two different studies. </li>
+<li>The correlation matrix are calculated. Three different average correlation are calculated: The average of all 36 values become the average correlation among all profiles (Black); The average of 20 values from the same studies become the average correlation among profiles from the same studies (Green); The average of 12 values from the same conditions become the average correlation among profiles from the same conditions (Orange) </li>
+<li>Then, the average transcription profiles for each condition (Blue) and for each study (Red) are calculated.</li>
+<li>The corresponded correlation matrices are also calculated. The average values of these correlation matrices become the average correlation across different studies/conditions.
+</li>
+<li>Adding noise with higher noise ratio decrease the correlation. The corresponded plot will be shown.</li>
+</ol>
+
+
+![Figure 3. The demonstration of correlation validation. ](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/images/Figure3.png)
+Figure 3. The demonstration of correlation validation.
+</li>
+ 2. List item
+</ol>
+ 1. 
+ 3. 
+
+</div>
