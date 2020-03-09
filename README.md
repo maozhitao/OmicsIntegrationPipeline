@@ -10,48 +10,48 @@ The pipeline will do the necessary work for building transcriptomic compendium f
 
 
 ### 1. Metadata preparation
-#### This step will take two user inputs to prepare all necessary metadata for sequencing data processing:
+<h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing: </h4>
     <ol>
         <li>Sample List: The list that contains samples (experiment ID in SRA database) you are interested in.</li>
         <li>Gene Annotation File: A GFF file downloaded from NCBI genome database. This annotation file allow the pipeline to fetch reference genome sequence and extract the corresponded gene names.</li>
     </ol>
-#### The output metadata will contain all necessary information for sequencing data processing:
+<h4>The output metadata will contain all necessary information for sequencing data processing: </h4>
     <ol>
         <li>Run information in SRA database: It contains corresponded run information for samples you are interested in. One sample (experiment ID) may contain more than one runs.</li>
         <li>Reference genome files: Files in Bowtie2 index format to allow the pipeline align the sequencing data with this reference.</li>
         <li>Reference genome sequence direction information: A BED file to allow the pipeline detect the sequencing data type (stranded or unstranded). </li>
     </ol>
-</li>
-<li>Sequencing data download:<br>
-This step will take run information input and then download all sequencing data of samples you are interested in from SRA database:
+    
+### 2. Sequencing data download
+<h4>This step will take run information input and then download all sequencing data of samples you are interested in from SRA database: </h4>
     <ul>
         <li>Run information in SRA database: Generated from step (1) and contains corresponded run information for samples you are interested in.</li>
     </ul>
-The output files are downloaded and format-converted sequencing data:
+<h4> The output files are downloaded and format-converted sequencing data: </h4>
     <ul>
         <li>Sequencing data: Fastq files for each run. Two files for one run if this run is paired-end data, otherwise each run will generate one fastq file.
     </ul>
-</li>
-<li>Sequencing data alignment:<br>
-This step will take sequencing data and reference genome files as inputs to perform sequence alignment:
+
+### 3. Sequencing data alignment
+<h4>This step will take sequencing data and reference genome files as inputs to perform sequence alignment:</h4>
     <ol>
         <li>Sequencing data: Generated from step (2). Fastq files for each run.</li>
         <li>Reference genome files: Generated from step(1). Reference genome sequence for alignment.</li>
     </ol>
-The output file is alignment results is SAM format and alignment rates:
+<h4>The output file is alignment results is SAM format and alignment rates:</h4>
     <ol>
         <li>The alignment result files: For each run, a file contains the alignment result in SAM format is generated.</li>
         <li>Alignment rate information: Alignment rate information will be recorded (for internal use only).</li>
     </ol>
-</li>
-<li>Gene expression counting:<br>
-This step will take gene alignment results, sequence direction information file (BED file) and gene annotation file (GFF file) as inputs to generate the gene expression profile for each run.<br>
+
+### 4. Gene expression counting
+<h4>This step will take gene alignment results, sequence direction information file (BED file) and gene annotation file (GFF file) as inputs to generate the gene expression profile for each run.<br></h4>
     <ol>
         <li>The alignment result files: Files in SAM format generated from step (3) which recorded the alignment result.</li>
         <li>BED file contains sequence direction information: A file in BED format generated from step (1). With this sequence direction information, the pipeline can detect whether sequencing data is stranded or unstranded.</li>
         <li>GFF file contains gene annotation information: A file in GFF format given from users. With this information, the pipeline can generate gene expression profiles with correct gene names.</li>
     </ol>
-The output file are the gene expression profiles of different runs. After perform the mapping between runs and samples with run information table (generated from step (1)), gene expression profile for each sample can be generated.
+<h4>The output file are the gene expression profiles of different runs. After perform the mapping between runs and samples with run information table (generated from step (1)), gene expression profile for each sample can be generated.</h4>
     <ol>
         <li>Gene expression profiles of different runs (for internal use only).</li>
         <li>Gene expression profiles of different samples after performing the mapping between runs and samples with run information table (for internal use only).</li>
@@ -59,12 +59,6 @@ The output file are the gene expression profiles of different runs. After perfor
             Each row represent different genes and each column represent different samples.
         </li>
     </ol>
-</li>
-<li>
-</li>
-After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.</li>
-<li>Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.</li>
-
 
 ![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure1.png)
 Figure 1. The entire transcriptomic compendium pipeline
