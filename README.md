@@ -9,7 +9,7 @@ The pipeline will do the necessary work for building transcriptomic compendium f
 (To check the exact format, please read "Step-by-Step example")
 
 <ol>
-<li>### Metadata preparation:<br>
+# <li> Metadata preparation:<br>
 <h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing:</h4>
     <ol>
         <li>Sample List: The list that contains samples (experiment ID in SRA database) you are interested in.</li>
