@@ -1,2 +1,0 @@
-LT2.gff3
-LT2_pSLT.gff3
