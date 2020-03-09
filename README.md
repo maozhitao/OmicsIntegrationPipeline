@@ -9,8 +9,8 @@ The pipeline will do the necessary work for building transcriptomic compendium f
 (To check the exact format, please read "Step-by-Step example")
 
 <ol>
-<li><h3>Metadata preparation:</h3><br>
-This step will take two user inputs to prepare all necessary metadata for sequencing data processing:
+<h3><li>Metadata preparation:<br>
+<h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing:
     <ol>
         <li>Sample List: The list that contains samples (experiment ID in SRA database) you are interested in.</li>
         <li>Gene Annotation File: A GFF file downloaded from NCBI genome database. This annotation file allow the pipeline to fetch reference genome sequence and extract the corresponded gene names.</li>
@@ -21,7 +21,8 @@ The output metadata will contain all necessary information for sequencing data p
         <li>Reference genome files: Files in Bowtie2 index format to allow the pipeline align the sequencing data with this reference.</li>
         <li>Reference genome sequence direction information: A BED file to allow the pipeline detect the sequencing data type (stranded or unstranded). </li>
     </ol>
-</li>
+</h4>
+</li></h3>
 <li>Sequencing data download:<br>
 This step will take run information input and then download all sequencing data of samples you are interested in from SRA database:
     <ul>
