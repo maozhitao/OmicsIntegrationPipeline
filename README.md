@@ -65,7 +65,7 @@ The pipeline will do the necessary work for building transcriptomic compendium f
     <ul>
         <li>Gene expression profile table: Generated from step (4). A table in csv format contains gene expression profiles of all samples you are interested in</li>
     </ul>
-<h4>The output file are the normalized gene expression profile table. In addition, a binary file recorded the normalized gene expression table and all parameters are saved.
+<h4>The output file are the normalized gene expression profile table. In addition, a binary file recorded the normalized gene expression table and all parameters are saved.<br></h4>
     <ol>
         <li>Normalized gene expression profile table: A table in csv format contains normalized gene expression profiles of all samples.</li>
         <li>Compendium saved in binary format: A python object contains the normalized gene expression table and recorded parameters. It can be used for the next step -- optional validation.</li>
