@@ -175,11 +175,13 @@ Required python packages have to be installed.
 <h4>Please refer step-by-step example for more information</h4>
 
 ### Building Compendium Script
-<h4>This script will take sample list and a gene annotation file as inputs to build the compendium</h4>
+<h4>This script is the main script and will take sample list and a gene annotation file as inputs to build the compendium</h4>
 
 #### Input
+    This script takes two input files:
     <ol>
-        <li>Sample List: A file in csv format with one column with name "Experiment" (Please refer figure 1).(<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv">Example</a>)</li>
+        <li>Sample List: A file in csv format with one column with name "Experiment". (Please refer figure 1).(<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv">Example</a>)</li>
+        <li>Gene Annotation: A file in gff3 format downloaded from NCBI genome database. (Please refer figure 1)(<a href="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/006/945/GCA_000006945.2_ASM694v2/GCA_000006945.2_ASM694v2_genomic.gff.gz">Example (need decompression)</a>)</li>
     </ol>
 
 ```
