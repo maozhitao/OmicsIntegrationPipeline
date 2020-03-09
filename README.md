@@ -15,7 +15,7 @@ The pipeline will do the necessary work for building transcriptomic compendium f
 <li>Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.</li>
 </ol>
 
-![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200307/images/Figure1.png)
+![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure1.png)
 Figure 1. The entire transcriptomic compendium pipeline
 
 <div id = "usage">
