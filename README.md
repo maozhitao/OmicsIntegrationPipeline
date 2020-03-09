@@ -211,6 +211,7 @@ This script will generate a directory with specified compendium name and many fi
     <li>Compendium saved in binary format (Filename: '(Compendium Name)_projectfile.bin'): A python object contains the normalized gene expression table and recorded parameters. It can be used for optional validation. (Please refer step (5) and figure 1)</li>
 </ul>
 
+<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/raw/Pipeline_20200307/SalmonellaExample.tar.gz>Salmonella compendium example including validation results (need decompression)</a>
 #### Usage
 
 ```
