@@ -89,14 +89,22 @@ Please clone the entire repository into your computer.
 Required software have to be installed.
 
 #### 1. Python 3.6 or later (NOTE: This version does not support Python 2 anymore)
-<h4>Please download are install python 3 by following the instructions in official website (https://www.python.org/downloads/)</h4>
+<h4>Please download are install python 3 by following the instructions in official website:<br>
+(https://www.python.org/downloads/)</h4>
     <ul>
         <li>Tested in Python 3.6 </li>
     </ul>
+    
 #### 2. sratoolkit 2.9.6 or later
-<h4>Please download are install sratoolkit by following the instructions in official website (https://ncbi.github.io/sra-tools/install_config.html)</h4>
+<h4>Please download are install sratoolkit by following the instructions in official website:<br>
+(https://ncbi.github.io/sra-tools/install_config.html)</h4>
     <ul>
         <li>Tested in sratoolkit 2.9.6 </li>
+        <li>Please make sure the toolkit location is specified in your $PATH variable. To add the toolkit location, use export command in linux:
+        ```
+        export PATH=<your_toolkit_location>:$PATH
+        ```
+        </li>
     </ul>
 
 
