@@ -5,7 +5,7 @@ This toolkit can prepare the transcriptomic compendium (a normalized, format-con
 
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
-## Steps of prepare a transcriptomic compendium
+## Steps of preparing a transcriptomic compendium
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
 <b>(To check the exact format, please read "Step-by-Step example")</b>
 
@@ -80,7 +80,13 @@ Figure 1. The entire transcriptomic compendium pipeline
 
 
 ##How to use it
-### 
+<h4> To use this pipeline, you have to download the entire directory, install all required software and python packages. <h4>
+### Download the entire directory
+Please clone the entire repository into your computer.
+### Install all required software
+Required software have to be installed.
+#### 1. Python
+
 
 <div id = "usage">
 <h1> How to use it </h1>
