@@ -105,7 +105,7 @@ Required software have to be installed.
                 <li>Linux: Use export command:
                 
                     
-                    export PATH=<your_toolkit_location>:$PATH
+    export PATH=<your_toolkit_location>:$PATH
                     
                     
 </li>
