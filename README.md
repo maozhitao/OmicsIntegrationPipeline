@@ -26,13 +26,22 @@ This step will take run information input and then download all sequencing data 
     <ul>
         <li>Run information in SRA database: Generated from step (1) and contains corresponded run information for samples you are interested in.</li>
     </ul>
-The output files are downloaded and converted sequencing data:
+The output files are downloaded and format-converted sequencing data:
     <ul>
         <li>Sequencing data: Fastq files for each run. Two files for one run if this run is paired-end data, otherwise each run will generate one fastq file.
     </ul>
 </li>
 <li>Sequencing data alignment:<br>
-Once the sequencing data and the reference genome is ready, the pipeline will align the sequencing data with the reference genome and produce alignment result in SAM format
+This step will take sequencing data and reference genome files as inputs to perform sequence alignment:
+    <ol>
+        <li>Sequencing data: Generated from step (2). Fastq files for each run.</li>
+        <li>Reference genome files: Generated from step(1). Reference genome sequence for alignment.</li>
+    </ol>
+The output file is alignment results is SAM format and alignment rates:
+    <ol>
+        <li>The alignment result file: For each run, a file contains the alignment result in SAM format is generated.</li>
+        <li>Alignment rate information: Alignment rate information will be recorded (for internal use only).</li>
+    </ol>
 </li>
 <li>After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.</li>
 <li>Finally, the validation module will evaluate the quality of the compendium. If additional metadata are provided (see validation part), both supervised validation and unsupervised validation will be applied. Otherwise, only unsupervised validation will be applied.</li>
