@@ -34,6 +34,9 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         
         self.configure_parameter_set()
         
+    def do_gene_mapping(self):
+        self.map_gene()
+        
     def configure_parameter_set(self):
         parameter_set = self.get_parameter_set()
         self.parameters.drop_unnamed_genes              = parameter_set.s_gene_mapping_parameters_drop_unnamed_genes
@@ -52,14 +55,13 @@ class SequencingGeneMapping(s_module_template.SequencingSubModule):
         except Exception as e:
             raise s_gene_mapping_exceptions.FailedToWriteGeneMappingTable('Failed to write gene mapping table!')
         
-        gene_mapping_table_selected_dict = {}
-        for index, row in gene_mapping_table_selected.iterrows():
-            gene_mapping_table_selected_dict[row[colname_id]] = row[colname_gene_name]
-        
         count_reads_matrix = self.s_sample_mapping_results.count_reads_matrix
         indices = count_reads_matrix.index.tolist()
         
         if self.parameters.use_gene_names == True:
+            gene_mapping_table_selected_dict = {}
+            for index, row in gene_mapping_table_selected.iterrows():
+                gene_mapping_table_selected_dict[row[colname_id]] = row[colname_gene_name]
             #USE GENE NAMES ==> rpoS, spoT, ...
             #NOT USE GENE NAMES ==> STMXXXX
             for i in range(len(indices)):

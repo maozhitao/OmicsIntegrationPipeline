@@ -14,9 +14,10 @@ import pandas as pd
 
 import pickle
 import subprocess
+import json
 
 import os
-
+import io
 
 
 class SequencingSampleMappingConstant(Enum):
@@ -76,6 +77,44 @@ class SequencingSampleMappingResults:
     def update_result_file(self, exp, result_file):
         self.result_file[exp] = result_file
         
+    def update_result_from_dict(self, input_dict):
+        for attribute in input_dict.keys():
+            if type(input_dict[attribute]) is not dict:
+                setattr(self, attribute, input_dict[attribute])
+            else:
+                if attribute == 'merged_count_reads_result':
+                    for exp in input_dict[attribute]:
+                        cur_merged_count_reads_result_dict = input_dict[attribute][exp]
+                        if (sys.version_info < (3, 0)):
+                            cur_merged_count_reads_result = pd.read_csv(io.BytesIO(bytes(cur_merged_count_reads_result_dict)),index_col=0)
+                        else:
+                            cur_merged_count_reads_result = pd.read_csv(io.BytesIO(bytes(cur_merged_count_reads_result_dict, 'utf-8')),index_col=0)
+                        self.update_merged_count_reads_result(exp, cur_merged_count_reads_result)
+                else:
+                    tmp = getattr(self, attribute)
+                    for exp in input_dict[attribute]:
+                        tmp[exp] = input_dict[attribute][exp]
+    
+    def save_result_to_dict(self):
+        new_json_obj = {}
+        for attribute in self.__dict__.keys():
+            if type(getattr(self, attribute)) is not dict:
+                new_json_obj[attribute] = getattr(self, attribute)
+            else:
+                if attribute == 'merged_count_reads_result':
+                    new_result = {}
+                    tmp_result = getattr(self, attribute)
+                    for exp in getattr(self, attribute):
+                        new_result[exp] = tmp_result[exp].to_csv()
+                else:
+                    new_result = {}
+                    tmp_result = getattr(self, attribute)
+                    for exp in getattr(self, attribute):
+                        new_result[exp] = tmp_result[exp]
+                        
+                new_json_obj[attribute] = new_result
+                
+        return new_json_obj
         
 class SequencingSampleMapping(s_module_template.SequencingSubModule):
     def __init__(self, owner):
@@ -89,6 +128,16 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         self.workers = {}
         
         self.configure_parameter_set()
+        print(self.parallel_parameters.pyscripts)
+        
+    def do_sample_mapping(self):
+        #Parallel (exp level)
+        self.prepare_workers()
+        self.submit_job()
+        self.join_results()
+        #Now the thing are the same as serial now :)
+        self.merge_sample()
+        self.complete_data_dependent_metadata()
         
     def configure_parameter_set(self):
         parameter_set = self.get_parameter_set()
@@ -97,6 +146,8 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         self.parameters.skip_merge_different_run            = parameter_set.s_sample_mapping_parameters_skip_merge_different_run
         self.parameters.clean_existed_worker_file           = parameter_set.s_sample_mapping_parameters_clean_existed_worker_file
         self.parameters.clean_existed_results               = parameter_set.s_sample_mapping_parameters_clean_existed_results
+
+        self.parallel_parameters.pyscripts				= parameter_set.s_sample_mapping_parallel_parameters_pyscript
         
     def configure_parameter_set_parallel(self):
         parameter_set = self.get_parameter_set()
@@ -193,14 +244,17 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
     def prepare_worker_file(self, exp):
         pickle.dump(self.workers[exp], open(self.get_worker_file(exp), 'wb'))
     def get_worker_file(self, exp):
-        return 'worker_s_sample_mapping_' + str(exp) + '.dat'
+        return 'worker_s_sample_mapping_' + str(exp) + '.json'
     def get_worker_results_file(self, exp):
-        return 'results_s_sample_mapping_' + str(exp) + '.dat'
+        return 'results_s_sample_mapping_' + str(exp) + '.json'
     def get_worker_results(self, exp):
-        return pickle.load(open(self.get_worker_results_file(exp), 'rb'))
+        return json.load(open(self.get_worker_results_file(exp), 'r'))
         
     def get_local_submit_command(self, exp):
-        python_path = 'python'
+        if (sys.version_info < (3, 0)):
+            python_path = 'python2'
+        else:
+            python_path = 'python3'
         script_path = self.parallel_parameters.pyscripts
         worker_path = self.get_worker_file(exp)
         result_path = self.get_worker_results_file(exp)
@@ -218,7 +272,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 if self.parameters.skip_merge_different_run == False or self.check_existed_results(exp) == False:
                     self.workers[exp].do_run()
-                    pickle.dump(self.workers[exp].results.__dict__, open(self.get_worker_results_file(exp),'rb'))
+                    json.dump(self.workers[exp].results.save_result_to_dict(), open(self.get_worker_results_file(exp),'w'))
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.LOCAL.value:
             commands = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
@@ -232,6 +286,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
             local_commands = []
             commands = []
             result_path_list = []
+            job_name_list = []
             parallel_engine = self.get_parallel_engine()
             workers = []
             for exp in self.s_retrieval_results.mapping_experiment_runs:
@@ -239,16 +294,18 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
                     self.prepare_worker_file(exp)
                     local_command = self.get_local_submit_command(exp)
                     local_commands.append(local_command)
-                    command = parallel_engine.get_command_sbatch(SequencingSampleMappingConstant.JOB_NAME.value + exp)
+                    job_name = SequencingSampleMappingConstant.JOB_NAME.value + exp
+                    command = parallel_engine.get_command_sbatch(job_name)
                     commands.append(command)
                     workers.append(self.workers[exp])
                     print(local_command)
                     print(command)
                     
                     result_path_list.append(self.get_worker_results_file(exp))
+                    job_name_list.append(job_name)
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, workers)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, workers, job_name_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
@@ -256,7 +313,7 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         exception_occurred = False
         for exp in mapping_experiment_runs:
             cur_exp_results = SequencingSampleMappingResults()
-            cur_exp_results.__dict__ = self.get_worker_results(exp).__dict__
+            cur_exp_results.update_result_from_dict(self.get_worker_results(exp))
             if cur_exp_results.exception is not None:
                 print(exp + ": Exception Occurred : " + str(cur_exp_results.exception))
                 exception_occurred = True
@@ -279,12 +336,12 @@ class SequencingSampleMapping(s_module_template.SequencingSubModule):
         
     def check_existed_results(self, exp):
         try:
-            cur_exp_results = self.get_worker_results(exp)
+            cur_exp_results_dict = self.get_worker_results(exp)
         except Exception as e:
             return False
             
         #We have to check the completeness of the results here!
-        if cur_exp_results.exception is not None:
+        if cur_exp_results_dict['exception'] is not None:
             os.remove(self.get_worker_results_file(exp))
             return False
         return True
@@ -355,8 +412,7 @@ class SequencingSampleMappingWorker:
             self.results.update_merged_count_reads_result(self.exp, merged_count_reads_result)
             print(merged_count_reads_result.shape)
             print(self.exp + '(Normal)')
-            if merged_count_reads_result.shape[0] != 4548:
-                raise Exception(self.exp + '!!??')
+
         else:
             count_reads_results_exp = []
             for run in self.mapping_experiment_runs[self.exp]:
@@ -376,5 +432,3 @@ class SequencingSampleMappingWorker:
             print(merged_count_reads_result.shape)
             print(self.exp + '(Mean)')
             
-            if merged_count_reads_result.shape[0] != 4548:
-                raise Exception(self.exp + '!!??')

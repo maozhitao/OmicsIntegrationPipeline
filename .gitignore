@@ -19,3 +19,6 @@
 *.xls
 *.cpython.*
 pycache.*
+*.gff*
+refgen*
+meta-omics*

@@ -10,6 +10,25 @@ import datetime
 
 import pandas as pd
 
+class MetadataTableColumns(Enum):
+    __order__ = 'CHANNEL_NUM FIRST_CHANNEL SECOND_CHANNEL SOURCE_TYPE SERIES_ID PLATFORM_ID REMOVED USED_DATA PAIRED STRANDED BG_AVAILABLE USED_VALUE VALUE_VALID PMID AUTHOR DATE'
+    CHANNEL_NUM         = "channel_num"
+    FIRST_CHANNEL       = "first_channel"
+    SECOND_CHANNEL      = "second_channel"
+    SOURCE_TYPE         = "source_type"
+    SERIES_ID           = "series_id"
+    PLATFORM_ID         = "platform_id"
+    REMOVED             = "removed"
+    USED_DATA           = "used_data"
+    PAIRED              = "paired"
+    STRANDED            = "stranded"
+    BG_AVAILABLE        = "bg_available"
+    USED_VALUE          = "used_value"
+    VALUE_VALID         = "value_valid"
+    PMID                = "pmid"
+    AUTHOR              = "author"
+    DATE                = "date"
+    
 
 class Separator(Enum):
     CHANNEL_NUM     = "_"
@@ -158,8 +177,8 @@ class MetadataEntry:
         self.date = date
         
     def to_df(self):
-        columns = list(vars(self).keys())
-        del columns[0]
+        columns = [e.value for e in MetadataTableColumns]
+        
     
         df = pd.DataFrame([ [self.channel_num,
                             self.first_channel,

@@ -7,6 +7,11 @@ else:
     from . import t_metadata
     from . import t_data
     from . import t_compendium_exceptions
+    
+from enum import Enum
+    
+class TranscriptomeCompendiumConst(Enum):
+    METADATA_SERIES_COLUMN = "series_id" #Please refer metadata object in t_metadata.py
 
 class TranscriptomeCompendium:
     def __init__(self, query_string = "", query_ids = []):
@@ -43,6 +48,13 @@ class TranscriptomeCompendiumCollections:
     def set_merged_metadata_table(self, merged_metadata_table, merged_metadata_table_path):
         self.merged_metadata_table = merged_metadata_table
         self.merged_metadata_table_path = merged_metadata_table_path
+        
+    def get_merged_metadata_table(self):
+        return self.merged_metadata_table
+        
+    def get_merged_metadata_series(self):
+        print(TranscriptomeCompendiumConst.METADATA_SERIES_COLUMN.value)
+        return self.merged_metadata_table[TranscriptomeCompendiumConst.METADATA_SERIES_COLUMN.value]
         
     def output_merged_metadata_table(self):
         try:

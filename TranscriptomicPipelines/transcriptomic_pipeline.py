@@ -4,9 +4,14 @@ import postprocessing_pipeline
 import validation_pipeline
 import parallel_engine
 
-import pickle
+import subprocess
+
+import uuid
 
 import sys
+import os
+import os.path
+
 if (sys.version_info < (3, 0)):
     sys.path.insert(0, "t_utilities")
     import t_compendium
@@ -19,6 +24,7 @@ else:
 
 from enum import Enum 
 import sys
+import pickle
 
 class GeneralConstant(Enum):
     WINDOWS                     = "win32"
@@ -72,7 +78,19 @@ class TranscriptomicDataPreparationPipeline:
         #metadata will be initialized here and it will shared by ALL COMPONENT in this pipeline
         #Initialize the gene annotation table:
         self.t_gene_annotation = t_gff.GeneAnnotation(gff_path)
-        self.t_gene_annotation.read_file()
+        print("read gff")
+        print(gff_path)
+        try:
+            self.t_gene_annotation.read_file()
+        except:
+            self.t_gene_annotation = t_gff.GeneAnnotation(gff_path)
+            print("Failed to use attribute 'gene' as ID: Use 'locus' as gene ID and also extract gene field")
+            self.t_gene_annotation.target_type = t_gff.GFF3Type.GENE.value
+            self.t_gene_annotation.used_id = t_gff.GFF3AttributesHeader.LOCUSTAG.value
+            self.t_gene_annotation.gene_name_id = t_gff.GFF3AttributesHeader.NAME.value
+            self.t_gene_annotation.read_file()
+            
+        print("read gff: done")
         self.t_compendium_collections = t_compendium.TranscriptomeCompendiumCollections()
         
         #Parallel Engine
@@ -121,30 +139,4 @@ class TranscriptomicDataPreparationPipeline:
     def get_parallel_engine(self):
         return self.parallel_engine
         
-        
-if __name__ == "__main__":
-    #For Testing
-    import pandas as pd
-    tmp = pd.read_csv("../TestFiles/SraRunInfo3.csv")
-    exp_list = tmp["Experiment"].tolist()
-    print(exp_list)
-    #exp_list = ["SRX3266939","SRX5961261"],
-    
-    transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],exp_list,['../TestFiles/LT2_pSLT.gff3','../TestFiles/LT2.gff3'])
-    
-    tmp_t_parameters = t_parameters.TranscriptomicParameters(transcriptome_pipeline)
-    transcriptome_pipeline.configure_parameter_set_all()
-    
-    
-    #Start Working
-    s_platform_id_remove = []
-    s_series_id_remove = []
-    s_experiment_id_remove = []
-    s_run_id_remove = []
-    
-    transcriptome_pipeline.sequencing_pipeline.run_sequencing_pipeline(s_platform_id_remove,s_series_id_remove,s_experiment_id_remove,s_run_id_remove)
-    transcriptome_pipeline.postprocessing_pipeline.run_postprocessing_pipeline()
-    transcriptome_pipeline.validation_pipeline.run_validation_pipeline( input_corr_path = "../TestFiles/Input_CorrTest.csv", 
-                                                                        input_knowledge_capture_groupping_path = "../TestFiles/Input_KnowledgeCapture_fur.csv", 
-                                                                        input_knowledge_capture_gene_list_path = "../TestFiles/Input_KnowledgeCapture_fur_related_genes.csv")
-    
+

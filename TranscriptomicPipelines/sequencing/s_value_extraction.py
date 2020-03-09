@@ -1,4 +1,5 @@
 import sys
+import copy
 if (sys.version_info < (3, 0)):
     import s_module_template
     import s_value_extraction_exceptions
@@ -12,6 +13,8 @@ import subprocess
 import os
 import pandas as pd
 import pickle
+import json
+import io
 
 class SequencingExtractionConstant(Enum):
     NEWLINE                     = '\n'
@@ -40,6 +43,7 @@ class SequencingExtractionConstant(Enum):
     COUNT_ALIGNMENT_NOT_UNIQUE  = '__alignment_not_unique'
     SRA_RESULT_OK               = 'consistent'
     INFER_RESULT_UNKNOWN        = 'Unknown'
+    JOB_NAME_REFBUILD            = 's_value_extraction_refbuild_'
     JOB_NAME                    = 's_value_extraction_'
     
 class SequencingExtractionParallelParameters:
@@ -66,10 +70,12 @@ class SequencingExtractionParameters:
         
         self.skip_all = True
         self.skip_fastq_dump = True
+        self.skip_refbuild = True
         self.skip_alignment = True
         self.skip_infer_experiment = True
         self.skip_count_reads = True
         
+        self.clean_reference_genome = False
         self.clean_existed_sra_files = True
         self.clean_existed_fastqdump_results = True
         self.clean_existed_alignment_sequence_results = True
@@ -143,6 +149,64 @@ class SequencingExtractionResults:
     def update_result_file(self, run, result_file):
         self.result_file[run] = result_file
         
+    def update_result_from_dict(self, input_dict):
+        for attribute in input_dict.keys():
+            if attribute == 'infer_experiment_result':
+                for run in input_dict['infer_experiment_result'].keys():
+                    cur_infer_experiment_result_dict = input_dict['infer_experiment_result'][run]
+                    paired_type = cur_infer_experiment_result_dict['paired_type']
+                    ratio_failed = cur_infer_experiment_result_dict['ratio_failed']
+                    stranded_info = cur_infer_experiment_result_dict['stranded_info']
+                    ratio_direction1 = cur_infer_experiment_result_dict['ratio_direction1']
+                    ratio_direction2 = cur_infer_experiment_result_dict['ratio_direction2']
+                    cur_infer_experiment_result = InferExperimentResults(paired_type, ratio_failed, ratio_direction1, ratio_direction2, stranded_info)
+                    self.update_infer_experiment_result(run, cur_infer_experiment_result)
+            elif attribute == 'count_reads_result':
+                for run in input_dict['count_reads_result'].keys():
+                    cur_count_reads_result_dict = input_dict['count_reads_result'][run]
+                    cur_count_reads_result_exceptions_dict = input_dict['count_reads_result_exceptions'][run]
+                    if (sys.version_info < (3, 0)):
+                        cur_count_reads_result = pd.read_csv(io.BytesIO(bytes(cur_count_reads_result_dict)),index_col=0)
+                        cur_count_reads_result_exceptions = pd.read_csv(io.BytesIO(bytes(cur_count_reads_result_exceptions_dict)),index_col=0)
+                    else:
+                        cur_count_reads_result = pd.read_csv(io.BytesIO(bytes(cur_count_reads_result_dict, 'utf-8')),index_col=0)
+                        cur_count_reads_result_exceptions = pd.read_csv(io.BytesIO(bytes(cur_count_reads_result_exceptions_dict, 'utf-8')),index_col=0)
+                    self.update_count_reads_result(run, cur_count_reads_result, cur_count_reads_result_exceptions)
+            elif attribute == 'count_reads_result_exceptions':
+                pass
+            else:
+                if type(input_dict[attribute]) is dict:
+                    for run in input_dict[attribute].keys():
+                        tmp = getattr(self, attribute)
+                        tmp[run] = input_dict[attribute][run]
+                else:
+                    setattr(self, attribute, input_dict[attribute])
+                    
+    def save_result_to_dict(self):
+        new_json_obj = {}
+        for attribute in self.__dict__.keys():
+            if attribute == 'infer_experiment_result':
+                tmp_result = getattr(self, attribute)
+                new_result = {}
+                for run in tmp_result:
+                    new_result[run] = tmp_result[run].__dict__
+            elif attribute == 'count_reads_result' or attribute == 'count_reads_result_exceptions':
+                tmp_result = getattr(self, attribute)
+                new_result = {}
+                for run in tmp_result:
+                    new_result[run] = tmp_result[run].to_csv()
+            else:
+                tmp_result = getattr(self, attribute)
+                if type(tmp_result) is dict:
+                    new_result = {}
+                    for run in tmp_result:
+                        new_result[run] = tmp_result[run]
+                else:
+                    new_result = tmp_result
+            
+            new_json_obj[attribute] = new_result
+            
+        return new_json_obj
 
 class InferExperimentResults:
     def __init__(self, paired_type, ratio_failed, ratio_direction1, ratio_direction2, stranded_info):
@@ -166,6 +230,21 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         self.parallel_parameters = SequencingExtractionParallelParameters(self.owner.get_parallel_engine().get_parameters())
         self.results = SequencingExtractionResults()
         self.workers = {}
+
+        self.configure_parameter_set(self.get_general_parameters())
+        
+    def do_extract(self):
+        print("gene_annotation")
+        self.configure_parallel_engine_create_bowtie2_index()
+        self.prepare_gene_annotation()
+        self.reset_parallel_engine()
+        
+        print("run extraction")
+        self.configure_parallel_engine()
+        self.prepare_workers()
+        self.submit_job()
+        self.join_results()
+        self.reset_parallel_engine()
         
     def get_parameters(self):
         return self.parameters
@@ -183,10 +262,12 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         
         self.parameters.skip_all = parameter_set.s_value_extraction_parameters_skip_all
         self.parameters.skip_fastq_dump = parameter_set.s_value_extraction_parameters_skip_fastq_dump
+        self.parameters.skip_refbuild = parameter_set.s_value_extraction_refbuild_parameters_skip_build
         self.parameters.skip_alignment = parameter_set.s_value_extraction_parameters_skip_alignment
         self.parameters.skip_infer_experiment = parameter_set.s_value_extraction_parameters_skip_infer_experiment
         self.parameters.skip_count_reads = parameter_set.s_value_extraction_parameters_skip_count_reads
         
+        self.parameters.clean_reference_genome = parameter_set.s_value_extraction_parameters_clean_reference_genome
         self.parameters.clean_existed_sra_files = parameter_set.s_value_extraction_parameters_clean_existed_sra_files
         self.parameters.clean_existed_fastqdump_results = parameter_set.s_value_extraction_parameters_clean_existed_fastqdump_results
         self.parameters.clean_existed_alignment_sequence_results = parameter_set.s_value_extraction_parameters_clean_existed_alignment_sequence_results
@@ -198,6 +279,8 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         
         if not self.parameters.working_file_dir.endswith(general_parameters.dir_sep):
             self.parameters.working_file_dir = self.parameters.working_file_dir + general_parameters.dir_sep
+
+        self.parallel_parameters.pyscripts = parameter_set.s_value_extraction_parallel_parameters_pyscript
         
     def get_results(self):
         return self.results
@@ -229,10 +312,76 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                                             t_gene_annotation,
                                             general_parameters, general_constant)
         return worker
+        
+    def reset_parallel_engine(self):
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.reset()
+        
+    def configure_parallel_engine_create_bowtie2_index(self):
+        parameter_set = self.get_parameter_set()
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.set_parallel_mode(parameter_set.s_value_extraction_refbuild_parameters_parallel_mode)
+        parallel_engine.parameters.set_n_processes_local(parameter_set.s_value_extraction_refbuild_parameters_n_processes_local)
+        parallel_engine.parameters.set_n_jobs_slurm(parameter_set.s_value_extraction_refbuild_parameters_n_jobs_slurm)
+        parallel_engine.parameters.set_SLURM_num_node()
+        parallel_engine.parameters.set_SLURM_num_core_each_node(parameter_set.s_value_extraction_refbuild_parameters_slurm_num_core_each_node)
+        parallel_engine.parameters.set_SLURM_time_limit_hr(parameter_set.s_value_extraction_refbuild_parameters_slurm_time_limit_hr)
+        parallel_engine.parameters.set_SLURM_time_limit_min(parameter_set.s_value_extraction_refbuild_parameters_slurm_time_limit_min)
+        
+    def configure_parallel_engine(self):
+        parameter_set = self.get_parameter_set()
+        parallel_engine = self.get_parallel_engine()
+        parallel_engine.parameters.set_parallel_mode(parameter_set.s_value_extraction_parallel_parameters_parallel_mode)
+        parallel_engine.parameters.set_n_processes_local(parameter_set.s_value_extraction_parallel_parameters_n_processes_local)
+        parallel_engine.parameters.set_n_jobs_slurm(parameter_set.s_value_extraction_parallel_parameters_n_jobs_slurm)
+        parallel_engine.parameters.set_SLURM_num_node()
+        parallel_engine.parameters.set_SLURM_num_core_each_node(parameter_set.s_value_extraction_parallel_parameters_slurm_num_core_each_node)
+        parallel_engine.parameters.set_SLURM_time_limit_hr(parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_hr)
+        parallel_engine.parameters.set_SLURM_time_limit_min(parameter_set.s_value_extraction_parallel_parameters_slurm_time_limit_min)
 
+    def check_bowtie2_index(self):
+        bowtie2_parameters = self.get_bowtie2_parameters()
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".1.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".2.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".3.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".4.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".rev.1.bt2"
+        if not os.path.isfile(file_check):
+            return False
+        file_check = bowtie2_parameters.dir + self.get_t_gene_annotation().get_name() + ".rev.2.bt2"
+        if not os.path.isfile(file_check):
+            return False
+    
+        return True
+    
+    
     def create_bowtie2_index(self):
-        command = self.get_bowtie2_build_command()
-        subprocess.call(command, stdout=subprocess.PIPE, shell = self.get_general_parameters().use_shell)
+        if self.parameters.skip_refbuild == False or self.check_bowtie2_index() == False:
+            parallel_engine = self.get_parallel_engine()
+            if parallel_engine.parameters.parallel_mode == parallel_engine.parameters.parallel_option.SLURM.value:
+                local_command = self.get_bowtie2_build_command()
+                command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME_REFBUILD.value, wait = True)
+                print(local_command)
+                print(command)
+                try:
+                    parallel_engine.do_run_slurm_parallel_wait(local_command, command)
+                except:
+                    raise
+            else:
+                command = self.get_bowtie2_build_command()
+                subprocess.call(command, shell = self.get_general_parameters().use_shell)
+            
+            
+        else:
+            print("Skip RefBuild!")
         
     def get_bowtie2_build_command(self):
         bowtie2_parameters = self.get_bowtie2_parameters()
@@ -242,8 +391,9 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         thread_par = bowtie2_parameters.build_par_nthreads
         nthread = str(bowtie2_parameters.build_nthreads)
         fasta_path = self.s_retrieval_results.fasta_path
-        bowtie2_index_name = bowtie2_parameters.build_index_name
+        bowtie2_index_name = self.get_t_gene_annotation().get_name()
         command = [executive_path, thread_par, nthread, fasta_path, bowtie2_index_name]
+        
         return(command)
         
     def download_data(self):
@@ -279,14 +429,18 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
         pickle.dump(self.workers[run], open(self.get_worker_file(run), 'wb'))
         
     def get_worker_file(self, run):
-        return 'worker_s_value_extraction_' + str(run) + '.dat'
+        return 'worker_s_value_extraction_' + str(run) + '.json'
     def get_worker_results_file(self, run):
-        return 'results_s_value_extraction_' + str(run) + '.dat'
+        return 'results_s_value_extraction_' + str(run) + '.json'
     def get_worker_results(self, run):
-        return pickle.load(open(self.get_worker_results_file(run), 'rb'))
+        return json.load(open(self.get_worker_results_file(run), 'r'))
+        
         
     def get_local_submit_command(self, run):
-        python_path = 'python'
+        if (sys.version_info < (3, 0)):
+            python_path = 'python2'
+        else:
+            python_path = 'python3'
         script_path = self.parallel_parameters.pyscripts
         worker_path = self.get_worker_file(run)
         result_path = self.get_worker_results_file(run)
@@ -304,7 +458,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                     if self.parameters.skip_all == False or self.check_existed_results(run) == False:
                         self.workers[run].do_run()
                         result_file = self.get_worker_results_file(run)
-                        pickle.dump(self.workers[run].results.__dict__, open(result_file,'wb'))
+                        json.dump(self.workers[run].results.save_result_to_dict(), open(result_file,'w'))
                     
         elif self.parallel_parameters.parallel_parameters.parallel_mode == self.parallel_parameters.parallel_parameters.parallel_option.LOCAL.value:
             commands = []
@@ -329,6 +483,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             commands = []
             result_path_list = []
             worker_list = []
+            job_name_list = []
             parallel_engine = self.get_parallel_engine()
             for exp in self.s_retrieval_results.mapping_experiment_runs:
                 for run in self.s_retrieval_results.mapping_experiment_runs[exp]:
@@ -336,14 +491,16 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                         self.prepare_worker_file(run)
                         local_command = self.get_local_submit_command(run)
                         local_commands.append(local_command)
-                        command = parallel_engine.get_command_sbatch(SequencingExtractionConstant.JOB_NAME.value + run)
+                        job_name = SequencingExtractionConstant.JOB_NAME.value + run
+                        command = parallel_engine.get_command_sbatch(job_name)
                         #Run It!
                         commands.append(command)
                         result_path_list.append(self.get_worker_results_file(run))
                         worker_list.append(self.workers[run])
+                        job_name_list.append(job_name)
             #Polling
             parallel_engine = self.get_parallel_engine()
-            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list)
+            parallel_engine.do_run_slurm_parallel(local_commands, commands, result_path_list, worker_list, job_name_list)
             
     def join_results(self):
         mapping_experiment_runs = self.s_retrieval_results.mapping_experiment_runs
@@ -354,7 +511,7 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
             count_reads_result_2D[exp] = {}
             for run in mapping_experiment_runs[exp]:
                 cur_run_results = SequencingExtractionResults()
-                cur_run_results.__dict__ = self.get_worker_results(run).__dict__
+                cur_run_results.update_result_from_dict(self.get_worker_results(run))
                 if cur_run_results.exception is not None:
                     print(run + ": Exception Occurred : " + str(cur_run_results.exception))
                     exception_occurred = True
@@ -382,19 +539,17 @@ class SequencingExtraction(s_module_template.SequencingSubModule):
                 
     def check_existed_results(self, run):
         try:
-            cur_run_results = self.get_worker_results(run)
+            cur_run_results_dict = self.get_worker_results(run)
         except Exception as e:
             return False
             
         #We have to check the completeness of the results here!
-        if cur_run_results.exception is not None:
+        print(run)
+        if cur_run_results_dict['exception'] is not None:
             os.remove(self.get_worker_results_file(run))
             return False
         return True
-
-
         
-    
         
 class SequencingExtractionWorker:
     def __init__(self, run, 
@@ -413,7 +568,10 @@ class SequencingExtractionWorker:
         self.general_parameters = general_parameters
         self.general_constant = general_constant
         
-        self.t_gene_annotation = t_gene_annotation
+        self.t_gene_annotation = copy.copy(t_gene_annotation)
+        #Clean the actual gene annotation data to save space
+        self.t_gene_annotation.gff3_data = None
+        self.t_gene_annotation.gff3_data_target_type = None
         
         self.results = SequencingExtractionResults()
         
@@ -633,19 +791,19 @@ class SequencingExtractionWorker:
             else:
                 paired_type = output[-5].split(SequencingExtractionConstant.SPACE.value)[2]
                 if paired_type != SequencingExtractionConstant.SINGLE_PAIREDTYPE.value and paired_type != SequencingExtractionConstant.PAIRED_PAIREDTYPE.value:
-                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results (SINGLE/PAIRED)')
                 
                 ratio_failed = float(output[-4].split(SequencingExtractionConstant.SPACE.value)[-1])
                 if ratio_failed < 0 or ratio_failed > 1:
-                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results (FAILED RATIO)')
                 
                 ratio_direction1 = float(output[-3].split(SequencingExtractionConstant.SPACE.value)[-1])
                 if ratio_direction1 < 0 or ratio_direction1 > 1:
-                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results (DIRECTION 1)')
                 
                 ratio_direction2 = float(output[-2].split(SequencingExtractionConstant.SPACE.value)[-1])
                 if ratio_direction2 < 0 or ratio_direction2 > 1:
-                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+                    raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results (DIRECTION 2)')
                 
                 if ratio_direction1 > self.parameters.infer_experiment_threshold or ratio_direction2 > self.parameters.infer_experiment_threshold:
                     stranded_info = SequencingExtractionConstant.STRANDEDTYPE.value
@@ -656,7 +814,7 @@ class SequencingExtractionWorker:
             
             
         except Exception as e:
-            raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results')
+            raise s_value_extraction_exceptions.RSeQCInferExperimentFailedException('Invalid RSeQC infer_experiment results (UNKNOWN)')
             
         
         with open(self.parameters.working_file_dir + self.run + self.parameters.infer_experiment_record_file_ext, SequencingExtractionConstant.WRITEMODE.value) as outfile:
@@ -796,7 +954,7 @@ class SequencingExtractionWorker:
         
         #Bowtie2IndexPath
         index_par = self.bowtie2_parameters.align_par_index_name
-        bowtie2_index_name = self.bowtie2_parameters.build_index_name
+        bowtie2_index_name = self.t_gene_annotation.get_name()
         
         #Output
         sam_par = self.bowtie2_parameters.align_par_sam
