@@ -79,7 +79,7 @@ Figure 1. The entire transcriptomic compendium pipeline
 
 
 
-##How to use it
+## How to use it
 <h4> To use this pipeline, you have to download the entire directory, install all required software and python packages. <h4>
 ### Download the entire directory
 Please clone the entire repository into your computer.
