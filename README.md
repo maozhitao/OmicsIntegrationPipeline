@@ -39,8 +39,24 @@ This step will take sequencing data and reference genome files as inputs to perf
     </ol>
 The output file is alignment results is SAM format and alignment rates:
     <ol>
-        <li>The alignment result file: For each run, a file contains the alignment result in SAM format is generated.</li>
+        <li>The alignment result files: For each run, a file contains the alignment result in SAM format is generated.</li>
         <li>Alignment rate information: Alignment rate information will be recorded (for internal use only).</li>
+    </ol>
+</li>
+<li>Gene expression counting:<br>
+This step will take gene alignment results, sequence direction information file (BED file) and gene annotation file (GFF file) as inputs to generate the gene expression profile for each run.<br>
+    <ol>
+        <li>The alignment result files: Files in SAM format generated from step (3) which recorded the alignment result.</li>
+        <li>BED file contains sequence direction information: A file in BED format generated from step (1). With this sequence direction information, the pipeline can detect whether sequencing data is stranded or unstranded.</li>
+        <li>GFF file contains gene annotation information: A file in GFF format given from users. With this information, the pipeline can generate gene expression profiles with correct gene names.</li>
+    </ol>
+The output file are the gene expression profiles of different runs. After perform the mapping between runs and samples with run information table (generated from step (1)), gene expression profile for each sample can be generated.
+    <ol>
+        <li>Gene expression profiles of different runs (for internal use only).</li>
+        <li>Gene expression profiles of different samples after performing the mapping between runs and samples with run information table (for internal use only).</li>
+        <li>Gene expression profile table: A table in csv format contains gene expression profiles of all samples you are interested in after concatenating all gene expression profiles of different samples.<br>
+            Each row represent different genes and each column represent different samples.
+        </li>
     </ol>
 </li>
 <li>After the transcription profiles are ready, quantile normalization will be applied to reduce the batch effect among different experiments.</li>
