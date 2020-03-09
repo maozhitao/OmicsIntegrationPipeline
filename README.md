@@ -185,7 +185,7 @@ Required python packages have to be installed.
 ## How to use it
 <h4>Please refer step-by-step example for more information</h4>
 
-### Building compendium script (Main script)
+### Building compendium script (Main script) (build_compendium_script.py)
 <h4>This script is the main script and will take sample list and a gene annotation file as inputs to build the compendium</h4>
 
 #### Input
@@ -218,7 +218,7 @@ This script will generate a directory with specified compendium name and many fi
 python build_compendium_script.py <sample list file path> <gene annotation file path> <compendium name>
 ```
 
-### Unsupervised validation script
+### Unsupervised validation script (unsupervised_validation_script.py)
 <h4>Please refer step-by-step example and validation description for more information</h4>
 
 #### Input
@@ -247,6 +247,11 @@ This script will generate two files in your compendium directory. There is also 
 </li>
 </ul>
 
+#### Usage
+
+```
+python unsupervised_validation_script.py  <compendium name>
+```
 
 
 <div id = "validation">
