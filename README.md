@@ -89,14 +89,14 @@ Please clone the entire repository into your computer.
 Required software have to be installed.
 
 #### 1. Python 3.6 or later (NOTE: This version does not support Python 2 anymore)
-<h4>Please download are install python 3 by following the instructions in official website:<br>
+<h4>Please download and install python 3 by following the instructions in official website:<br>
 ( https://www.python.org/downloads/ )</h4>
     <ul>
         <li>Tested in Python 3.6 </li>
     </ul>
     
 #### 2. sratoolkit 2.9.6 or later
-<h4>Please download are install sratoolkit by following the instructions in official website:<br>
+<h4>Please download and install sratoolkit by following the instructions in official website:<br>
 ( https://ncbi.github.io/sra-tools/install_config.html )</h4>
     <ul>
         <li>Tested with sratoolkit 2.9.6 </li>
@@ -125,14 +125,51 @@ Required software have to be installed.
 </ul>
 
 #### 3. Bowtie 2.3.4 or later
-<h4>Please download are install sratoolkit by following the instructions in official website:<br>
+<h4>Please download and install Bowtie2 by following the instructions in official website:<br>
 ( http://bowtie-bio.sourceforge.net/bowtie2/index.shtml )</h4>
     <ul>
-        <li>Tested with Bowtie2 2.3.4</li>
+        <li>Tested with Bowtie 2.3.4</li>
         <li>Please make sure the toolkit location is specified in your $PATH variable. (As installing sratoolkit)</li>
     </ul>
 
+### Install all required Python packages
+Required python packages have to be installed.
 
+#### 1. biopython
+<h4>Please install biopython by following the instructions in official website:<br>
+( https://biopython.org/wiki/Download )</h4>
+    <ul>
+        <li>Tested with biopython 1.74</li>
+    </ul>
+
+#### 2. pandas
+<h4>Please install pandas by following the instructions in official website:<br>
+( https://pandas.pydata.org/docs/getting_started/install.html#installing-pandas )</h4>
+    <ul>
+        <li>Tested with pandas 0.25.0</li>
+    </ul>
+    
+#### 3. RSeQC
+<h4>Please install RSeQC by following the instructions in official website:<br>
+( http://rseqc.sourceforge.net/#download-rseqc )</h4>
+    <ul>
+        <li>Tested with RSeQC 3.0.0</li>
+        <li>Please make sure the location of 'infer_experiment.py' is specified in your $PATH variable. (As installing sratoolkit)</li>
+            <ul>
+                <li>(Example location: '~/.local/bin')</li>
+            </ul>
+    </ul>
+    
+#### 4. HTSeq
+<h4>Please install HTSeq by following the instructions in official website:<br>
+( https://htseq.readthedocs.io/en/master/ )</h4>
+    <ul>
+        <li>Tested with HTSeq 0.11.2</li>
+        <li>Please make sure the location of 'htseq-count' is specified in your $PATH variable. (As installing sratoolkit)</li>
+            <ul>
+                <li>(Example location: '~/.local/bin')</li>
+            </ul>
+    </ul>
 
 <div id = "usage">
 <h1> How to use it </h1>
