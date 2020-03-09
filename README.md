@@ -79,7 +79,7 @@ Figure 1. The entire transcriptomic compendium pipeline
 
 
 
-## How to use it
+## Configuration before using
 <h4> To use this pipeline, you have to download the entire directory, install all required software and python packages. <h4>
 
 ### Download the entire directory
@@ -170,15 +170,17 @@ Required python packages have to be installed.
                 <li>(Example location: '~/.local/bin')</li>
             </ul>
     </ul>
+    
+## How to use it
+<h4>Please refer step-by-step example for more information</h4>
 
-<div id = "usage">
-<h1> How to use it </h1>
-<ol>
-<li> Download all <a href="#software">necessary software and toolkits</a> </li>
-<li> Add all installed software to <a href="#path_env">PATH environment variables</a> </li>
-<li> Download the entire directory of this project </li>
-<li> Configure the parameter set in <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/t_utilities/t_parameters.py">t_utilities/t_parameters.py</a></li>
-<li> Install the keyword query module: switch to the directory meta-omics-master and then install the package by running setup.py:
+### Building Compendium Script
+<h4>This script will take sample list and a gene annotation file as inputs to build the compendium</h4>
+
+#### Input
+    <ol>
+        <li>Sample List: A file in csv format with one column with name "Experiment" (Please refer figure 1).(<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv">Example</a>)</li>
+    </ol>
 
 ```
 cd meta-omics-master
