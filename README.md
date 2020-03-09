@@ -89,6 +89,7 @@ Please clone the entire repository into your computer.
 Required software have to be installed.
 
 #### 1. Python 3 (NOTE: This version does not support Python 2 anymore)
+
     <ul>
         <li>Please download are install python 3 by following the instructions in official website (https://www.python.org/downloads/ )</li>
         <li>Tested in Python 3.6 </li>
