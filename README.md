@@ -8,8 +8,10 @@ This toolkit can prepare the transcriptomic compendium (a normalized, format-con
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
 (To check the exact format, please read "Step-by-Step example")
 
+
+## 1. Metadata preparation
 <ol>
-# <li> Metadata preparation:<br>
+<li> Metadata preparation:<br>
 <h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing:</h4>
     <ol>
         <li>Sample List: The list that contains samples (experiment ID in SRA database) you are interested in.</li>
