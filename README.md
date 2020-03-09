@@ -108,7 +108,7 @@ Required software have to be installed.
                     export PATH=<your_toolkit_location>:$PATH
                     ```
                     
-    </li>
+</li>
                 
 <li>Windows 10: please follow these steps:
         <ol>
