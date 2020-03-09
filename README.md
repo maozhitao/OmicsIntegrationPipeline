@@ -231,8 +231,10 @@ This script will generate two files in your compendium directory. There is also 
         <ol>
             <li>Unsupervised validation result table (Filename: '(Compendium Name)_UnsupervisedValidationResults.csv'): A table recorded the symmetric mean absolute percentage error for different combination of noise ratio and missing value ratio.</li>
             <li>Unsupervised validation result figure (Filename: '(Compendium Name)_UnsupervisedValidationResults.png'): Visualization of the table.
+            
             ![Figure 2. Unsupervised validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_UnsupervisedValidationResults.png)
             Figure 2. Unsupervised validation results of Salmonella Example compendium.
+            
             </li>
         </ol>
     </li>
