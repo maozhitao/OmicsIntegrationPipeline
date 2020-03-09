@@ -260,36 +260,36 @@ python unsupervised_validation_script.py  <compendium name>
 #### Input
 This script takes only two input: Your compendium name and sample-study-condition mapping table.
 <ul>
-    <li>Sample-study-condition mapping table</li>
+    <li>Sample-study-condition mapping table: A csv file contains study name (or ID) and condition for selected samples in your compendium (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExample_CorrelationValidation.csv>Example</a>). It contains three columns:
+    <ol>
+        <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+        <li>series_id: Study ID or Study Name. </li>
+        <li>cond_id: Condition name.</li>
+    </ol>
+    </li>
+    
 </ul>
 
 #### Output
-This script will generate two files in your compendium directory. There is also a benchmark shown in command line
+This script will generate two files in your compendium directory. 
 <ul>
     <li> Output files:
         <ol>
-            <li>Unsupervised validation result table (Filename: '(Compendium Name)_UnsupervisedValidationResults.csv'): A table recorded the symmetric mean absolute percentage error for different combination of noise ratio and missing value ratio.</li>
-            <li>Unsupervised validation result figure (Filename: '(Compendium Name)_UnsupervisedValidationResults.png'): Visualization of the table.
+            <li>Correlation validation result table (Filename: '(Compendium Name)_CorrelationValidationResults.csv'): A table recorded the average correlations among different samples or across different studies/conditions.</li>
+            <li>Correlation validation result figure (Filename: '(Compendium Name)_CorrelationValidationResults.png'): Visualization of the table.
             
-![Figure 2. Unsupervised validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_UnsupervisedValidationResults.png)
-<br>Figure 2. Unsupervised validation results of Salmonella Example compendium.
+![Figure 3. Correlation validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_CorrelationValidationResults.png)
+<br>Figure 3. Correlation validation results of Salmonella Example compendium.
             
 </li>
 </ol>
-</li>
-<li> Bench mark shown in command line: A number between 0%~100%. The higher the number, the better the compendium. 
-<ul>
-<li>For this example, the number is about 50% (it varies due to the randomless).</li>
-<li><a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">One small (26 samples), published Salmonella compendium</a> can be used for comparison. For that compendium, the benchmark is about 55%.</li>
-<li>If we pick these 26 samples from Salmonella example compendium (709 samples) and perform this analysis, the benchmark is about 58%</li>
-</ul>
 </li>
 </ul>
 
 #### Usage
 
 ```
-python unsupervised_validation_script.py  <compendium name>
+python supervised_validation_corr_script.py  <compendium name> <sample-study-condition mapping file path>
 ```
 
 
