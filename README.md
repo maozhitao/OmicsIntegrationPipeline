@@ -225,10 +225,21 @@ python build_compendium_script.py <sample list file path> <gene annotation file 
 This script takes only one input: Your compendium name.
 
 #### Output
-This script will generate two files in your compendium directory.
+This script will generate two files in your compendium directory. There is also a benchmark shown in command line
 <ul>
-    <li></li>
-    <li></li>
+    <li> Output files:
+        <ol>
+            <li>Unsupervised validation result table (Filename: '(Compendium Name)_UnsupervisedValidationResults.csv'): A table recorded the symmetric mean absolute percentage error for different combination of noise ratio and missing value ratio.</li>
+            <li>Unsupervised validation result figure (Filename: '(Compendium Name)_UnsupervisedValidationResults.png'): Visualization of the table.
+            
+            </li>
+        </ol>
+    </li>
+    <li> One additional argument:
+        <ul>
+            <li>Compendium name: The name you want. The pipeline will create a directory with this name and store all results in this directory.</li>
+        </ul>
+    </li>
 </ul>
 
 
