@@ -104,9 +104,9 @@ Required software have to be installed.
             <ul>
                 <li>Linux: Use export command:
                 
-                    ```
+                    
                     export PATH=<your_toolkit_location>:$PATH
-                    ```
+                    
                     
 </li>
                 
