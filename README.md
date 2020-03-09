@@ -61,7 +61,7 @@ The pipeline will do the necessary work for building transcriptomic compendium f
     </ol>
     
 ### 5. Data normalization
-<h4>This step will take the gene expression profile table as input and perform normalization to reduce the error across different studies.</h4>
+<h4>This step will take the gene expression profile table as input and perform normalization to reduce the error across different studies.<br></h4>
     <ul>
         <li>Gene expression profile table: Generated from step (4). A table in csv format contains gene expression profiles of all samples you are interested in</li>
     </ul>
@@ -69,7 +69,7 @@ The pipeline will do the necessary work for building transcriptomic compendium f
     <ol>
         <li>Normalized gene expression profile table: A table in csv format contains normalized gene expression profiles of all samples.</li>
         <li>Compendium saved in binary format: A python object contains the normalized gene expression table and recorded parameters. It can be used for the next step -- optional validation.</li>
-    </ul>
+    </ol>
     
 ### 6. Optional validation
 <h4>This optional step will estimate the quality of normalized gene expression table. Unsupervised approaches and supervised approaches are provided.</h4>
