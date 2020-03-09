@@ -254,6 +254,52 @@ python unsupervised_validation_script.py  <compendium name>
 ```
 
 
+### Supervied validation (Correlation) script (supervised_validation_corr_script.py)
+<h4>Please refer step-by-step example and validation description for more information</h4>
+
+#### Input
+This script takes only two input: Your compendium name and sample-study-condition mapping table.
+<ul>
+    <li>Sample-study-condition mapping table</li>
+</ul>
+
+#### Output
+This script will generate two files in your compendium directory. There is also a benchmark shown in command line
+<ul>
+    <li> Output files:
+        <ol>
+            <li>Unsupervised validation result table (Filename: '(Compendium Name)_UnsupervisedValidationResults.csv'): A table recorded the symmetric mean absolute percentage error for different combination of noise ratio and missing value ratio.</li>
+            <li>Unsupervised validation result figure (Filename: '(Compendium Name)_UnsupervisedValidationResults.png'): Visualization of the table.
+            
+![Figure 2. Unsupervised validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_UnsupervisedValidationResults.png)
+<br>Figure 2. Unsupervised validation results of Salmonella Example compendium.
+            
+</li>
+</ol>
+</li>
+<li> Bench mark shown in command line: A number between 0%~100%. The higher the number, the better the compendium. 
+<ul>
+<li>For this example, the number is about 50% (it varies due to the randomless).</li>
+<li><a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">One small (26 samples), published Salmonella compendium</a> can be used for comparison. For that compendium, the benchmark is about 55%.</li>
+<li>If we pick these 26 samples from Salmonella example compendium (709 samples) and perform this analysis, the benchmark is about 58%</li>
+</ul>
+</li>
+</ul>
+
+#### Usage
+
+```
+python unsupervised_validation_script.py  <compendium name>
+```
+
+
+
+
+
+
+
+
+
 <div id = "validation">
 <h1>Validation Part</h1>
 To evaluate the quality of the compendium, unsupervised and supervised approach are applied:
