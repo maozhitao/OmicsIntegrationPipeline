@@ -1,12 +1,12 @@
 # Automated Omics Compendium Preparation Pipeline
 
-<h1> Propose</h1>
+## Propose
 This toolkit can prepare the transcriptomic compendium (a normalized, format-consistent data matrix across samples from different studies) by collecting the samples in <a href="https://www.ncbi.nlm.nih.gov/sra">Sequencing Read Archive (SRA) </a> database given the topic you are interested in and your target species.
 
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
-(To check the exact format, please read "Step-by-Step example")
+<b>(To check the exact format, please read "Step-by-Step example")</b>
 
 
 ### 1. Metadata preparation
