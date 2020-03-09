@@ -5,9 +5,9 @@ This toolkit can prepare the transcriptomic compendium (a normalized, format-con
 
 (In the future, this toolkit will be capable to process microarray dataset from GEO and ArrayExpress database)
 
+## Steps of prepare a transcriptomic compendium
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
 <b>(To check the exact format, please read "Step-by-Step example")</b>
-
 
 ### 1. Metadata preparation
 <h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing: </h4>
@@ -76,6 +76,11 @@ The pipeline will do the necessary work for building transcriptomic compendium f
 
 ![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure1.png)
 Figure 1. The entire transcriptomic compendium pipeline
+
+
+
+##How to use it
+### 
 
 <div id = "usage">
 <h1> How to use it </h1>
