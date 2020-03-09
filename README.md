@@ -71,9 +71,8 @@ The pipeline will do the necessary work for building transcriptomic compendium f
         <li>Compendium saved in binary format: A python object contains the normalized gene expression table and recorded parameters. It can be used for the next step -- optional validation.</li>
     </ol>
     
-### 6. Optional validation
+### 6. Optional validation (Please read the document about validation and step-by-step examples for more information.)
 <h4>This optional step will estimate the quality of normalized gene expression table. Unsupervised approaches and supervised approaches are provided.</h4>
-<h4>Please read the document about validation and step-by-step examples for more information.</h4>
 
 ![Figure 1. The entire transcriptomic compendium pipeline](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure1.png)
 Figure 1. The entire transcriptomic compendium pipeline
