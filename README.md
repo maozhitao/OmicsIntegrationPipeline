@@ -258,7 +258,7 @@ python unsupervised_validation_script.py  <compendium name>
 <h4>Please refer step-by-step example and validation description for more information</h4>
 
 #### Input
-This script takes only two input: Your compendium name and sample-study-condition mapping table.
+This script takes two inputs: Your compendium name and sample-study-condition mapping table.
 <ul>
     <li>Sample-study-condition mapping table: A csv file contains study name (or ID) and condition for selected samples in your compendium (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExample_CorrelationValidation.csv>Example</a>). It contains three columns:
     <ol>
@@ -293,7 +293,48 @@ python supervised_validation_corr_script.py  <compendium name> <sample-study-con
 ```
 
 
+### Supervied validation (Knowledge capture) script (supervised_validation_knowledge_capture_script.py)
+<h4>Please refer step-by-step example and validation description for more information</h4>
 
+#### Input
+This script takes only three input: Your compendium name, sample selection table and gene selection table.
+<ul>
+    <li>Sample selection table: A csv file contains samples and case/control indicator(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur.csv>Example</a>). It contains two columns:
+    <ol>
+        <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+        <li>indicator: inticate case or control (1 means case and 0 means control)</li>
+    </ol>
+    </li>
+    
+    <li>Gene selection table: A csv file contains genes(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur_related_genes.csv>Example</a>). It contains one column:
+    <ol>
+        <li>gene_list: Gene names. (should be a subset of gene names in the normalized data matrix.)</li>
+        <li>Other columns are just for comment and will not be processed.</li>
+    </ol>
+    </li>
+</ul>
+
+#### Output
+This script will generate two files in your compendium directory. 
+<ul>
+    <li> Output files:
+        <ol>
+            <li>Knowledge Capture validation result table (Filename: '(Compendium Name)_KnowledgeCaptureValidationResults.csv'): A table recorded the sorted rank of absolute log fold change between case and control of selected genes for different noise ratio.</li>
+            <li>Knowledge Capture validation result figure (Filename: '(Compendium Name)_KnowledgeCaptureValidationResults.png'): Visualization of the table.
+            
+![Figure 4. Knowledge capture validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_KnowledgeCaptureValidationResults.png)
+<br>Figure 4. Knowledge capture validation results of Salmonella Example compendium.
+            
+</li>
+</ol>
+</li>
+</ul>
+
+#### Usage
+
+```
+python supervised_validation_knowledge_capture_script.py  <compendium name> <Sample selection table> <Gene selection table>
+```
 
 
 
