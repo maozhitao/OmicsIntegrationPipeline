@@ -101,9 +101,21 @@ Required software have to be installed.
     <ul>
         <li>Tested in sratoolkit 2.9.6 </li>
         <li>Please make sure the toolkit location is specified in your $PATH variable. To add the toolkit location, use export command in linux:
+        
         ```
         export PATH=<your_toolkit_location>:$PATH
         ```
+        
+        <br>
+        For adding the toolkit location to PATH variable in Windows 10, please follow these steps:
+            <ol>
+                <li>Open "Control Panel".</li>
+                <li>Click "System".</li>
+                <li>Click "About", and then click "System info" at the bottom of the page. </li>
+                <li>Click "Advanced system settings" at the right of the system info page. </li>
+                <li>Click "Environment Variables..." Button in advanced system settings window. </li>
+                <li>Now you can add the toolkit location to PATH variable in Windows 10.</li>
+            </ol>
         </li>
     </ul>
 
