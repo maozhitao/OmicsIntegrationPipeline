@@ -254,6 +254,30 @@ python unsupervised_validation_script.py  <compendium name>
 ```
 
 
+### Unsupervised validation script (csv input file and user specified output) (unsupervised_validation_script_csv_input.py)
+<h4>Please refer step-by-step example and validation description for more information</h4>
+
+This script is similar as unsupervised validation script but it takes three more input. It will read external data matrix file and users have to specified the output file and figure name. <br>
+This script is useful when you want to compare the benchmark of your compendium with external data matrix such as published data.
+#### Input
+This script takes three inputs in addition to the compendium name.
+<ol>
+    <li>Data matrix file: A csv files that contains gene expression profiles with arbitrary #rows and #columns. The first column will be assumed as gene name and the first row will be assumed as sample name.</li>
+    <li>Output result table path</li>
+    <li>Output result figure path</li>
+</ol>
+
+#### Output
+This script will generate two files same as regular unsupervised validation script with user specified filename. There is also a benchmark shown in command line
+
+
+#### Usage
+
+```
+python unsupervised_validation_script_csv_input.py  <compendium name> <output result table path> <output result figure path>
+```
+
+
 ### Supervied validation (Correlation) script (supervised_validation_corr_script.py)
 <h4>Please refer step-by-step example and validation description for more information</h4>
 
@@ -358,11 +382,14 @@ This script will generate two files in your compendium directory.
 <ul>
     <li> Output files:
         <ol>
-            <li>Knowledge Capture validation result table (Filename: '(Compendium Name)_KnowledgeCaptureValidationResults.csv'): A table recorded the sorted rank of absolute log fold change between case and control of selected genes for different noise ratio.</li>
-            <li>Knowledge Capture validation result figure (Filename: '(Compendium Name)_KnowledgeCaptureValidationResults.png'): Visualization of the table.
+            <li>Published data comparison result table (Filename: 'PublishedDataComparisonResults.csv'): A table recorded the log2 gene expression profiles from both compendium and published data.</li>
+            <ul>
+                <li>Only the genes recorded in both published data and compendium will be shown.</li>
+            </ul>
+            <li>Published data comparison result figure (Filename: 'PublishedDataComparisonResults.png'): Visualization of the table.
             
-![Figure 4. Knowledge capture validation results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_KnowledgeCaptureValidationResults.png)
-<br>Figure 4. Knowledge capture validation results of Salmonella Example compendium.
+![Figure 5. Published data comparison results of Salmonella Example compendium](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/PublishedDataComparisonResults.png)
+<br>Figure 5. Published data comparison results results of Salmonella Example compendium.
             
 </li>
 </ol>
@@ -372,7 +399,7 @@ This script will generate two files in your compendium directory.
 #### Usage
 
 ```
-python supervised_validation_knowledge_capture_script.py  <compendium name> <Sample selection table> <Gene selection table>
+python supervised_validation_published_data_comparison_script.py  <compendium name> <published data table path>
 ```
 
 
