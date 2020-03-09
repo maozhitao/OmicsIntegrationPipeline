@@ -90,16 +90,16 @@ Required software have to be installed.
 
 #### 1. Python 3.6 or later (NOTE: This version does not support Python 2 anymore)
 <h4>Please download are install python 3 by following the instructions in official website:<br>
-(https://www.python.org/downloads/)</h4>
+( https://www.python.org/downloads/ )</h4>
     <ul>
         <li>Tested in Python 3.6 </li>
     </ul>
     
 #### 2. sratoolkit 2.9.6 or later
 <h4>Please download are install sratoolkit by following the instructions in official website:<br>
-(https://ncbi.github.io/sra-tools/install_config.html)</h4>
+( https://ncbi.github.io/sra-tools/install_config.html )</h4>
     <ul>
-        <li>Tested in sratoolkit 2.9.6 </li>
+        <li>Tested with sratoolkit 2.9.6 </li>
         <li>Please make sure the toolkit location is specified in your $PATH variable. To add the toolkit location:
             <ul>
                 <li>Linux: Use export command:
@@ -123,6 +123,15 @@ Required software have to be installed.
 </ul>
 </li>
 </ul>
+
+#### 3. Bowtie 2.3.4 or later
+<h4>Please download are install sratoolkit by following the instructions in official website:<br>
+( http://bowtie-bio.sourceforge.net/bowtie2/index.shtml )</h4>
+    <ul>
+        <li>Tested with Bowtie2 2.3.4</li>
+        <li>Please make sure the toolkit location is specified in your $PATH variable. (As installing sratoolkit)</li>
+    </ul>
+
 
 
 <div id = "usage">
