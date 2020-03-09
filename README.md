@@ -171,6 +171,17 @@ Required python packages have to be installed.
             </ul>
     </ul>
     
+### Testing after install and configure your computer
+<h4>After you added these path to PATH variable, you should be capable to run the following program in any directory:</h4>
+<ul>
+    <li>prefetch</li>
+    <li>bowtie2</li>
+    <li>infer_experiment.py</li>
+    <li>htseq_count</li>
+</ul>
+<h4>If you failed to run these four programs, please make sure that you located these four programs correctly and added the correct path to PATH variables before you run this pipeline.</h4>
+
+    
 ## How to use it
 <h4>Please refer step-by-step example for more information</h4>
 
@@ -178,64 +189,37 @@ Required python packages have to be installed.
 <h4>This script is the main script and will take sample list and a gene annotation file as inputs to build the compendium</h4>
 
 #### Input
-    This script takes two input files:
-    <ol>
-        <li>Sample List: A file in csv format with one column with name "Experiment". (Please refer figure 1).(<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv">Example</a>)</li>
-        <li>Gene Annotation: A file in gff3 format downloaded from NCBI genome database. (Please refer figure 1)(<a href="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/006/945/GCA_000006945.2_ASM694v2/GCA_000006945.2_ASM694v2_genomic.gff.gz">Example (need decompression)</a>)</li>
-    </ol>
-
-```
-cd meta-omics-master
-python setup.py install --user
-```
-
-</li>
-<li> Execute the main program: <a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/pipeline_20200102/TranscriptomicPipelines/transcriptomic_pipeline_human_mergedFang.py">transcriptomic_pipeline_human_mergedFang.py </a>
-
-```
-python transcriptomic_pipeline_human_mergedFang.py <interested studies> <target species> <correlation_validation_file> <knowledge_capture_validation_sample_list> <knowledge_capture_validation_gene_list> <optional experiment filter file>;
-```
-
-</li><br> NOTE: For the test version, the pipeline will use the experiments in optional experiment filter file and overwrite all query results.
-<li> For the validation part (including three necessary for supervised validation: correlation_validation_file, knowledge_capture_validation_sample_list and knowledge_capture_validation_gene_list), please refer <a href="#validation">validation part</a></li>
-</ol>
-</div>
-
-<div id = "software">
-<h3>Required Software</h3>
-<ol>
-<li>Python3 (>=3.6.9) or Python2 (>=2.7.1)</li>
-<li>sratoolkit (>=2.9.6) </li>
-<li>bowtie2(>=2.3.4)</li>
-</ol>
-
-<h3>Required Packages</h3>
-<ol>
-<li>biopython (>=1.74)</li>
-<li>pandas (>=0.25.0)</li>
-<li>RSeQC (For Python3: >=3.0.0, For Python2: 2.6.4)</li>
-<li>HTSeq (>=0.11.2) </li>
-</ol>
-</div>
-
-<div id = "path_env">
-<h3>PATH environment variable settings</h3>
-You should add all path of installed toolkits to PATH environment variables <br>
-(Especially when you do not have root privileges and you install or compile the software/toolkits manually): <br>
-Here are the example path of those installed software/toolkits:
-<ol>
-<li> RSeQC: ~/.local/lib/python2.7/site-packages/RSeQC-2.6.4-py2.7.egg/EGG-INFO/scripts/ </li>
-<li> HTSeq: ~/.local/lib/python2.7/site-packages/HTSeq-0.6.1p1-py2.7-linux-x86_64.egg/EGG-INFO/scripts/</li>
-</ol>
-After you added these path to PATH variable, you should be capable to run the following program in any directory:
+This script takes two input files and one additional parameter:
 <ul>
-<li>prefetch</li>
-<li>bowtie2</li>
-<li>infer_experiment.py</li>
-<li>htseq_count</li>
+    <li> Input files:
+        <ol>
+            <li>Sample List: A file in csv format with one column with name "Experiment". (Please refer figure 1).(<a href="https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv">Example</a>)</li>
+            <li>Gene Annotation: A file in gff3 format downloaded from NCBI genome database. (Please refer figure 1)(<a href="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/006/945/GCA_000006945.2_ASM694v2/GCA_000006945.2_ASM694v2_genomic.gff.gz">Example (need decompression)</a>)</li>
+        </ol>
+    </li>
+    <li> One additional parameter:
+        <ul>
+            <li>Compendium name: The name you want. The pipeline will create a directory with this name and store all results in this directory.</li>
+        </ul>
+    </li>
 </ul>
-If you failed to run these four programs, please make sure that you located these four programs correctly and added the correct path to PATH variables before you run this pipeline.
-</div>
+
+#### Output
+This script will generate a directory with specified compendium name and many files in the directory. There are two the most important files:
+<ul>
+    <li>Normalized Data Matrix (Filename: '<Compendium Name>_NormalizedDataMatrix.csv'): A table in csv format contains normalized gene expression profiles of all samples. Each row represent different genes and each column represent different samples. (Please refer step (5) and figure 1)</li>
+    <li>Compendium saved in binary format (Filename: '<Compendium Name>_projectfile.bin'): A python object contains the normalized gene expression table and recorded parameters. It can be used for optional validation. (Please refer step (5) and figure 1)</li>
+</ul>
+
+#### Usage
+
+```
+python build_compendium_script.py <sample list file path> <gene annotation file path> <compendium name>
+```
+
+
+
+
 
 <div id = "validation">
 <h1>Validation Part</h1>
