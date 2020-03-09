@@ -8,7 +8,7 @@ This toolkit can prepare the transcriptomic compendium (a normalized, format-con
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
 (To check the exact format, please read "Step-by-Step example")
 
-<font size="2">
+<font size="4">
 <ol>
 <li>Metadata preparation:<br>
 This step will take two user inputs to prepare all necessary metadata for sequencing data processing:
