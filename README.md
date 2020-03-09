@@ -109,19 +109,20 @@ Required software have to be installed.
                     ```
                     
                 </li>
-                <li>Windows 10: please follow these steps:
-                    <ol>
-                        <li>Open "Control Panel".</li>
-                        <li>Click "System".</li>
-                        <li>Click "About", and then click "System info" at the bottom of the page. </li>
-                        <li>Click "Advanced system settings" at the right of the system info page. </li>
-                        <li>Click "Environment Variables..." Button in advanced system settings window. </li>
-                        <li>Now you can add the toolkit location to PATH variable in Windows 10.</li>
-                    </ol>
-                </li>
-            </ul>
-        </li>
-    </ul>
+                
+<li>Windows 10: please follow these steps:
+        <ol>
+            <li>Open "Control Panel".</li>
+            <li>Click "System".</li>
+            <li>Click "About", and then click "System info" at the bottom of the page. </li>
+            <li>Click "Advanced system settings" at the right of the system info page. </li>
+            <li>Click "Environment Variables..." Button in advanced system settings window. </li>
+            <li>Now you can add the toolkit location to PATH variable in Windows 10.</li>
+        </ol>
+</li>
+</ul>
+</li>
+</ul>
 
 
 <div id = "usage">
