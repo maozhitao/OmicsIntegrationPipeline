@@ -185,11 +185,11 @@ Required python packages have to be installed.
 ## How to use it
 <h4>Please refer step-by-step example for more information</h4>
 
-### Building Compendium Script
+### Building compendium script (Main script)
 <h4>This script is the main script and will take sample list and a gene annotation file as inputs to build the compendium</h4>
 
 #### Input
-This script takes two input files and one additional parameter:
+This script takes two input files and one additional argument:
 <ul>
     <li> Input files:
         <ol>
@@ -197,7 +197,7 @@ This script takes two input files and one additional parameter:
             <li>Gene Annotation: A file in gff3 format downloaded from NCBI genome database. (Please refer figure 1)(<a href="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/006/945/GCA_000006945.2_ASM694v2/GCA_000006945.2_ASM694v2_genomic.gff.gz">Example (need decompression)</a>)</li>
         </ol>
     </li>
-    <li> One additional parameter:
+    <li> One additional argument:
         <ul>
             <li>Compendium name: The name you want. The pipeline will create a directory with this name and store all results in this directory.</li>
         </ul>
@@ -207,8 +207,8 @@ This script takes two input files and one additional parameter:
 #### Output
 This script will generate a directory with specified compendium name and many files in the directory. There are two the most important files:
 <ul>
-    <li>Normalized Data Matrix (Filename: '<Compendium Name>_NormalizedDataMatrix.csv'): A table in csv format contains normalized gene expression profiles of all samples. Each row represent different genes and each column represent different samples. (Please refer step (5) and figure 1)</li>
-    <li>Compendium saved in binary format (Filename: '<Compendium Name>_projectfile.bin'): A python object contains the normalized gene expression table and recorded parameters. It can be used for optional validation. (Please refer step (5) and figure 1)</li>
+    <li>Normalized Data Matrix (Filename: '(Compendium Name)_NormalizedDataMatrix.csv'): A table in csv format contains normalized gene expression profiles of all samples. Each row represent different genes and each column represent different samples. (Please refer step (5) and figure 1)</li>
+    <li>Compendium saved in binary format (Filename: '(Compendium Name)_projectfile.bin'): A python object contains the normalized gene expression table and recorded parameters. It can be used for optional validation. (Please refer step (5) and figure 1)</li>
 </ul>
 
 #### Usage
@@ -217,7 +217,18 @@ This script will generate a directory with specified compendium name and many fi
 python build_compendium_script.py <sample list file path> <gene annotation file path> <compendium name>
 ```
 
+### Unsupervised validation script
+<h4>Please refer step-by-step example and validation description for more information</h4>
 
+#### Input
+This script takes only one input: Your compendium name.
+
+#### Output
+This script will generate two files in your compendium directory.
+<ul>
+    <li></li>
+    <li></li>
+</ul>
 
 
 

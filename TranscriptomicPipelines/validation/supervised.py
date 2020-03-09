@@ -206,9 +206,9 @@ class SupervisedValidation(v_module_template.ValidationSubModule):
                 print('Warning: The gene name you given:' + query_name +' does not exist in compendium')
                 
         if len(result) == 0:
-            raise Exception('Error: You did not select any genes in compendium!')
-        elif len(result) < 5:
-            print('WARNING: You selected less than 5 genes in compendium!')
+            raise Exception('Error: You did not select any genes or samples in compendium!')
+        #elif len(result) < 5:
+        #    print('WARNING: You selected less than 5 genes in compendium!')
         return result
         
         
@@ -273,7 +273,7 @@ class SupervisedValidation(v_module_template.ValidationSubModule):
         fig = plt.figure()
 
         ax = fig.add_axes([0,0,1,1])
-        ax.set_title("Knowledge capture validation results")
+        ax.set_title("Knowledge capture validation results" + '(#genes = ' + str(len(gene_indice))+ ')')
         ax.set_xlabel('Rank')
         ax.set_ylabel('Ratio of targeted genes')
         for col in list(final_results):
