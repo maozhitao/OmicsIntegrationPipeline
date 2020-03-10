@@ -36,7 +36,7 @@ There are some necessary files for compendium building and supervised validation
             <li><a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">Reference compendium for comparison.</a>
                 <ul>
                     <li>Original dataset (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SampleTable_GoldenStandard.csv>SampleTable_GoldenStandard.csv</a>) </li>
-                    <li>Format refined dataset (< a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SampleTable_STM_GoldenStandard.csv>SampleTable_STM_GoldenStandard.csv</a>) </li>
+                    <li>Format refined dataset (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SampleTable_STM_GoldenStandard.csv>SampleTable_STM_GoldenStandard.csv</a>) </li>
                 </ul>
             </li>
         </ul>
