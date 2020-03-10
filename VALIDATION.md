@@ -238,3 +238,17 @@ The second level is more difficult but also more valuable:
 <br>Figure V5. Knowledge capture validation steps.
 
 ### Validation of the results
+The rank of the absolute log fold change should be significantly different than random numbers draw from uniform distribution. Therefore, the sorted-rank of the absolute log fold change can be compared with a series of random number from uniform distribution by KS-test.
+<ul>
+    <li>Salmonella example compendium: There are two knowledge capture validation example results.
+        <ol>
+            <li>fur mutant case: There are one fur mutant and two wildtype samples for comparison. 
+                <ul>
+                    <li>fur mutant (case): SRX1638999 </li>
+                    <li>wildtype (control): SRX1638996, SRX1638997 </li>
+                    <li>Genes: according the the <a href=https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5001712/>published study</a>, it is well known that fur genes activates flagellar genes, SPI1 genes but represses SPI2 genes. Total are 26 genes.</li>
+                </ul>
+            </li>
+        </ol>
+    </li>
+</ul>
