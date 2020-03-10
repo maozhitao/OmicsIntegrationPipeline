@@ -160,3 +160,20 @@ self.s_bowtie2_parameters_align_nthreads                                    = 4
 ```
 
 Note that it will generate at least 8 (2*4) threads in the local machine. Please make sure your machine have enough computation resources.
+
+#### 1.3.3 Sampling mapping
+If you want to process 2 samples at the same time, you may have the following configuration:
+
+```
+self.s_sample_mapping_parallel_parameters_n_processes_local                 = 2
+```
+
+#### 1.4.4 Missing value imputation (missing forest only)
+In local mode, it will just impute one feature at the same time (just as the original missing forest algorithm). However, you can assign more than one cores to speedup each imputation.
+<br>
+If you want to use 32 cores to speedup a imputation task, you may have the following configuration:
+
+```
+self.p_imputation_rfimpute_parallel_parameters_n_core_local                 = 32
+```
+
