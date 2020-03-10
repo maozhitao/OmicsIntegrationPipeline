@@ -1,6 +1,6 @@
 # Validation of the compendium
 <h4>Before you read this part, please make sure you read the <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/tree/Pipeline_20200307>main documentation first.</a></h4>
-<h4>Please read step-by-step example for more information. </h4><br>
+<h4>Please read step-by-step example for more information. </h4>
 It is important to validate and check the quality of the compendium. There are one supervised approach and three unsupervised approaches to check the quality or validate the compendium you built.
 
 ## An unsupervised approach -- Drop and impute values approach
@@ -69,6 +69,6 @@ Figure V1. Four steps of drop and impute values approach
 Figure V2. Benchmark evaluation of drop and impute values approach. The area between 100% error horizontal line and the error curve from missing value ratio = 0.5 (orange line) is evaluated as the benchmark.
 
 ### Benchmark comparison with reference compendium
-</h4>
+<h4>It may be difficult to have the conclusion of the quality of the compendium without comparing with the benchmark of the reference compendium with good quality. For example, you got the benchmark with 49.35%, but you do not know whether the value 49.35% is good enough or not.<h4>
 
 
