@@ -55,7 +55,7 @@ This step shows you how to modify some important variables which is necessary fo
 </ul>
 
 ### 1.1 Parallel options
-There are four time consuming procedures which can be run in parallel:
+There are four procedures which can be run in parallel:
 <ol>
     <li>Reference genome building (corresponded parameter: self.s_value_extraction_refbuild_parameters_parallel_mode)</li>
     <li>Sequencing value extraction (corresponded parameter: self.s_value_extraction_parallel_parameters_parallel_mode)</li>
@@ -79,3 +79,84 @@ self.s_sample_mapping_parallel_parameters_parallel_mode = self.constants.paralle
 ...
 self.p_imputation_rfimpute_parallel_parameters_parallel_mode = self.constants.parallel_option_local
 ```
+
+### 1.2 Number of jobs and number of cores for each node (SLURM mode only) (For Sequencing value extraction and Sample mapping only)
+If you can use multiple machine, you can run multiple samples (or runs) at the same time. In addition, you can decide #cores for each job.
+<ul>
+    <li>Only available in sequencing value extraction and sample mapping because you can split samples or runs into different jobs.</li>
+    <li>Number of cores option is only available in sequencing value extraction step because only bowtie2 can use multiple cores for each job.</li>
+</ul>
+
+
+### 1.3 Example configuration (SLURM mode)
+
+#### 1.3.1 Referene genome building
+If you want to build the reference genome using 30 cores, you have to adjust the number of cores first. (#job has to be 1 because this step cannot be split into multiple subtasks)
+
+```
+self.s_value_extraction_refbuild_parameters_n_jobs_slurm                    = 1 #Cannot be more than one
+self.s_value_extraction_refbuild_parameters_slurm_num_core_each_node        = 30
+```
+
+In addition, you have to adjust the bowtie2 parameters so that bowtie2 will build the genome with 30 cores:
+```
+self.s_bowtie2_parameters_build_nthreads                                    = 31
+```
+
+#### 1.3.2 Sequencing value extraction
+If you want to extract 6 runs, each job use 4 cores at the same time, you may have the following configuration:
+
+```
+self.s_value_extraction_parallel_parameters_n_jobs_slurm                    = 6
+self.s_value_extraction_parallel_parameters_slurm_num_core_each_node        = 4
+```
+
+In addition, you have to adjust the bowtie2 parameters so that bowtie2 will use 4 cores to align the sequencing data for each job:
+```
+self.s_bowtie2_parameters_align_nthreads                                    = 4
+```
+
+#### 1.3.3 Sampling mapping
+If you want to process 6 samples at the same time, you may have the following configuration:
+
+```
+self.s_sample_mapping_parallel_parameters_n_jobs_slurm                      = 6
+self.s_sample_mapping_parallel_parameters_slurm_num_core_each_node          = 30 #Not meaningful in this version
+```
+
+The code cannot utilize multiple cores in this step.
+
+#### 1.3.4 Missing value imputation (missing forest only)
+Missing value imputation configuration is different than the previous three steps: It does not specify the jobs directly. Instead, it specify number of feature has to be imputed in one job (and number of cores can be used during the imputation).
+The lower number of feature has to be imputed in one job, the more jobs will be created. However, the original missing forest imputation is data dependent: the imputation results of the feature is based on the imputation results of the previous imputed feature. Run too many jobs in parallel may negatively impact the imputation performance and may need more iteration to reach convergence.
+<br>
+If you want to impute 200 features for each job and each job use 32 cores, you may have the following configuration:
+
+```
+self.p_imputation_rfimpute_parallel_parameters_n_feature_local              = 200
+self.p_imputation_rfimpute_parallel_parameters_n_jobs                       = 1 #Deprecated, not useful
+self.p_imputation_rfimpute_parallel_parameters_n_core_local                 = 32
+```
+
+### 1.4 Example configuration (LOCAL mode)
+
+#### 1.4.1 Referene genome building
+By adjusting the bowtie2 parameters directly, you can speedup the reference genome index building:
+
+```
+self.s_bowtie2_parameters_build_nthreads                                    = 31
+```
+
+#### 1.3.2 Sequencing value extraction
+If you want to extract 2 runs at the same time, each job use 4 cores at the same time, you may have the following configuration:
+
+```
+self.s_value_extraction_parallel_parameters_n_processes_local               = 2
+```
+
+In addition, you have to adjust the bowtie2 parameters so that bowtie2 will use 4 cores to align the sequencing data for each job:
+```
+self.s_bowtie2_parameters_align_nthreads                                    = 4
+```
+
+Note that it will generate at least 8 (2*4) threads in the local machine. Please make sure your machine have enough computation resources.
