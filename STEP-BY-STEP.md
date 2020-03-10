@@ -191,9 +191,19 @@ You can prepare a sample list file using <a href = https://www.ncbi.nlm.nih.gov/
 You can find a reference genome and download the corresponded gene annotation file using <a href = https://www.ncbi.nlm.nih.gov/assembly>NCBI assembly database</a>.
 <ol>
     <li>Search the keyword and select the assembly you are interested in.</li>
-    <li>At the right of the page, click 'FTP directory for GenBank assembly'.<li>
+    <li>At the right of the page, click 'FTP directory for GenBank assembly'.</li>
     <li>Download the .gff.gz file and then unzip it. That will be the gene annotation file.</li>
 </ol>
 
+### 2.3 Run build compendium command
+Once you get both sample list file (or sra runinfo file) and gene annotation file, you can run the following command to build the compendium. Suppose we use SalmonellaExample as the project name:
 
-    
+```
+python build_compendium_script.py SalmonellaExampleSampleList.csv GCF_000006945.2_ASM694v2 SalmonellaExample
+```
+
+It will takes three to four days to download, align, count the gene expressions, merge profiles into one table and normalize it. (Depends on your parallel configuration)
+<br>
+<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/SalmonellaExample.tar.gz>The example compendium output can be downloaded here. (Intermediate files are removed)</a>
+
+
