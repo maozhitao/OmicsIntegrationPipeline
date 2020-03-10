@@ -7,7 +7,7 @@ This toolkit can prepare the transcriptomic compendium (a normalized, format-con
 
 ## Steps of preparing a transcriptomic compendium
 The pipeline will do the necessary work for building transcriptomic compendium for you in five steps:<br>
-<b>(To check the exact format, please read "Step-by-Step example")</b>
+<b>(To check the exact format, please read <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>Step-by-Step example</a>)</b>
 
 ### 1. Metadata preparation
 <h4>This step will take two user inputs to prepare all necessary metadata for sequencing data processing: </h4>
@@ -190,7 +190,7 @@ Required python packages have to be installed.
 
     
 ## How to use it
-<h4>Please refer step-by-step example for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step example</a> for more information</h4>
 
 ### Building compendium script (Main script) (build_compendium_script.py)
 <h4>This script is the main script and will take sample list and a gene annotation file as inputs to build the compendium</h4>
@@ -226,7 +226,7 @@ python build_compendium_script.py <sample list file path> <gene annotation file 
 ```
 
 ### Unsupervised validation script (unsupervised_validation_script.py)
-<h4>Please refer step-by-step example and validation description for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step</a> example and validation description for more information</h4>
 
 #### Input
 This script takes only one input: Your compendium name.
@@ -262,7 +262,7 @@ python unsupervised_validation_script.py  <compendium name>
 
 
 ### Unsupervised validation script (csv input file and user specified output) (unsupervised_validation_script_csv_input.py)
-<h4>Please refer step-by-step example and validation description for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step</a> example and validation description for more information</h4>
 
 This script is similar as unsupervised validation script but it takes three more input. It will read external data matrix file and users have to specified the output file and figure name. <br>
 This script is useful when you want to compare the benchmark of your compendium with external data matrix such as published data.
@@ -286,7 +286,7 @@ python unsupervised_validation_script_csv_input.py  <compendium name> <output re
 
 
 ### Supervied validation (Correlation) script (supervised_validation_corr_script.py)
-<h4>Please refer step-by-step example and validation description for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step</a> example and validation description for more information</h4>
 
 #### Input
 This script takes two inputs: Your compendium name and sample-study-condition mapping table.
@@ -325,7 +325,7 @@ python supervised_validation_corr_script.py  <compendium name> <sample-study-con
 
 
 ### Supervied validation (Knowledge capture) script (supervised_validation_knowledge_capture_script.py)
-<h4>Please refer step-by-step example and validation description for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step</a> example and validation description for more information</h4>
 
 #### Input
 This script takes three inputs: Your compendium name, sample selection table and gene selection table.
@@ -368,7 +368,7 @@ python supervised_validation_knowledge_capture_script.py  <compendium name> <Sam
 
 
 ### Supervied validation (Published data comparison) script (supervised_validation_published_data_comparison_script.py)
-<h4>Please refer step-by-step example and validation description for more information</h4>
+<h4>Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/STEP-BY-STEP.md>step-by-step example </a> and validation description for more information</h4>
 
 #### Input
 This script takes two input: Your compendium name and published data table.
