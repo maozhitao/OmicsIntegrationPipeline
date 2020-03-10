@@ -145,8 +145,8 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
 <ol>
     <li>For correlation validation, the correlation curve from grouping by conditions (the green curve) should be higher than the curve from grouping by studies (the orange curve).</li>
     <li>For correlation validation, the correlation curve from grouping by studies (the orange curve) should be higher than the curve from the entire compendium (the blue curve).</li>
-    <li>For checking diversity, the correlation curve among different studies or conditions (the red and purple curve) should not be too high.</li>
+    <li>For checking diversity, the correlation curve among different studies or conditions (the red and purple curve) should not be too high. However, the exact threshold is not defined in the current version.</li>
 </ol>
 
 ![Figure V4. Evaluation and observation of the correlation validation results.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_CorrelationValidationResults.png)
-Figure V4. Evaluation and observation of the correlation validation results.
+<br>Figure V4. Evaluation and observation of the correlation validation results. It follow the first two criteria: the green curve (average correlation of samples grouping by conditions) is higher than orange curve (average correlation of samples grouping by studies), and the orange curve is higher than the blue line (average correlation of the entire compendium).
