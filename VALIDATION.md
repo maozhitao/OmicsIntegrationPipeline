@@ -3,19 +3,17 @@
 <h4>Please read step-by-step example for more information. </h4><br>
 It is important to validate and check the quality of the compendium. There are one supervised approach and three unsupervised approaches to check the quality or validate the compendium you built.
 
-## Unsupervised approaches
+## An unsupervised approach -- Drop and impute values approach
 <h4>Unsupervised approaches can evaluate one or more benchmarks of the compendium you built based on several assumptions. Users do not have to provide additional information to obtain the benchmark.</h4>
 
-### Drop and impute values approach
-
-#### Assumptions
+### Assumptions
 <h4>Based on the following two assumtpions, drop and impute values approach can evaluate a benchmark to evaluate the quality of the compendium.</h4>
 <ol>
     <li>A good compendium should capture the pattern of gene expression profiles. Therefore, even if some values are dropped, we still can recover these missing values by applying missing value imputation.</li>
     <li>If a compendium is perturbed, it is more difficult to recover the missing values and yield larger error.</li>
 </ol>
 
-#### Steps
+### Steps
 <h4>There are four steps for drop and impute values approach:</h4>
 <ol>
     <li>Add the noise to the normalized data matrix in the compendium with different noise ratio.
@@ -51,7 +49,7 @@ It is important to validate and check the quality of the compendium. There are o
 ![Figure V1. Four steps of drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
 Figure V1. Four steps of drop and impute values approach
 
-#### Benchmark evaluation
+### Benchmark evaluation
 <h4> After we get the average error curve, the next thing is the benchmark evaluation.</h4>
 <ul>
     <li>We can pick a curve (for example, a curve from missing value ratio = 0.5) and then calculate the area below this curve.
@@ -65,11 +63,12 @@ Figure V1. Four steps of drop and impute values approach
         </ul>
     </li>
 </ul>
-<h4>Current pipeline use the second defination as the benchmark.</h4>
+<h4>Current pipeline use the second defination as the benchmark. Since the noise ratio should be between 0 and 1 and typically error will not exceed 100%, the area will be between 0% and 100%.</h4>
 
 ![Figure V2. Benchmark evaluation of drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Unsupervised_validation_description.png)
 Figure V2. Benchmark evaluation of drop and impute values approach. The area between 100% error horizontal line and the error curve from missing value ratio = 0.5 (orange line) is evaluated as the benchmark.
 
+### Benchmark comparison with reference compendium
 </h4>
 
 
