@@ -15,6 +15,11 @@ There are some necessary files for compendium building and supervised validation
             <li>The pipeline will fetch all corresponded sequence from NCBI database using this metadata.</li>
         </ul>
     </li>
+    <li>Supervised validation (correlation validation files):
+        <ul>
+            <li>Samples-studies-conditions mapping table (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Samples_studies_conditions_mappingtable.csv>Samples_studies_conditions_mappingtable.csv</a>)</li>
+        </ul>
+    </li>
     <li>Supervised validation (knowledge capture validation) files:
         <ol>
             <li>fur gene mutant vs wildtype
@@ -207,3 +212,80 @@ It will takes three to four days to download, align, count the gene expressions,
 <a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/SalmonellaExample.tar.gz>The example compendium output can be downloaded here. (Intermediate files are removed)</a>
 
 
+## 3. Validation
+
+### 3.1 Unsupervised validation
+To evaluate a benchmark of this compendium, just run the following command:
+
+```
+python unsupervised_validation_script.py SalmonellaExample
+```
+
+It will report a benchmark and generate unsupervised validation results (Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/VALIDATION.md>validation description</a>).
+
+### 3.2 Supervised validation -- correlation validation
+
+#### 3.2.1 Creating a samples-studies-conditions mapping table
+You have to manually curate the metadata to create a sample-studies-conditions mapping table.
+<br>
+For this <a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Samples_studies_conditions_mappingtable.csv>example sample-studies-conditions mapping table file</a>, it contains 64 samples from 3 different studies or 40 different conditions.
+
+#### 3.2.2 Run the correlation validation script
+Once you prepare the mapping table, run the following command:
+
+```
+python supervised_validation_corr_script.py SalmonellaExample Samples_studies_conditions_mappingtable.csv
+```
+
+It will generate correlation validation results. (Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/VALIDATION.md>validation description</a>).
+
+### 3.3 Supervised validation -- knowledge capture validation
+
+#### 3.3.1 Creating a sample selection file
+You have to manually curate the metadata to create a sample selection file.
+<br>
+For <a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur.csv>fur mutant example</a>, you have to check the metadata and find that two samples (SRX1638996, SRX1638997) are wildtype, and another sample (SRX1638999) is fur mutant.
+
+#### 3.3.2 Creating a gene selection file
+You have to survey the published researches to find a gene set which will be regulated by specific stress/mutant and then create a gene selection file
+<br>
+For <https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur_related_genes.csv>fur regulated gene example</a>, you have to find the <a href=https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5001712/>genes regulated by fur</a>: flagellar genes (activated), SPI1 genes (activated) and SPI2 genes (repressed). In addition, you have to perform necessary gene name conversion to make sure the gene names exist in the compendium.
+
+#### 3.3.3. Run the knowledge capture validation script
+Once you prepare both sample selection table and gene selection table, run the following command:
+
+```
+python supervised_validation_knowledge_capture_script.py  SalmonellaExample Input_KnowledgeCapture_fur.csv Input_KnowledgeCapture_fur_related_genes.csv
+```
+It will generate knowledge capture validation results. (Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/VALIDATION.md>validation description</a>).
+
+### 3.4 Supervised validation -- published data comparison
+
+#### 3.4.1 Find a reference compendium
+You have to find a reference compendium with the samples collected in the compendium for comparison.
+<br>
+There are three additional steps after you find a reference compendium:
+<ol>
+    <li>Make sure each row represent different gene and each column represent different samples.</li>
+    <li>Gene name mapping: You have to convert the gene names to make sure the gene names is in the compendium.</li>
+    <li>Sample mapping: You have to convert the sample tag to sample ID in the compendium.
+        <ul>
+            <li>Some reference compendia may merge multiple technical replicates into one gene expression profiles. In this case, you can concatenate the technical replicates sample ID with '|' symbol (example: SRX334188|SRX334189). The validation script will merge those technical replicates in the compendium into one gene expression profile.</li>
+        </ul>
+    </li>
+</ol>
+<br>
+You can compare the format before and after data format conversion:
+<ul>
+    <li>Original dataset (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SampleTable_GoldenStandard.csv>SampleTable_GoldenStandard.csv</a>) </li>
+    <li>Format refined dataset (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SampleTable_STM_GoldenStandard.csv>SampleTable_STM_GoldenStandard.csv</a>) </li>
+</ul>
+
+#### 3.4.2 Run the published data comparison script
+Once you have well-formatted reference compendium, you can run the following command:
+
+```
+python supervised_validation_published_data_comparison_script.py  SalmonellaExample SampleTable_STM_GoldenStandard.csv
+```
+
+It will generate published data comparison results. (Please refer <a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/VALIDATION.md>validation description</a>).
