@@ -171,6 +171,13 @@ Required python packages have to be installed.
             </ul>
     </ul>
     
+#### 5. missingpy
+<h4>Please install missingpy by following the instructions in official website:<br>
+( https://pypi.org/project/missingpy/ )</h4>
+    <ul>
+        <li>Tested with missingpy 0.2.0</li>
+    </ul>
+    
 ### Testing after install and configure your computer
 <h4>After you added these path to PATH variable, you should be capable to run the following program in any directory:</h4>
 <ul>

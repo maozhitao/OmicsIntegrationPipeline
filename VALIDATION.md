@@ -25,13 +25,22 @@ It is important to validate and check the quality of the compendium. There are o
             <ul>
                 <li>If noise ratio is 0, it means that there is no noise to be added.</li>
                 <li>If noise ratio is 1, it means that the data matrix is totally perturbed by random permutation.</li>
-                <li>If noise ratio is between 0 and 1 (0 < x < 1, x is noise ratio), it means that the data matrix will be generated from the linear combination of original data matrix and noise.<br>
+                <li>If noise ratio is between 0 and 1 (0 < x < 1, x is noise ratio), it means that the data matrix will be generated from the linear combination of original data matrix and noise:<br><br>
                     x*(noise) + (1-x)*(original data matrix)
                 </li>
             </ul>
         </ul>
     </li>
-    
+    <li>Randomly remove the values in the noise-added data matrix with different missing value ratio.</li>
+    <li>Run the missing value imputation to fill the missing value back.<br>
+        There are two approaches to impute the missing value in the pipeline:
+        <ul>
+            <li>K-nearest neighborhood (KNN)</li>
+            <li>Missing Forest</li>
+        </ul>
+        The pipeline use missingpy to perform these two imputation approaches. Please refer <a href=https://pypi.org/project/missingpy/>the package description</a> for more information.
+    </li>
+        
     
 </ol>
 
