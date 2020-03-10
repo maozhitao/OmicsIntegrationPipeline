@@ -2,7 +2,7 @@
 <h4>This example provides a step-by-step example to make a Salmonella example compendium.</h4>
 
 ## Necessary files in this example:
-There are some necessary files for compendium building and supervised validation:
+There are some necessary files for compendium building and supervised validation.
 <ol>
     <li>Sample list files (<a href = https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExampleSampleList.csv>SalmonellaExampleSampleList.csv</a>)
         <ul>
@@ -42,3 +42,6 @@ There are some necessary files for compendium building and supervised validation
         </ul>
     </li>
 </ol>
+
+## 0. Installation
+Please make sure you have installed all the packages, software and set the environment variables correctly. (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/tree/Pipeline_20200307>Please refer the main description.</a>)
