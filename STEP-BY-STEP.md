@@ -177,3 +177,23 @@ If you want to use 32 cores to speedup a imputation task, you may have the follo
 self.p_imputation_rfimpute_parallel_parameters_n_core_local                 = 32
 ```
 
+## 2. Compendium building
+
+### 2.1 Sample list file preparation
+You can prepare a sample list file using <a href = https://www.ncbi.nlm.nih.gov/sra>SRA database</a>.
+<ol>
+    <li>Search the keyword in SRA database.</li>
+    <li>Send the searching results into a file using runinfo format.</li>
+    <li>Extract the 'Experiment' column (Optional, the output runinfo csv files can also be read by the pipeline).</li>
+</ol>
+
+### 2.2 Gene annotation file
+You can find a reference genome and download the corresponded gene annotation file using <a href = https://www.ncbi.nlm.nih.gov/assembly>NCBI assembly database</a>.
+<ol>
+    <li>Search the keyword and select the assembly you are interested in.</li>
+    <li>At the right of the page, click 'FTP directory for GenBank assembly'.<li>
+    <li>Download the .gff.gz file and then unzip it. That will be the gene annotation file.</li>
+</ol>
+
+
+    

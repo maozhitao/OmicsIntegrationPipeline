@@ -19,6 +19,7 @@ if __name__ == "__main__":
     os.chdir(unique_id)
     tmp = pd.read_csv('../'+sample_list_file)
     exp_list = tmp["Experiment"].tolist()
+    exp_list = list(set(exp_list))
 
     transcriptome_pipeline = TranscriptomicDataPreparationPipeline([],exp_list,['../' + gff_file])
     
