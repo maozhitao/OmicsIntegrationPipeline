@@ -40,8 +40,12 @@ It is important to validate and check the quality of the compendium. There are o
         </ul>
         The pipeline use missingpy to perform these two imputation approaches. Please refer <a href=https://pypi.org/project/missingpy/>the package description</a> for more information.
     </li>
-        
-    
+    <li>Calculate the error between imputed values and the original values before dropping.
+        <ul>
+            <li>There will be a error table recording the error of values for each noise ratio. By taking the average, the pipeline can get the average error of this noise ratio.</li>
+            <li>There will be a average error table recording the average error of different noise ratio for each missing value ratio. Each table can be plotted as a noise ratio vs. average error curve.</li>
+        </ul>
+    </li> 
 </ol>
 
 ![Figure V1. Drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
