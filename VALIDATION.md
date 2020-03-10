@@ -301,4 +301,4 @@ You can compare your compendium with the published data directly. The pipeline w
 Even without any additional normalization and standardization, the average PCC and SCC between published data and the compendium should be higher than 0.8. For the comparison case: Salmonella example compendium vs. <a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">published small compendium</a>, both average PCC and SCC are around 0.9.
 
 ![Figure V9. Published data comparison steps.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/PublishedDataComparisonResults.png)
-<br>Figure V9. Published data comparison results (Salmonella example compared with <a href = https://www.sciencedirect.com/science/article/pii/S1931312813004113">published compendium</a>).
+<br>Figure V9. Published data comparison results (Salmonella example compared with <a href = https://www.sciencedirect.com/science/article/pii/S1931312813004113">published compendium</a> ).
