@@ -181,7 +181,9 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
     <li>Capture the information in specific study: If one published study with published gene expression profiles shows that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
     <li>Capture the general knowledge: If there are well known knowledge (or one published study without available gene expression profiles) points that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
 </ol>
-<br>The second level is more difficult but also more valuable:
+
+The second level is more difficult but also more valuable:
+
 <ul>
     <li>For example, if study A points that some gene were up-regulated or down-regulated with significant fold change on some stresses or mutants.</li>
     <ul>
