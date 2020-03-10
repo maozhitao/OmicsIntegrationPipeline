@@ -49,8 +49,16 @@ It is important to validate and check the quality of the compendium. There are o
 </ol>
 
 #### Benchmark evaluation
-<h4> After we get the average error curve, the next thing is the benchmark evaluation. We can pick a curve (for example, a curve from missing value ratio = 0.5) and then calculate the area below this curve.<br> 
-The larger area means that higher error of missing value imputation.
+<h4> After we get the average error curve, the next thing is the benchmark evaluation.</h4>
+<ul>
+    <li>We can pick a curve (for example, a curve from missing value ratio = 0.5) and then calculate the area below this curve.
+        <ul>
+            <li>The large area means bad compendium quality due to that high error of missing value imputation.</li>
+        </ul>
+    </li>
+</ul>
+
+
 </h4>
 
 ![Figure V1. Drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
