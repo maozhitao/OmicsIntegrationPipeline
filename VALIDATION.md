@@ -106,7 +106,13 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
     </li>
     <li>Read the samples-studies-conditions mapping table and group the samples by conditions or studies.
         <ul>
-            <li>It need one user input: samples-studies-conditions table (Please refer the main document and step-by-step example).</li>
+            <li>It need one user input: Sample-study-condition mapping table, a csv file contains study name (or ID) and condition for selected samples in your compendium (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExample_CorrelationValidation.csv>Example</a>). It contains three columns:
+            <ol>
+                <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+                <li>series_id: Study ID or Study Name. </li>
+                <li>cond_id: Condition name.</li>
+            </ol>
+            </li>
         </ul>
     </li>
     <li>For each group, evaluate the correlation matrix.
@@ -178,8 +184,8 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
 ### Assumptions
 <h4>A good compendium should capture the published information and knowledge. This validation focus on the fold change of average gene expression profiles between case and control. There are two levels of knowledge capture:</h4>
 <ol>
-    <li>Capture the information in specific study: If one published study with published gene expression profiles shows that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
-    <li>Capture the general knowledge: If there are well known knowledge (or one published study without available gene expression profiles) points that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
+    <li>Capture the information in specific study: If one published study with published gene expression profiles shows that some genes are up-regulated or down-regulated with significant fold change for specific stresses or mutants, the data matrix of the compendium should keep this information.</li>
+    <li>Capture the general knowledge: If there are well known knowledge (or one published study without available gene expression profiles) points that some genes are up-regulated or down-regulated with significant fold change for specific stresses or mutants, the data matrix of the compendium should keep this information.</li>
 </ol>
 
 The second level is more difficult but also more valuable:
@@ -191,3 +197,23 @@ The second level is more difficult but also more valuable:
         <li>It means that we can capture more samples about this mutant or stress for the further study even those studies are not focus on this mutant and stress.</li>
     </ul>
 </ul>
+
+### Steps
+<h4>There are four steps for knowledge capture validation approach (Figure V5):</h4>
+<ol>
+    <li>Add the noise to the normalized data matrix in the compendium with different noise ratio.
+        <ul>
+            <li>Same as the adding noise step in drop and impute values approach</li>
+        </ul>
+    </li>
+    <li>Read the sample selection table and pick the case samples and control samples, and then calculate the absolute log fold change of average gene expressions between case samples and control samples.
+        <ul>
+            <li>Sample selection table: A csv file contains samples and case/control indicator(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur.csv>Example</a>). It contains two columns:
+            <ol>
+                <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+                <li>indicator: inticate case or control (1 means case and 0 means control)</li>
+            </ol>
+            </li>
+        </ul>
+    </li>
+</ol>
