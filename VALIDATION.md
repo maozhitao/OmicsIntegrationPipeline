@@ -252,7 +252,7 @@ The rank of the absolute log fold change should be significantly different than 
             </li>
             <li>hfq mutant case: There are 10 hfq mutant and 10 hfq samples from six different Salmonella strains for comparison. 
                 <ul>
-                    <li>fur mutant (case): ERX339078,ERX339082,ERX339070,ERX339086,ERX339072,ERX339084,ERX339074,ERX339088,ERX339080,ERX339076 </li>
+                    <li>hfq mutant (case): ERX339078,ERX339082,ERX339070,ERX339086,ERX339072,ERX339084,ERX339074,ERX339088,ERX339080,ERX339076 </li>
                     <li>wildtype (control): ERX339077,ERX339081,ERX339069,ERX339085,ERX339071,ERX339083,ERX339073,ERX339087,ERX339079,ERX339075 </li>
                     <li>Genes: according the the <a href=https://www.ncbi.nlm.nih.gov/pubmed/?term=23808344>published study</a>, it is well known that hfq gene regulated 9 genes. (7 genes are in the compendium)</li>
                     <li>Results (Figure V6(B)): The KS-test shows significant results (p-value < 0.05) for the case only without noise ratio.
@@ -260,7 +260,45 @@ The rank of the absolute log fold change should be significantly different than 
             </li>
         </ol>
     </li>
+    <li>Human example (Ischemic heart disease) compendium: There is one knowledge capture validation example result. (This does not show the general knowledge capture, just shows the information capture for the specific study)
+        <ul>
+            <li>Ischemic heart disease: There are 13 Ischemic heart patient and 14 healthy controls.
+                <ul>
+                    <li>patients (case): SRX4297657,SRX4297658,SRX4297659,SRX4297660,SRX4297661,SRX4297662,SRX4297663,SRX4297664,SRX4297665,SRX4297666,SRX4297667,SRX4297668,SRX4297669 </li>
+                    <li>healthy (control): SRX4297606,SRX4297608,SRX4297610,SRX4297611,SRX4297612,SRX4297613,SRX4297614,SRX4297615,SRX4297616,SRX4297617,SRX4297618,SRX4297619,SRX4297609,SRX4297607 </li>
+                    <li>Genes: according the the <a href=https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6233272/>this study </a>, there are 93 genes with absolute log fold change > 2. (64 genes are in the compendium)</li>
+                    <li>Results (Figure V7): The KS-test shows significant results (p-value < 0.05) for all cases with noise ratio < 0.5.
+                </ul>
+            </li>
+        </ul>
+    </li>
 </ul>
 
 ![Figure V6. Knowledge capture validation results--Salmonella.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/knowledge_capture_Salmonella.png)
 <br>Figure V6. Knowledge capture validation results--Salmonella. (A) fur mutant case. (B) hfq mutant case.
+
+![Figure V7. Validation of information capture in specific study--Human (Ischemic heart disease case).](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/IschemicHeartDiseaseSimplified2_KnowledgeCaptureValidationResults.png)
+<br>Figure V7. Validation of information capture in specific study--Human (Ischemic heart disease case).
+
+
+## An Supervised approach -- Published data comparison
+You can compare your compendium with the published data directly. The pipeline will extract the genes and samples in both your compendium and published data, and then calculate the correlation for each sample.
+
+### Assumptions
+<h4>A gene expression profile in a good compendium should have high similarity comapred with a gene expression profile in the published data.</h4>
+
+### Steps
+<h4>This approach has two steps:</h4>
+<ol>
+    <li>Read published data matrix and then extract the genes and samples in the compendium.</li>
+    <li>Calculate the correlation between the gene expression profile in the compendium and given published data matrix for each sample, and then plot the log gene expression level.</li>
+</ol>
+
+![Figure V8. Published data comparison steps.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure5.png)
+<br>Figure V8. Published data comparison steps.
+
+### Validation of the results:
+Even without any additional normalization and standardization, the average PCC and SCC between published data and the compendium should be higher than 0.8. For the comparison case: Salmonella example compendium vs. <a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">published small compendium</a>, both average PCC and SCC are around 0.9.
+
+![Figure V9. Published data comparison steps.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/PublishedDataComparisonResults.png)
+<br>Figure V9. Published data comparison results (Salmonella example compared with <a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">published compendium</a>).
