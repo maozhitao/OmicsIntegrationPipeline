@@ -206,7 +206,7 @@ The second level is more difficult but also more valuable:
             <li>Same as the adding noise step in drop and impute values approach</li>
         </ul>
     </li>
-    <li>Read the sample selection table and pick the case samples and control samples, and then calculate the absolute log fold change of average gene expressions between case samples and control samples.
+    <li>Read the sample selection table and pick the case samples and control samples, and then calculate the absolute log fold change of average gene expressions between case samples and control samples. Then the rank of absolute log fold change is evaluated.
         <ul>
             <li>Sample selection table: A csv file contains samples and case/control indicator(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur.csv>Example</a>). It contains two columns:
             <ol>
@@ -214,6 +214,25 @@ The second level is more difficult but also more valuable:
                 <li>indicator: inticate case or control (1 means case and 0 means control)</li>
             </ol>
             </li>
+            <li>It calculate the absolute log fold change, which means that it does not consider the genes are up-regulated or down-regulated.</li>
+        </ul>
+    </li>
+    <li>Read the gene selection table and pick the genes which is expected to have significant fold change. The rank of absolute log fold change of these gene are selected and sorted.</li>
+        <ul>
+            <li>Gene selection table: A csv file contains genes(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur_related_genes.csv>Example</a>). It contains one column:
+            <ol>
+                <li>gene_list: Gene names. (should be a subset of gene names in the normalized data matrix.)</li>
+                <li>Other columns are just for comment and will not be processed.</li>
+            </ol>
+            </li>
+        </ul>
+    </li>
+    <li>Count the gene one by one and then divided by the #genes to get hit ratio. Plot the rank vs. hit ratio for different noise ratio cases.
+        <ul>
+            <li>#genes is the number of genes in the gene list. (If some genes in the gene list are not in the compendium, then those genes will not be counted)</li>
         </ul>
     </li>
 </ol>
+
+![Figure V5. Knowledge capture validation steps.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_KnowledgeCaptureValidationResults.png)
+<br>Figure V5. Knowledge capture validation steps.
