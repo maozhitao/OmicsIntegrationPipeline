@@ -83,3 +83,70 @@ You may also observed that for the high missing value ratio (0.99), the imputati
 
 ![Figure V3. Benchmark comparison results](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Unsupervised_validation_comparison.png)
 Figure V3. Benchmark comparison results. (A) The results of the entire Salmonella example compendium with 709 samples. (B) The results of the reference compendium. (C) The results of the subset of Salmonella example compendium contains the samples in the reference compendium.
+
+
+## An Supervised approach -- Correlation validation
+<h4>Supervised approaches need additional information from users. For correlation validation, it needs samples-studies-conditions mapping table.</h4>
+
+### Assumptions
+<h4>Based on the following three assumtpions, correlation validation can perform simple validation of the compendium. (Currently there is no benchmark to evaluate overall quality, just observation and simple validation)</h4>
+<ol>
+    <li>The average correlation among samples within the same condition should be higher than the average correlation among samples within the same study.</li>
+    <li>The average correlation among samples within the same study should be higher than the average correlation among samples in the entire compendium.</li>
+    <li>The average correlation among different conditions or different studies should not be too high. (Otherwise the compendium may have low diversity)</li>
+</ol>
+
+### Steps (Correlation validation)
+<h4>There are four steps for correlation validation approach to check the average correlation among samples within the same condition, study or the entire compendium (Figure V4(A)):</h4>
+<ol>
+    <li>Add the noise to the normalized data matrix in the compendium with different noise ratio.
+        <ul>
+            <li>Same as the adding noise step in drop and impute values approach</li>
+        </ul>
+    </li>
+    <li>Read the samples-studies-conditions mapping table and group the samples by conditions or studies.
+        <ul>
+            <li>It need one user input: samples-studies-conditions table (Please refer the main document and step-by-step example).</li>
+        </ul>
+    </li>
+    <li>For each group, evaluate the correlation matrix.
+        <ul>
+            <li>The group with just only one sample will be skipped.</li>
+        </ul>
+    </li>
+    <li>Take the average values in lower half part of the correlation matrix from all groups.
+        <ul>
+            <li>One average correlation will be evaluated for each noise ratio and then a noise ratio vs. correlation curve can be plotted.</li>
+            <li>Three lines with different grouping approaches (group by conditions, studies, or the entire compendium) will be plotted.</li>
+        </ul>
+    </li>
+</ol>
+
+### Steps (Correlation validation for checking diversity)
+<h4>There are three steps for correlation validation approach to check the diversity among conditions and studies after adding the noise to normalized data matrix with different noise ratio. (Figure V4(B)):</h4>
+<ol>
+    <li>Read the samples-studies-conditions mapping table and group the samples by conditions or studies.
+        <ul>
+            <li>It need one user input: samples-studies-conditions table (Please refer the main document and step-by-step example).</li>
+        </ul>
+    </li>
+    <li>For each group, merge the gene expression by taking the average.
+    </li>
+    <li>Calculate the correlation matrix among groups and take the average of the lower half part of the correlation matrix.
+        <ul>
+            <li>One average correlation will be evaluated for each noise ratio and then a noise ratio vs. correlation curve can be plotted.</li>
+            <li>Two lines with different grouping approaches (group by conditions and studies) will be plotted.</li>
+        </ul>
+    </li>
+</ol>
+
+### Evaluation and observation of the correlation validation results
+<h4>There are several points to simply validate the compendium based on the results: (Figure V4)</h4>
+<ol>
+    <li>For correlation validation, the correlation curve from grouping by conditions (the green curve) should be higher than the curve from grouping by studies (the orange curve).</li>
+    <li>For correlation validation, the correlation curve from grouping by studies (the orange curve) should be higher than the curve from the entire compendium (the blue curve).</li>
+    <li>For checking diversity, the correlation curve among different studies or conditions (the red and purple curve) should not be too high.</li>
+</ol>
+
+![Figure V4. Evaluation and observation of the correlation validation results.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_CorrelationValidationResults.png)
+Figure V4. Evaluation and observation of the correlation validation results.
