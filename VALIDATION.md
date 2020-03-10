@@ -71,4 +71,6 @@ Figure V2. Benchmark evaluation of drop and impute values approach. The area bet
 ### Benchmark comparison with reference compendium
 After you got the benchmark with 49.35%, you want to know whether 49.35% is high enough to prove the compendium quality. To check whether this value is high enough, you need to fine one reference compendium with good quality and then evalute its benchmark and then make the comparison.
 
+<h4>Reference compendium with good quality</h4>
+For this Salmonella example compendium with 709 samples, it includes <a href=https://www.sciencedirect.com/science/article/pii/S1931312813004113">one small, published compendium</a> with 26 samples across different conditions and we can use this as a reference compendium.
 
