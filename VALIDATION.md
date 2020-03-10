@@ -247,8 +247,20 @@ The rank of the absolute log fold change should be significantly different than 
                     <li>fur mutant (case): SRX1638999 </li>
                     <li>wildtype (control): SRX1638996, SRX1638997 </li>
                     <li>Genes: according the the <a href=https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5001712/>published study</a>, it is well known that fur genes activates flagellar genes, SPI1 genes but represses SPI2 genes. Total are 26 genes.</li>
+                    <li>Results (Figure V6(A)): The KS-test shows significant results (p-value < 0.05) for all cases with noise ratio < 0.5.
+                </ul>
+            </li>
+            <li>hfq mutant case: There are 10 hfq mutant and 10 hfq samples from six different Salmonella strains for comparison. 
+                <ul>
+                    <li>fur mutant (case): ERX339078,ERX339082,ERX339070,ERX339086,ERX339072,ERX339084,ERX339074,ERX339088,ERX339080,ERX339076 </li>
+                    <li>wildtype (control): ERX339077,ERX339081,ERX339069,ERX339085,ERX339071,ERX339083,ERX339073,ERX339087,ERX339079,ERX339075 </li>
+                    <li>Genes: according the the <a href=https://www.ncbi.nlm.nih.gov/pubmed/?term=23808344>published study</a>, it is well known that hfq gene regulated 9 genes. (7 genes are in the compendium)</li>
+                    <li>Results (Figure V6(B)): The KS-test shows significant results (p-value < 0.05) for the case only without noise ratio.
                 </ul>
             </li>
         </ol>
     </li>
 </ul>
+
+![Figure V6. Knowledge capture validation results--Salmonella.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/knowledge_capture_Salmonella.png)
+<br>Figure V6. Knowledge capture validation results--Salmonella. (A) fur mutant case. (B) hfq mutant case.
