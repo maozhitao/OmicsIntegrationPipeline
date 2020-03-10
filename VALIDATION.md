@@ -48,6 +48,9 @@ It is important to validate and check the quality of the compendium. There are o
     </li> 
 </ol>
 
+![Figure V1. Four steps of drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
+Figure V1. Four steps of drop and impute values approach
+
 #### Benchmark evaluation
 <h4> After we get the average error curve, the next thing is the benchmark evaluation.</h4>
 <ul>
@@ -56,10 +59,17 @@ It is important to validate and check the quality of the compendium. There are o
             <li>The large area means bad compendium quality due to that high error of missing value imputation.</li>
         </ul>
     </li>
+    <li>Or, we can calculate the area between the selected curve and the reference line (for example, a horizontal line with 100% error).
+        <ul>
+            <li>The large area means good compendium quality due to that low error of missing value imputation.</li>
+        </ul>
+    </li>
 </ul>
+<h4>Current pipeline use the second defination as the benchmark.</h4>
 
+![Figure V2. Benchmark evaluation of drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Unsupervised_validation_description.png)
+Figure V2. Benchmark evaluation of drop and impute values approach. The area between 100% error horizontal line and the error curve from missing value ratio = 0.5 (orange line) is evaluated as the benchmark.
 
 </h4>
 
-![Figure V1. Drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
-Figure V1. Drop and impute values approach
+
