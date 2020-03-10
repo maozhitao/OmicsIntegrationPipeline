@@ -127,7 +127,13 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
 <ol>
     <li>Read the samples-studies-conditions mapping table and group the samples by conditions or studies.
         <ul>
-            <li>It need one user input: samples-studies-conditions table (Please refer the main document and step-by-step example).</li>
+            <li>It need one user input: Sample-study-condition mapping table, a csv file contains study name (or ID) and condition for selected samples in your compendium (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/SalmonellaExample_CorrelationValidation.csv>Example</a>). It contains three columns:
+            <ol>
+                <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+                <li>series_id: Study ID or Study Name. </li>
+                <li>cond_id: Condition name.</li>
+            </ol>
+            </li>
         </ul>
     </li>
     <li>For each group, merge the gene expression by taking the average.
@@ -150,3 +156,29 @@ Figure V3. Benchmark comparison results. (A) The results of the entire Salmonell
 
 ![Figure V4. Evaluation and observation of the correlation validation results.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/SalmonellaExample_CorrelationValidationResults.png)
 <br>Figure V4. Evaluation and observation of the correlation validation results. It follow the first two criteria: the green curve (average correlation of samples grouping by conditions) is higher than orange curve (average correlation of samples grouping by studies), and the orange curve is higher than the blue line (average correlation of the entire compendium).
+
+
+## An Supervised approach -- Knowledge capture validation
+<h4>Supervised approaches need additional information from users. For knowledge capture validation, it needs two inputs:</h4>
+<ol>
+    <li>Sample selection table: A csv file contains samples and case/control indicator(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur.csv>Example</a>). It contains two columns:
+    <ol>
+        <li>exp_id: Sample ID. (should be a subset of the sample list you provided when you prepared the compendium)</li>
+        <li>indicator: inticate case or control (1 means case and 0 means control)</li>
+    </ol>
+    </li>
+    <li>Gene selection table: A csv file contains genes(<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TestFiles/Input_KnowledgeCapture_fur_related_genes.csv>Example</a>). It contains one column:
+    <ol>
+        <li>gene_list: Gene names. (should be a subset of gene names in the normalized data matrix.)</li>
+        <li>Other columns are just for comment and will not be processed.</li>
+    </ol>
+    </li>
+</ol>
+
+### Assumptions
+<h4>A good compendium should capture the published information and knowledge. This validation focus on the fold change of average gene expression profiles between case and control. There are two levels of knowledge capture:</h4>
+<ol>
+    <li>Capture the information in specific study: If one published study with published gene expression profiles shows that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
+    <li>Capture the general knowledge: If there are well known knowledge (or one published study without available gene expression profiles) points that some genes are up-regulated or down-regulated with significant fold change, the data matrix of the compendium should keep this information.</li>
+</ol>
+The second level is more difficult but also more valuable. For example, if study A points that some gene were up-regulated or down-regulated with significant fold change on some stresses or mutants, the compendium can show the signficant fold change on the same stress or the same mutant in different studies in additiona to study A. It means that we can capture more samples about this mutant or stress for the further study even those studies are not focus on this mutant and stress.
