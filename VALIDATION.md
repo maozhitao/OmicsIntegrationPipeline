@@ -69,6 +69,6 @@ Figure V1. Four steps of drop and impute values approach
 Figure V2. Benchmark evaluation of drop and impute values approach. The area between 100% error horizontal line and the error curve from missing value ratio = 0.5 (orange line) is evaluated as the benchmark.
 
 ### Benchmark comparison with reference compendium
-<h4>It may be difficult to have the conclusion of the quality of the compendium without comparing with the benchmark of the reference compendium with good quality. For example, you got the benchmark with 49.35%, but you do not know whether the value 49.35% is good enough or not.<h4>
+After you got the benchmark with 49.35%, you want to know whether 49.35% is high enough to prove the compendium quality. To check whether this value is high enough, you need to fine one reference compendium with good quality and then evalute its benchmark and then make the comparison.
 
 
