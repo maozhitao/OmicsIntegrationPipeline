@@ -45,3 +45,37 @@ There are some necessary files for compendium building and supervised validation
 
 ## 0. Installation
 Please make sure you have installed all the packages, software and set the environment variables correctly. (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/tree/Pipeline_20200307>Please refer the main description.</a>)
+
+## 1. Parameters configurations (t_utilities/t_parameters.py)
+This step shows you how to modify some important variables which is necessary for building and validating a compendium. To configure the parameters, please open the parameter setting file. (<a href=https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/TranscriptomicPipelines/t_utilities/t_parameters.py>t_utilities/t_parameters.py</a>)
+<br>There are two classes: 
+<ul>
+    <li>TranscriptomicConstants: It records the constants, especially some option strings inside the pipeline.</li>
+    <li>TranscriptomicParameters: It records the parameters. Some options can be found in the class TranscriptomicConstants.</li>
+</ul>
+
+### 1.1 Parallel options
+There are four time consuming procedures which can be run in parallel:
+<ol>
+    <li>Reference genome building (corresponded parameter: self.s_value_extraction_refbuild_parameters_parallel_mode)</li>
+    <li>Sequencing value extraction (corresponded parameter: self.s_value_extraction_parallel_parameters_parallel_mode)</li>
+    <li>Sample mapping (corresponded parameter: self.s_sample_mapping_parallel_parameters_parallel_mode)</li>
+    <li>Missing value imputation (corresponded parameter: self.p_imputation_rfimpute_parallel_parameters_parallel_mode)</li>
+</ol>
+
+There are two options for parallelization:
+<ol>
+    <li>local(corresponded option: self.constants.parallel_option_local): The pipeline will run in parallel in the local machine.</li>
+    <li>slurm(corresponded option: self.constants.parallel_option_slurm): The pipeline will submit the job to the computation node in cluster via slurm.</li>
+</ol>
+
+If you do not have slurm installed in your computer, please change the option as follows in this file:
+```
+self.s_value_extraction_refbuild_parameters_parallel_mode = self.constants.parallel_option_local
+...
+self.s_value_extraction_parallel_parameters_parallel_mode = self.constants.parallel_option_local
+...
+self.s_sample_mapping_parallel_parameters_parallel_mode = self.constants.parallel_option_local
+...
+self.p_imputation_rfimpute_parallel_parameters_parallel_mode = self.constants.parallel_option_local
+```
