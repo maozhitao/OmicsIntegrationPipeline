@@ -236,3 +236,5 @@ The second level is more difficult but also more valuable:
 
 ![Figure V5. Knowledge capture validation steps.](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure4.png)
 <br>Figure V5. Knowledge capture validation steps.
+
+### Validation of the results
