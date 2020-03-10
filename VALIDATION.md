@@ -17,7 +17,23 @@ It is important to validate and check the quality of the compendium. There are o
 
 #### Steps
 <h4>There are four steps for drop and impute values approach:</h4>
-
+<ol>
+    <li>Add the noise to the normalized data matrix in the compendium with different noise ratio.
+        <ul>
+            <li>The noise for adding is from random permutation results of normalized data matrix to make sure that the noise has the same distribution as the original data matrix.</li>
+            <li>The noise ratio is a value between 0 and 1.
+            <ul>
+                <li>If noise ratio is 0, it means that there is no noise to be added.</li>
+                <li>If noise ratio is 1, it means that the data matrix is totally perturbed by random permutation.</li>
+                <li>If noise ratio is between 0 and 1 (0 < x < 1, x is noise ratio), it means that the data matrix will be generated from the linear combination of original data matrix and noise.<br>
+                    x*(noise) + (1-x)*(original data matrix)
+                </li>
+            </ul>
+        </ul>
+    </li>
+    
+    
+</ol>
 
 ![Figure V1. Drop and impute values approach](https://github.com/bigghost2054/AutomatedOmicsCompendiumPreparationPipeline/blob/Pipeline_20200307/images/Figure2.png)
 Figure V1. Drop and impute values approach
