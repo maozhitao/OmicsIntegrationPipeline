@@ -184,7 +184,7 @@ Required python packages have to be installed.
     <li>prefetch</li>
     <li>bowtie2</li>
     <li>infer_experiment.py</li>
-    <li>htseq_count</li>
+    <li>htseq-count</li>
 </ul>
 <h4>If you failed to run these four programs, please make sure that you located these four programs correctly and added the correct path to PATH variables before you run this pipeline.</h4>
 
