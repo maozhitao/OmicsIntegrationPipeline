@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pipeline Testing!</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    </head>
+    <body>
+        <center>
+            <div class="jumbotron">
+                <h2 class="display-4"><font size="6">Automatic transcriptomic compendium pipeline webservice version (Testing)</font></h2>
+                        {% block replace %}
+                <p class="lead">Please provide all necessary information</p>
+                <hr class="my-4">
+                <div id = "usage" align='left'>
+                    <h3> How to use it </h3>
+                    <ol>
+                    <font size="4"><li> Fill the topic you are interested in (example: "Salmonella", "stroke")
+                        <br> <b>NOTE: For the test version, the pipeline will use the experiments in optional experiment filter file and overwrite all query results.</b>
+                    </li>
+                    <li> Fill the species you are interested in (example: "Salmonella enterica", "Homo sapiens") </li>
+                    <li> Select a file for correlation validation: a comma-separated values (csv) file with the following columns:
+						<ul>
+						<li>"exp_id": Sample ID, the experiment id number in SRA database (example: SRX501844)</li>
+						<li>"series_id": Study ID, the study id number in SRA database (example: SRP040622)</li>
+						<li>"cond_id": Condition label marked by yourself manually (example: "healthy cortex")</li>
+						<li>Example: <a href="static/Input_CorrTest_Salmonella.csv">Salmonella example</a>, <a href="static/Input_CorrTest_HumanStroke.csv">Human stroke patients example</a>  </li>
+						</ul>
+             
+                    </li>
+                    <li> Select a sample list file for knowledge capture validation : a comma-separated values (csv) file with the following columns:
+						<ul>
+						<li>"exp_id": Sample ID, the experiment id number in SRA database (example: SRX501844)</li>
+						<li>"indicator": 0 or 1, to represent two conditions (example: 0 means healthy people and 1 means stroke patients)</li>
+						<li>Example: <a href="static/Input_KnowledgeCapture_fur.csv">Salmonella example</a>, <a href="static/Input_KnowledgeCapture_HumanStroke_SampleList.csv">Human stroke patients example</a> </li>
+						</ul>
+                    </li>
+                    <li> Select a gene list file for knowledge capture validation 
+						<ul>
+						<li>"gene_list": A list of gene (NOTE: the gene name should be matched with NCBI gene database) (example: MAFK, STM0001)</li>
+						<li>"description" (Optional): The optional description of genes</li>
+						<li>"expected" (Optional): Expected regulation of cases compared with control (example: Up-regulated or Down-regulated) </li>
+						<li>Example: <a href="static/Input_KnowledgeCapture_fur_related_genes.csv">Salmonella example</a>, <a href="static/Input_KnowledgeCapture_HumanStroke_SampleList.csv">Human stroke patients example</a> </li>
+						</ul>
+                    
+                    </li>
+                    <li> Select a additional sample filter files (Necessary in test version): a comma-separated values (csv) file with the following columns:
+						<ul>
+						<li>"Experiment": A list of gene (NOTE: the gene name should be matched with NCBI gene database) (example: MAFK, STM0001)</li>
+						<li>All other columns for annotation are optional</li>
+						<li>Example: <a href="static/SraRunInfo_Salmonella.csv">Salmonella example</a>, <a href="static/SraRunInfo_Human_Stroke.csv">Human stroke patients example</a> </li>
+						</ul>
+                        <b>NOTE: For the test version, the pipeline will USE ALL the experiments in optional experiment filter file and overwrite all query results.</b>
+                    </li>
+                    <li> Provide your email address. The results will send to you. </li>
+                    <li> Provide the project label. (Example: "SalmonellaExample", "HumanExample") </li>
+                    </font>
+                    </ol>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    <!-- Very Important csrf Token -->
+                    {% csrf_token %}
+                    <table>
+                        {{ form.as_table }}
+                    </table>
+                    <input type="submit" class="btn btn-primary btn-lg" name="register">
+            </div>
+        </center>
+        {% endblock %}
+    </body>
+</html>

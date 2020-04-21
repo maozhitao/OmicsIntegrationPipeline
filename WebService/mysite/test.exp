@@ -1,0 +1,10 @@
+#!/home/cetan/.local/bin/expect
+expect
+eval spawn ls /home/cetan -al
+interact
+eval spawn cat /home/cetan/HPCAccounts_Private_OpenSSH
+#eval spawn scp -i /home/cetan/HPCAAccounts_Private_OpenSSH -P 2022 $in_file bigghost@hpc1.engr.ucdavis.edu:~/TranscriptomePipelineTest/WebService/mysite/$in_file
+#expect ":"
+#send "284ejo3ejo3KEKE\r"
+interact
+exit

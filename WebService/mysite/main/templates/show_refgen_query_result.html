@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)https://getbootstrap.com/docs/4.4/examples/starter-template/ -->
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+    <script type="text/javascript" src="http://compendiumpipeline.online/static/dataTable.colResize.js"></script>
+</head>
+
+
+
+
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.6">
+    <!--<title>Starter Template · Bootstrap</title>-->
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.4/examples/starter-template/">
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <meta name="msapplication-config" content="/docs/4.4/assets/img/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#563d7c">
+
+
+    <style>
+    .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+    }
+
+    .navbar-dark .navbar-nav .nav-link {
+        color: rgba(255,255,255,.3);
+    }
+
+    body {
+        padding-top: 5rem;
+    }
+    .starter-template {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+    </style>
+    <!-- Custom styles for this template -->
+    <!--<link href="./bootstrap_template_files/starter-template.css" rel="stylesheet">-->
+    <script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/util.js"></script><script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/pagejs.js"></script></head>
+    <body>
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+            <a class="navbar-brand" href="http://compendiumpipeline.online/">Home</a>
+  
+            <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-link_1">1. Query samples</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-link_2">2. Select samples</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-link_3" style="color:rgba(255,255,255,0.9);">3. Select reference genome</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-link_4">4. View gene annotation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-link_5">5. Submit the job to the cluster</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main role="main" class="container">
+            <div class="starter-template">
+                <h1>Available reference genome selection</h1>
+                <CENTER>
+                <div class="container">
+                    <form id="refgen_table" method="post">
+                        <table id='test' class="display nowrap" style="width:100%">
+                            {{table_header|safe}}
+                        </table>
+                    </form>
+                </div>
+                <div class="container">
+                    <br>
+                    <br>
+                    <br>
+                    <form id="form_show_feature_table" method="post">
+                        <table> 
+                            <tr> 
+                                <td><input class="btn btn-primary btn-lg" type="button" id="back_sample_selection" value='<< Sample Selection'></td>
+                                <td><input class="btn btn-primary btn-lg" type="button" id="show_feature_table" value='View Gene Annotation >>'></td>
+                            </tr>
+                        </table>
+                    </form>
+                </div>
+                <div class="container">
+                    <br>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:0%" id='progress_bar'></div>
+                    </div>
+                    <div class="progress-value" id="progress_value"></div>
+                </div>
+                </CENTER>
+            </div>
+        </main><!-- /.container -->
+
+    </body>
+</html>
+
+<script>
+    $(document).ready(function() {
+        //Event Listener:
+        document.getElementById('back_sample_selection').addEventListener('click', back_sample_selection);
+        document.getElementById('show_feature_table').addEventListener('click', show_feature_table);
+        
+        var table = $('#test').DataTable( {
+            select: {
+              style:    'single',
+            },
+            order: [[ 1, 'asc' ]],
+
+            dom: 'Zfrtip',
+            //buttons: [
+            //  {extend: 'csvHtml5', charset: 'UTF-8', exportOptions: {orthogonal : 'export'}}
+            //],
+            'scrollX':true,
+            'ajax':{url: {{target_url|safe}}, uuid: {{uuid|safe}}}
+        } );
+
+       
+        function back_sample_selection(){
+            var form = document.getElementById('form_show_feature_table');
+            var target_url = form.action.replace('show_refgen_query_result','show_sample_query_result');
+            window.location.replace(target_url);
+        }
+
+        function getUrlVars() {
+            var vars = {};
+                var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                    vars[key] = value;
+                });
+            return vars;
+        }
+       
+       function check_progress_loop(request, check_progress_url, next_page_url) {
+            if (false) {
+                return;
+            }
+            request.open("GET", check_progress_url);
+            request.onreadystatechange = function() {
+                if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    var data = JSON.parse(request.responseText);
+                    console.log(data);
+                    if (data.cur_progress < 0){
+                        alert('Error: Failed to query sample');
+                        window.location.replace('');
+                    }
+                    console.log(Math.round(data.cur_progress*100));
+                    console.log(Math.round(data.cur_progress*100) == 100);
+                    progress_bar.style.width = Math.round(data.cur_progress*100) + "%";
+                    progress_value.innerHTML = 'Download feature table of reference genome...' + '(' + Math.round(data.cur_progress*100)  + "%)";
+                    if (Math.ceil(data.cur_progress*100) == 100){
+                        //The result is ready. Show it :)
+                        window.location.replace(next_page_url);
+                        return;
+                    }
+                    check_progress_loop(request, check_progress_url, next_page_url);
+                }
+            }
+            request.send();
+        };
+
+        function show_feature_table(){
+            document.getElementById("back_sample_selection").disabled = true;
+            document.getElementById("show_feature_table").disabled = true;
+
+            var form = document.getElementById('form_show_feature_table');
+            var xhr = new XMLHttpRequest();
+            var progress_bar = document.getElementById("progress_bar");
+            var row_data = table.rows({selected : true}).data();
+            if (row_data.length == 0){
+               alert('Please select at least one reference genome for data processing!');
+               document.getElementById("back_sample_selection").disabled = false;
+               document.getElementById("show_feature_table").disabled = false;
+               return;
+            }
+            var ftpurl=row_data[0][3];
+
+            var cur_params = getUrlVars();
+
+            var start_download_feature_table_url = form.action
+                                 + "&ftpurl=" + ftpurl;
+
+            var check_download_feature_table_progress_url = '/check_progress_download_feature_table/?studies=' + cur_params['studies']
+                                 + "&species=" + cur_params['species']
+                                 + "&uuid=" + cur_params['uuid']
+                                 + "&ftpurl=" + ftpurl;
+
+            var next_page_url = '/show_feature_table/?studies=' + cur_params['studies']
+                                 + "&species=" + cur_params['species']
+                                 + "&uuid=" + cur_params['uuid']
+                                 + "&ftpurl=" + ftpurl;
+                                 
+                                 
+            var start_download_feature_table_request = new XMLHttpRequest();
+            start_download_feature_table_request.open(form.method, start_download_feature_table_url, true);
+            start_download_feature_table_request.onload = function(e) {
+                if (start_download_feature_table_request.readyState == 4) {
+                    if (start_download_feature_table_request.status == 200){
+                        //Success: check the progress
+                        var check_progress_request = new XMLHttpRequest();
+                        check_progress_loop(check_progress_request, check_download_feature_table_progress_url, next_page_url);
+                    }else{
+                        alert('Error: Failed to start query');
+                    }
+                }else{
+                    setTimeout(function(){},1000);
+                }
+            }
+            start_download_feature_table_request.send()
+            //Should not reach here
+            return;
+       }
+
+    } );
+   
+</script>

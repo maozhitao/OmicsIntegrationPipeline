@@ -1,0 +1,276 @@
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+    <script>
+    $(document).ready(function() {
+       var table = $('#test').DataTable( {
+          columnDefs: [ {
+            orderable: false,
+            className: 'select-checkbox',
+            targets:   0,
+            //render: function (data, type, full, meta){
+            // return '<input type="checkbox" name="id[]" value="' 
+            //    + $('<div/>').text(data).html() + '">';
+            //        }
+            render: function (data, type, row, meta) {
+                if (data == true){
+                    var checkbox_style = '<input checked="checked" id=' + meta.row + ' type="checkbox">'; 
+                }else{
+                    var checkbox_style = '<input type="checkbox" id=' + meta.row + '>';
+                }
+                if (type === 'export'){
+                    var rows = table.row(meta.row).node();
+                    //console.log(rows);
+                    //console.log($('input[type="checkbox"]', rows).prop('checked'))
+                    var result = $('input[type="checkbox"]', rows).prop('checked');
+
+                    return result;
+                }else{
+                    return checkbox_style;
+                }
+            },
+          } ],
+          select: {
+              style:    'os',
+              selector: 'td:first-child'
+          },
+          order: [[ 1, 'asc' ]],
+
+          dom: 'Bfrtip',
+          buttons: [
+            {extend: 'csvHtml5', charset: 'UTF-8', exportOptions: {orthogonal : 'export'}}
+          ],
+          'scrollX':true,
+          'ajax':{url: {{target_url|safe}}, uuid: {{uuid|safe}}}
+       } );
+
+       table.on('user-select', function (e, dt, type, cell, originalEvent) {
+          //if (originalEvent.target.nodeName.toLowerCase() === '') {
+          e.preventDefault();
+          // }
+       });
+
+       // Handle click on "Select all" control
+       $('#example-select-all').on('click', function(){
+         // Check/uncheck all checkboxes in the table
+         var rows = table.rows({ 'search': 'applied' }).nodes();
+         $('input[type="checkbox"]', rows).prop('checked', this.checked);
+       });
+
+       // Handle click on checkbox to set state of "Select all" control
+       $('#test tbody').on('change', 'input[type="checkbox"]', function(){
+       // If checkbox is not checked
+
+       if(!this.checked){
+          var el = $('#example-select-all').get(0);
+          // If "Select all" control is checked and has 'indeterminate' property
+          if(el && el.checked && ('indeterminate' in el)){
+            // Set visual state of "Select all" control 
+            // as 'indeterminate'
+            el.indeterminate = true;
+          }
+       }
+    });
+
+    function toUTF8Array(str) {
+        let utf8 = [];
+        for (let i = 0; i < str.length; i++) {
+            let charcode = str.charCodeAt(i);
+            if (charcode < 0x80) utf8.push(charcode);
+            else if (charcode < 0x800) {
+                utf8.push(0xc0 | (charcode >> 6),
+                      0x80 | (charcode & 0x3f));
+            }
+            else if (charcode < 0xd800 || charcode >= 0xe000) {
+                utf8.push(0xe0 | (charcode >> 12),
+                      0x80 | ((charcode>>6) & 0x3f),
+                      0x80 | (charcode & 0x3f));
+            }
+        // surrogate pair
+            else {
+                i++;
+            // UTF-16 encodes 0x10000-0x10FFFF by
+            // subtracting 0x10000 and splitting the
+            // 20 bits of 0x0-0xFFFFF into two halves
+                charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+                      | (str.charCodeAt(i) & 0x3ff));
+                utf8.push(0xf0 | (charcode >>18),
+                      0x80 | ((charcode>>12) & 0x3f),
+                      0x80 | ((charcode>>6) & 0x3f),
+                      0x80 | (charcode & 0x3f));
+            }
+        }
+        return utf8;
+    }
+    document.getElementById('back_query_sample').addEventListener('click', back_query_sample);
+    function back_query_sample(){
+        window.location.replace('/query');
+    }
+    document.getElementById('process_data').addEventListener('click', process_data);
+    document.getElementById('update_samples_table').addEventListener('click', update_samples_table);
+
+    function process_data(){
+        var index = table.rows()[0];
+        var checked = [];
+        checked.length = index.length;
+        for (i = 0; i < index.length; i++){
+            var rows = table.row(index[i]).node();
+            var result = $('input[type="checkbox"]', rows).prop('checked');
+            checked[i] = result
+        }
+
+        var data_upload = {};
+        data_upload[0] = checked; //replace with actual checked value
+        for (i = 1; i < table.columns().data().length; i++){
+             data_upload[i] = table.columns().data()[i];
+        }
+
+
+        var xhr = new XMLHttpRequest();
+        var form = document.getElementById('samples_table');
+        data_upload_tojson = {"data": data_upload};
+
+        xhr.onload = function (e) {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              console.log(xhr.responseText);
+              var target_url = window.location.href.replace('/show/','/show_refgen/');
+              
+              window.location.replace(target_url);
+            } else {
+              console.error(xhr.statusText);
+            }
+          }
+        };
+
+
+
+        xhr.open(form.method, form.action, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        var json_string = JSON.stringify(data_upload_tojson);
+        var encoded = toUTF8Array(json_string);
+        console.log(encoded);
+        xhr.send('data=' + encoded);
+
+    }
+
+    function update_samples_table(){
+        var form = document.getElementById('form_update_samples_table');
+        try{
+            var file=document.getElementById('update_csv_file').files.item(0);
+        }
+        catch(err){
+            //FILE NOT SELECTED
+            return;
+        }
+        
+        if (file === null){
+            alert('Please select a csv file!');
+            return;
+        }
+        if (file.size > 10485760){
+            alert('Your file is too large!');
+            return;
+        } 
+
+        var xhr = new XMLHttpRequest();
+	if (xhr.upload) {	
+	    var progress = document.getElementById('progress_bar');
+        }else{
+            return;
+        }
+
+        xhr.upload.onprogress =  function(e) {
+	    var pc = parseInt(100 - (e.loaded / e.total * 100));
+	    progress.style.backgroundPosition = pc + "% 0";
+	}
+
+        // file received/failed
+        xhr.onload = function(e) {
+	     if (xhr.readyState == 4) {
+                  if (xhr.status == 200){
+                      alert('success');
+                      window.location.reload(true);
+                  }else{
+                      alert('error: Invalid format!');
+                  }
+	     }
+	}
+
+        var cur_params = getUrlVars();
+
+        console.log(cur_params);
+        console.log(cur_params['uuid']);
+        var target_url = form.action + '&update_table=true';
+        // start upload
+        xhr.open(form.method, target_url, true);
+	//xhr.setRequestHeader("Content-Type","multipart/form-data");
+
+        //Prepare form data
+        var formData = new FormData();
+        formData.append('table_file_for_update',file, file.name);
+	xhr.send(formData);
+
+    }
+    function getUrlVars() {
+         var vars = {};
+         var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+             vars[key] = value;
+         });
+         return vars;
+    }
+ 
+
+    } );
+   
+    </script>
+</head>
+
+<CENTER>
+<div class="jumbotron">
+  <h2 class="display-4">Query Result<br></h2>
+  <p class="lead"></p>
+  <hr class="my-4">
+  <p>
+  </p>
+  <form id="samples_table" method="post">
+     <table id='test' class="display nowrap" style="width:100%">
+       {{table_header|safe}}
+     </table>
+  
+  </form>
+  <form id="form_update_samples_table" method="post">
+  <table>
+    <tr> 
+      <td><input class="Column" type="file" id="update_csv_file" name="filename" accept=".csv"></td>
+      <td><input class="Column" type="button" id="update_samples_table" value="update_samples_table"></td>
+    </tr>
+      <td><input class="Column" type="button" id="back_query_sample" value='<<Query Sample Again'></td> 
+      <td><input class="Column" type="button" id="process_data" value='Process Data >>'></td>
+    <tr>
+    </tr>
+  </table>
+  </form>
+  <div class="container">
+    <br>
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%" id='progress_bar'>
+      </div>
+    </div>
+  </div>
+</div>
+</CENTER>
+
+<script>
+    </script>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)https://getbootstrap.com/docs/4.4/examples/starter-template/ -->
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+    
+    
+    <script type="text/javascript" src="http://compendiumpipeline.online/static/dataTable.colResize.js"></script>
+    <script>
+    $(document).ready(function() {
+       var table = $('#test').DataTable( {
+          select: {
+              style:    'single',
+          },
+          order: [[ 1, 'asc' ]],
+
+          dom: 'Zfrtip',
+          //buttons: [
+          //  {extend: 'csvHtml5', charset: 'UTF-8', exportOptions: {orthogonal : 'export'}}
+          //],
+          'scrollX':true,
+          'ajax':{url: {{target_url|safe}}, uuid: {{uuid|safe}}}
+       } );
+
+       table.on('user-select', function (e, dt, type, cell, originalEvent) {
+          //if (originalEvent.target.nodeName.toLowerCase() === '') {
+          //e.preventDefault();
+          // }
+       });
+
+       function getUrlVars() {
+         var vars = {};
+         var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+             vars[key] = value;
+         });
+         return vars;
+       }  
+
+       document.getElementById('back_select_reference_genome').addEventListener('click', back_select_reference_genome);
+       function back_select_reference_genome(){
+           var form = document.getElementById('form_process_data');
+           console.log(form.action);
+           var target_url = form.action.replace('show_feature_table','show_refgen_query_result');
+           window.location.replace(target_url);
+       }
+       
+
+
+       document.getElementById('process_data').addEventListener('click', process_data);
+       function process_data(){
+           var form = document.getElementById('form_process_data');
+           
+           var cor_file=document.getElementById('upload_corr_file').files.item(0);
+           if (cor_file === null){
+               alert('File for correlation validation is missing!');
+               return;
+           }
+           var knowledge_capture_sample_file=document.getElementById('upload_knowledge_capture_sample_file').files.item(0);
+           if (knowledge_capture_sample_file === null){
+               alert('File for knowledge capture validation (sample) is missing!');
+               return;
+           }
+           var knowledge_capture_gene_file=document.getElementById('upload_knowledge_capture_gene_file').files.item(0);
+           if (knowledge_capture_gene_file === null){
+               alert('File for knowledge capture validation (gene) is missing!');
+               return;
+           }
+           var email=document.getElementById('email');
+           console.log(email.value);
+
+           var xhr = new XMLHttpRequest();
+           var cur_params = getUrlVars();
+ 
+           // file received/failed
+           xhr.onload = function(e) {
+                if (xhr.readyState == 4) {
+                     if (xhr.status == 200){
+                         alert('success');
+                         window.location.replace('/submitted');
+                     }else{
+                         alert('error: Invalid format!');
+                     }
+                }else{
+                     setTimeout(function(){},1000);
+                }
+           }
+
+           var target_url = form.action;
+           console.log(target_url);
+           //return;        
+           // start upload
+           xhr.open(form.method, target_url, true);
+
+           //Prepare form data
+           var formData = new FormData();
+           formData.append('cor_file',cor_file, cor_file.name);
+           formData.append('knowledge_capture_sample_file',knowledge_capture_sample_file, knowledge_capture_sample_file.name);
+           formData.append('knowledge_capture_gene_file',knowledge_capture_gene_file, knowledge_capture_gene_file.name);
+           formData.append('email', email.value);
+           formData.append('gff_url', cur_params['ftpurl']);
+           xhr.send(formData);
+           return;
+           /*
+           console.log(row_data[0][3]);
+           var loader = document.getElementById("loader");
+           loader.style.display = "block";
+           var cur_button = document.getElementById("process_data");
+           cur_button.disabled = true;
+           */
+
+
+
+       }
+
+    } );
+   
+    </script>
+</head>
+
+
+
+
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.6">
+    <!--<title>Starter Template · Bootstrap</title>-->
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.4/examples/starter-template/">
+
+    <!-- Bootstrap core CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Favicons -->
+<!--
+<link rel="apple-touch-icon" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
+<link rel="icon" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">
+<link rel="manifest" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/manifest.json">
+<link rel="mask-icon" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/safari-pinned-tab.svg" color="#563d7c">
+<link rel="icon" href="https://getbootstrap.com/docs/4.4/assets/img/favicons/favicon.ico">
+// -->
+
+<meta name="msapplication-config" content="/docs/4.4/assets/img/favicons/browserconfig.xml">
+<meta name="theme-color" content="#563d7c">
+
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+      
+      .navbar-dark .navbar-nav .nav-link {
+        color: rgba(255,255,255,.3);
+      }
+      
+      body {
+        padding-top: 5rem;
+      }
+      .starter-template {
+        padding: 3rem 1.5rem;
+        text-align: center;
+      }
+    </style>
+    <!-- Custom styles for this template -->
+    <!--<link href="./bootstrap_template_files/starter-template.css" rel="stylesheet">-->
+  <script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/util.js"></script><script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/pagejs.js"></script></head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <a class="navbar-brand" href="http://compendiumpipeline.online/">Home</a>
+  
+  <!--
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  //-->
+  <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" id="nav-link_1">1. Query samples</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="nav-link_2">2. Select samples</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="nav-link_3">3. Select reference genome</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="nav-link_4" style="color:rgba(255,255,255,0.9);">4. View gene annotation</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="nav-link_5">5. Submit the job to the cluster</a>
+      </li>
+      <!--
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="https://getbootstrap.com/docs/4.4/examples/starter-template/#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+        <div class="dropdown-menu" aria-labelledby="dropdown01">
+          <a class="dropdown-item" href="https://getbootstrap.com/docs/4.4/examples/starter-template/#">Action</a>
+          <a class="dropdown-item" href="https://getbootstrap.com/docs/4.4/examples/starter-template/#">Another action</a>
+          <a class="dropdown-item" href="https://getbootstrap.com/docs/4.4/examples/starter-template/#">Something else here</a>
+        </div>
+      </li>
+      //-->
+      
+    </ul>
+    
+    <!--
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+      <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+    </form>
+    //-->
+  </div>
+</nav>
+
+<main role="main" class="container">
+  <div class="starter-template">
+    <h1>Gene table of selected reference genome</h1>
+    <br>
+    NOTE: For the knowledge capture validation gene file, please use the same gene name as shown in feature_tag column of the gene table.
+    
+    <CENTER>
+    <div class="container">
+      <form id="feature_table" method="post">
+        <table id='test' class="display nowrap" style="width:100%">
+        {{table_header|safe}}
+        </table>
+      </form>
+    </div>
+    <div class="container">
+      <br>
+      <br>
+      <br>
+      <form id="form_process_data" method="post">
+          <table>
+            <tr>
+              <td>Correlation Validation File:</td>
+              <td><input type="file" id="upload_corr_file" accept=".csv"></td>
+              <td colspan="2">Example: <a href="/static/Input_CorrTest_Salmonella.csv">Salmonella example</a>, <a href="/static/Input_CorrTest_HumanStroke.csv">Human stroke patients example</a></td>
+            </tr>
+            <tr>
+              <td>Knowledge Capture Validation Sample File:</td>
+              <td><input type="file" id="upload_knowledge_capture_sample_file" accept=".csv"></td>
+              <td colspan="2">Example: <a href="/static/Input_KnowledgeCapture_fur.csv">Salmonella example</a>, <a href="/static/Input_KnowledgeCapture_HumanStroke_SampleList.csv">Human stroke patients example</a></td>
+            </tr>
+            <tr>
+              <td>Knowledge Capture Validation Gene File:</td>
+              <td><input type="file" id="upload_knowledge_capture_gene_file" accept=".csv"></td>
+              <td colspan="2">Example: <a href="/static/Input_KnowledgeCapture_fur_related_genes.csv">Salmonella example</a>, <a href="/static/Input_KnowledgeCapture_HumanStroke_SampleList.csv">Human stroke patients example</a> </li></td>
+            </tr>
+            <tr>
+              <td>Email:</td>
+              <td colspan="3"><input type="email" id="email"></td>
+            </tr>
+            <tr> 
+              <td><input class="btn btn-primary btn-lg" type="button" id="back_select_reference_genome" value='<< Select Reference Genome'></td>
+              <td></td>
+              <td></td>
+              <td><input class="btn btn-primary btn-lg" type="button" id="process_data" value='Process Data >>'></td>
+            </tr>
+            
+          </table>
+      </form>
+    </div>
+    </CENTER>
+  </div>
+
+</main><!-- /.container -->
+
+<!--<script src="./bootstrap_template_files/jquery-3.4.1.slim.min.js.download" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+      <script>window.jQuery || document.write('<script src="/docs/4.4/assets/js/vendor/jquery.slim.min.js"><\/script>')</script><script src="./bootstrap_template_files/bootstrap.bundle.min.js.download" integrity="sha384-6khuMg9gaYr5AxOqhkVIODVIvm9ynTT5J4V1cfthmT+emCG6yVmEZsRHdxlotUnm" crossorigin="anonymous"></script>
+//-->
+</body></html>
+
